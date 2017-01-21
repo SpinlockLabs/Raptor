@@ -1,6 +1,7 @@
 cmake-build-debug
 .idea/
 build/
+out/
 *.o
 *.elf
 *.swp
