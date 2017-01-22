@@ -16,11 +16,14 @@ function build_x86
     build_libk_x86
     i686-elf-as kernel/x86/boot.s -o out/x86/boot.o
     i686-elf-as kernel/x86/isr.s -o out/x86/isr_asm.o
+    i686-elf-as kernel/x86/irq.s -o out/x86/irq_asm.o
     i686-elf-gcc -c kernel/x86/entry.c -o out/x86/entry.o $CFLAGS
     i686-elf-gcc -c kernel/x86/tty.c -o out/x86/tty.o $CFLAGS
     i686-elf-gcc -c kernel/x86/gdt.c -o out/x86/gdt.o $CFLAGS
     i686-elf-gcc -c kernel/x86/idt.c -o out/x86/idt.o $CFLAGS
     i686-elf-gcc -c kernel/x86/isr.c -o out/x86/isr.o $CFLAGS
+    i686-elf-gcc -c kernel/x86/io.c -o out/x86/io.o $CFLAGS
+    i686-elf-gcc -c kernel/x86/irq.c -o out/x86/irq.o $CFLAGS
     i686-elf-gcc -T kernel/x86/linker.ld -o out/x86/raptor.bin out/x86/*.o $LFLAGS
 end
 
@@ -29,7 +32,10 @@ function build_libk_x86
     set CFLAGS -std=gnu99 -ffreestanding -O2 -w
     set LFLAGS -ffreestanding -O2 -nostdlib
     i686-elf-gcc -c libc/memset.c -o out/x86/libk/memset.o $CFLAGS
-    i686-elf-ar rcs out/x86/libk/libk.a out/x86/libk/memset.o
+    i686-elf-gcc -c libc/strlen.c -o out/x86/libk/strlen.o $CFLAGS
+    i686-elf-gcc -c libc/reverse.c -o out/x86/libk/reverse.o $CFLAGS
+    i686-elf-gcc -c libc/itoa.c -o out/x86/libk/itoa.o $CFLAGS
+    i686-elf-ar rcs out/x86/libk/libk.a out/x86/libk/*.o
 end
 
 function qemu_arm

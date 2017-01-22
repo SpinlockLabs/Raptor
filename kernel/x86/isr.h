@@ -1,11 +1,8 @@
+#pragma once
 #include <stddef.h>
 #include <stdint.h>
 
-struct {
-    size_t index;
-    void (*stub)(void);
-} isr[32 + 1] __attribute__((used));
-
+// @TODO: Move to common include
 typedef struct {
     uint32_t gs, fs, es, ds;
     uint32_t edi, esi, ebp, esp, ebx, edx, ecx, eax;
@@ -48,4 +45,5 @@ extern void _isr28();
 extern void _isr29();
 extern void _isr30();
 extern void _isr31();
+extern void _isr127();
 

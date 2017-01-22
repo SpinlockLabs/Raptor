@@ -3,11 +3,9 @@
 
 #define isr(i) idt_set_gate(i, (uint32_t)_isr##i, 0x08, 0x8E)
 
-void isr_init(void) {
-    // Code from toaruos, I think it's the syscall interrupt...
-    //isr[32].index = SYSCALL_VECTOR;
-    //isr[32].stub = symbol_find("_isr127");
+// @TODO: We need handler add/remove functions.
 
+void isr_init(void) {
     isr(0);
     isr(1);
     isr(2);
@@ -40,9 +38,16 @@ void isr_init(void) {
     isr(29);
     isr(30);
     isr(31);
+    isr(127);
 }
 
 void fault_handler(regs_t *r) {
-    terminal_writestring("Unhandled exception\n");
+    int i = r->int_no;
+
+    terminal_writestring("Unhandled exception ");
+    char *is;
+    itoa(i, is, 10);
+    terminal_writestring(is);
+    terminal_writestring("\n");
 }
 
