@@ -8,15 +8,24 @@ void* memset(void* bufptr, int value, size_t size) {
     return bufptr;
 }
 
-// Function in assembly to run lidt instruction with IDT location.
-extern void idt_load(void);
-
 // Initializes the IDT.
 void idt_init(void) {
-    idtp.limit = (sizeof(idt_entry) * 256) - 1;
-    idtp.base = &idt;
+    idt_ptr.limit = (sizeof(idt_entry_t) * 256) - 1;
+    idt_ptr.base = &idt_entries;
 
-    memset(&idt, 0, sizeof (idt_entry) * 256);
+    memset(&idt_entries, 0, sizeof (idt_entry_t) * 256);
 
-    idt_load();
+    idt_flush();
 }
+
+void idt_set_gate(uint8_t num, uint32_t base, uint16_t sel, uint8_t flags) {
+    idt_entries[num].base_low = base & 0xFFFF;
+    idt_entries[num].base_high = (base >> 16) & 0xFFFF;
+
+    idt_entries[num].sel = sel;
+    idt_entries[num].zero = 0;
+    // Uncomment when we get user-mode.
+    // Sets the interrupt gate privilege level to 3.
+    idt_entries[num].flags = flags /* | 0x60 */;
+}
+

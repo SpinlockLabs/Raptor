@@ -58,10 +58,9 @@ char* itoa(int num, char* str, int base) {
 }
 
 void kernel_main(void) {
+    gdt_init();
     idt_init();
     terminal_init();
-
-    int i = 5 / 0;
 
     terminal_writestring("Hello World!\n");
     terminal_writestring("Hello World!\n");

@@ -86,12 +86,28 @@ _start:
 1:  hlt
     jmp 1b
 
-.global idt_load
-.extern idtp
-idt_load:
-    lidt idtp
+.global gdt_flush
+gdt_flush:
+    mov 4(%esp), %eax
+    lgdt (%eax)
+
+    mov $0x10, %ax
+    mov %ax, %ds
+    mov %ax, %es
+    mov %ax, %fs
+    mov %ax, %ss
+
+    ljmp $0x08, $.flush
+.flush:
+    ret
+
+.global idt_flush
+idt_flush:
+    mov 4(%esp), %eax
+    lidt (%eax)
     ret
 
 # Set the size of the _start symbol to the current location '.' minus its start.
 # This is useful when debugging or when you implement call tracing.
 .size _start, . - _start
+
