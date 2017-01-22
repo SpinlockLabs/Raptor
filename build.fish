@@ -1,4 +1,7 @@
 #!/usr/bin/env fish
+#
+# This file serves as a preliminary buildsystem. Will we ever adopt a real buildsystem? Not sure...
+#
 function build_arm
     mkdir -p out/arm
     arm-none-eabi-gcc -mcpu=arm1176jzf-s -fpic -ffreestanding -c kernel/arm/rpi/boot.s -o out/arm/boot.o
@@ -7,9 +10,10 @@ function build_arm
 end
 
 function build_x86
-    set CFLAGS -std=gnu99 -ffreestanding -O2 -w
-    set LFLAGS -ffreestanding -O2 -nostdlib
     mkdir -p out/x86
+    set CFLAGS -std=gnu99 -ffreestanding -O2 -w -Ilibc/ -Lout/x86/libk/ -lk
+    set LFLAGS -ffreestanding -O2 -nostdlib -Lout/x86/libk/ -lk
+    build_libk_x86
     i686-elf-as kernel/x86/boot.s -o out/x86/boot.o
     i686-elf-as kernel/x86/isr.s -o out/x86/isr_asm.o
     i686-elf-gcc -c kernel/x86/entry.c -o out/x86/entry.o $CFLAGS
@@ -17,7 +21,15 @@ function build_x86
     i686-elf-gcc -c kernel/x86/gdt.c -o out/x86/gdt.o $CFLAGS
     i686-elf-gcc -c kernel/x86/idt.c -o out/x86/idt.o $CFLAGS
     i686-elf-gcc -c kernel/x86/isr.c -o out/x86/isr.o $CFLAGS
-    i686-elf-gcc -T kernel/x86/linker.ld -o out/x86/raptor.bin $LFLAGS out/x86/boot.o out/x86/isr_asm.o out/x86/entry.o out/x86/tty.o out/x86/gdt.o out/x86/idt.o out/x86/isr.o
+    i686-elf-gcc -T kernel/x86/linker.ld -o out/x86/raptor.bin out/x86/*.o $LFLAGS
+end
+
+function build_libk_x86
+    mkdir -p out/x86/libk
+    set CFLAGS -std=gnu99 -ffreestanding -O2 -w
+    set LFLAGS -ffreestanding -O2 -nostdlib
+    i686-elf-gcc -c libc/memset.c -o out/x86/libk/memset.o $CFLAGS
+    i686-elf-ar rcs out/x86/libk/libk.a out/x86/libk/memset.o
 end
 
 function qemu_arm
