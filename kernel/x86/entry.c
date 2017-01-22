@@ -60,7 +60,10 @@ char* itoa(int num, char* str, int base) {
 void kernel_main(void) {
     gdt_init();
     idt_init();
+    isr_init();
     terminal_init();
+
+    asm volatile("int $0x0");
 
     terminal_writestring("Hello World!\n");
     terminal_writestring("Hello World!\n");

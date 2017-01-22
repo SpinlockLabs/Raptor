@@ -7,14 +7,17 @@ function build_arm
 end
 
 function build_x86
+    set CFLAGS -std=gnu99 -ffreestanding -O2 -w
+    set LFLAGS -ffreestanding -O2 -nostdlib
     mkdir -p out/x86
     i686-elf-as kernel/x86/boot.s -o out/x86/boot.o
-    # Getting rid of all warnings, I don't care right now.
-    i686-elf-gcc -c kernel/x86/entry.c -o out/x86/entry.o -std=gnu99 -ffreestanding -O2 -w # -Wall -Wextra
-    i686-elf-gcc -c kernel/x86/tty.c -o out/x86/tty.o -std=gnu99 -ffreestanding -O2 -w # -Wall -Wextra
-    i686-elf-gcc -c kernel/x86/gdt.c -o out/x86/gdt.o -std=gnu99 -ffreestanding -O2 -w # -Wall -Wextra
-    i686-elf-gcc -c kernel/x86/idt.c -o out/x86/idt.o -std=gnu99 -ffreestanding -O2 -w # -Wall -Wextra
-    i686-elf-gcc -T kernel/x86/linker.ld -o out/x86/raptor.bin -ffreestanding -O2 -nostdlib out/x86/boot.o out/x86/entry.o out/x86/tty.o out/x86/gdt.o out/x86/idt.o
+    i686-elf-as kernel/x86/isr.s -o out/x86/isr_asm.o
+    i686-elf-gcc -c kernel/x86/entry.c -o out/x86/entry.o $CFLAGS
+    i686-elf-gcc -c kernel/x86/tty.c -o out/x86/tty.o $CFLAGS
+    i686-elf-gcc -c kernel/x86/gdt.c -o out/x86/gdt.o $CFLAGS
+    i686-elf-gcc -c kernel/x86/idt.c -o out/x86/idt.o $CFLAGS
+    i686-elf-gcc -c kernel/x86/isr.c -o out/x86/isr.o $CFLAGS
+    i686-elf-gcc -T kernel/x86/linker.ld -o out/x86/raptor.bin $LFLAGS out/x86/boot.o out/x86/isr_asm.o out/x86/entry.o out/x86/tty.o out/x86/gdt.o out/x86/idt.o out/x86/isr.o
 end
 
 function qemu_arm
@@ -28,7 +31,4 @@ end
 function clean
     rm -rf out/
 end
-
-#build_arm
-build_x86
 
