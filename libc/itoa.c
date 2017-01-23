@@ -1,34 +1,37 @@
 #include "string.h"
 
-char* itoa(int num, char* str, int base) {
-    int i = 0;
-    bool neg = false;
-
-    if (num == 0) {
-        str[i++] = '0';
-        str[i] = '\0';
+char* itoa(int value, char* str, int base) {
+    char *rc;
+    char *ptr;
+    char *low;
+    
+    if (base < 2 || base > 36) {
+        *str = '\0';
         return str;
     }
 
-    if (num < 0) {
-        neg = true;
-        num = -num;
+    rc = str;
+    ptr = str;
+
+    if (value < 0 && base == 10) {
+        *ptr++ = '-';
     }
 
-    while (num != 0) {
-        int rem = num % base;
-        str[i++] = (rem > 9) ? (rem - base) + 'a' : rem + '0';
-        num = num / base;
+    low = ptr;
+
+    do {
+        *ptr++ = "zyxwvutsrqponmlkjihgfedcba9876543210123456789abcdefghijklmnopqrstuvwxyz"[35 + value % base];
+        value /= base;
+    } while(value);
+
+    *ptr-- = '\0';
+
+    while (low < ptr) {
+        char tmp = *low;
+        *low++ = *ptr;
+        *ptr-- = tmp;
     }
 
-    if (neg) {
-        str[i++] = '-';
-    }
-
-    str[i] = '\0';
-
-    reverse(str, i);
-
-    return str;
+    return rc;
 }
 
