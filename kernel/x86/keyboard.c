@@ -4,6 +4,7 @@
 #include "vga.h"
 #include "x86.h"
 #include <string.h>
+#include <stdbool.h>
 
 /**
  * Callback for keyboard interrupt(IRQ 1).
@@ -20,12 +21,18 @@ static int keyboard_callback(regs_t *regs) {
         }
     } while(1);
 
-    char* cs;
-    itoa(c, cs, 16);
-
-    vga_writestring("Code ");
-    vga_writestring(cs);
-    vga_writestring("\n");
+    char kt = key_types[c];
+    switch (kt) {
+        case N:
+            vga_writestring("N\n");
+            break;
+        case S:
+            vga_writestring("S\n");
+            break;
+        case F:
+            vga_writestring("F\n");
+            break;
+    }
 
     return 1;
 }
