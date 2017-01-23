@@ -3,7 +3,11 @@
 #include "io.h"
 #include "vga.h"
 #include "x86.h"
+#include <string.h>
 
+/**
+ * Callback for keyboard interrupt(IRQ 1).
+ */
 static int keyboard_callback(regs_t *regs) {
     char c = 0;
 
@@ -16,7 +20,14 @@ static int keyboard_callback(regs_t *regs) {
         }
     } while(1);
 
-    vga_writestring("KB Event\n");
+    char* cs;
+    itoa(c, cs, 16);
+
+    vga_writestring("Code ");
+    vga_writestring(cs);
+    vga_writestring("\n");
+
+    return 1;
 }
 
 void keyboard_init(void) {
