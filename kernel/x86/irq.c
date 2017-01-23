@@ -65,13 +65,21 @@ void int_enable(void) {
 
 void irq_add_handler(size_t irq, irq_handler_chain_t handler) {
     cli();
-    // @TODO
+    for (size_t i = 0; i < IRQ_CHAIN_DEPTH; i++) {
+        if (irq_routines[i * IRQ_CHAIN_SIZE + irq]) {
+            continue;
+        }
+        irq_routines[i * IRQ_CHAIN_SIZE + irq] = handler;
+        break;
+    }
     sti();
 }
 
 void irq_rem_handler(size_t irq) {
     cli();
-    // @TODO
+    for (size_t i = 0; i < IRQ_CHAIN_DEPTH; i++) {
+        irq_routines[i * IRQ_CHAIN_SIZE + irq] = NULL;
+    }
     sti();
 }
 
@@ -133,28 +141,29 @@ void irq_init(void) {
     irq_setup_gates();
 }
 
+/**
+ * Reset master PIC, reset slave if IRQ >= 8.
+ */
+void irq_ack(size_t irq) {
+    if (irq >= 8) {
+        outb(PIC2_CMD, 0x20);
+    }
+    outb(PIC1_CMD, 0x20);
+}
+
 void irq_handler(regs_t *r) {
     int_disable();
 
-
-    // Reset slave PIC if eighth interrupt or higher.
-    int i = r->int_no - 32;
-    if (i >= 8) {
-        outb(PIC2_CMD, 0x20);
+    if (r->int_no <= 47 && r->int_no >= 32) {
+        for (size_t i = 0; i < IRQ_CHAIN_DEPTH; i++) {
+            irq_handler_chain_t handler = irq_routines[i * IRQ_CHAIN_SIZE + (r->int_no - 32)];
+            if (handler && handler(r)) {
+                goto done;
+            }
+        }
+        irq_ack(r->int_no - 32);
     }
-    // Reset master PIC.
-    outb(PIC1_CMD, 0x20);
-
-    if (i == 0) {
-        // Ignore tick for now.
-    } else {
-        terminal_writestring("Unhandled interrupt ");
-        char* is;
-        itoa(i, is, 10);
-        terminal_writestring(is);
-        terminal_writestring("\n");
-    }
-
+done:
     int_resume();
 }
 

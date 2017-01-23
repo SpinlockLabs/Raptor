@@ -1,18 +1,16 @@
 #pragma once
 #include "isr.h"
+#include "irq.h"
 
-#define IRQ_CHAIN_SIZE  16
-#define IRQ_CHAIN_DEPTH 4
-
-typedef int (*irq_handler_chain_t) (struct regs *);
 static irq_handler_chain_t irq_routines[IRQ_CHAIN_SIZE * IRQ_CHAIN_DEPTH] = { NULL  };
 
 void int_disable(void);
 void int_resume(void);
 void int_enable(void);
 void irq_add_handler(size_t, irq_handler_chain_t);
-void irq_remove_handler(size_t);
+void irq_rem_handler(size_t);
 static void irq_remap();
+void irq_ack(size_t);
 void irq_handler(regs_t *);
 
 extern void _irq0();

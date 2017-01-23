@@ -1,14 +1,9 @@
 #pragma once
 #include <stddef.h>
 #include <stdint.h>
+#include "x86.h"
 
-// @TODO: Move to common include
-typedef struct {
-    uint32_t gs, fs, es, ds;
-    uint32_t edi, esi, ebp, esp, ebx, edx, ecx, eax;
-    uint32_t int_no, err_code;
-    uint32_t eip, cs, eflags, useresp, ss;
-} regs_t;
+static irq_handler_t isr_routines[256] = { 0 };
 
 static char* exceptions[32] = {
     "Division by zero",
@@ -45,6 +40,8 @@ static char* exceptions[32] = {
     "Reserved"
 };
 
+void isr_add_handler(size_t, irq_handler_t);
+void isr_rem_handler(size_t);
 void isr_init(void);
 void fault_handler(regs_t *r);
 
