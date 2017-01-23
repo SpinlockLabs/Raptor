@@ -44,7 +44,6 @@ void vga_setcolor(uint8_t color) {
 
 void vga_putentryat(char c, uint8_t color, size_t x, size_t y) {
     const size_t index = y * VGA_WIDTH + x;
-    vga_cursor(x + 1, y);
     vga_buffer[index] = vga_entry(c, color);
 }
 
@@ -76,6 +75,7 @@ void vga_putchar(char c) {
             vga_nextrow();
         }
     }
+    vga_cursor(vga_column, vga_row);
 }
 
 void vga_write(const char* data, size_t size) {
