@@ -19,6 +19,8 @@ void kernel_main(void) {
     vga_writestring("IRQs Initialized\n");
     timer_init(50);
     vga_writestring("PIT Initialized\n");
+    keyboard_init();
+    vga_writestring("Keyboard Initialized\n");
 
     vga_writestring("Entering idle state\n");
     // Let's idle, while continuously enabling interrupts.

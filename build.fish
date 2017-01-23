@@ -25,6 +25,7 @@ function build_x86
     i686-elf-gcc -c kernel/x86/io.c -o out/x86/io.o $CFLAGS
     i686-elf-gcc -c kernel/x86/irq.c -o out/x86/irq.o $CFLAGS
     i686-elf-gcc -c kernel/x86/timer.c -o out/x86/timer.o $CFLAGS
+    i686-elf-gcc -c kernel/x86/keyboard.c -o out/x86/keyboard.o $CFLAGS
     i686-elf-gcc -T kernel/x86/linker.ld -o out/x86/raptor.bin out/x86/*.o $LFLAGS
 end
 
