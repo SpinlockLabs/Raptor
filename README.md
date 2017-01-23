@@ -1,3 +1,3 @@
 # Raptor
-A small little kernel for doing... things? Not sure yet.
+A very incomplete x86 kernel. Aiming to have ARM support in the future.
 
