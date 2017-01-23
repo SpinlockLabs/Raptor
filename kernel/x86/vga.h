@@ -34,6 +34,7 @@ void vga_clear(void);
 void vga_scroll(void);
 void vga_setcolor(uint8_t);
 void vga_putentryat(char, uint8_t, size_t, size_t);
+void vga_cursor(uint8_t, uint8_t);
 void vga_nextrow(void);
 void vga_putchar(char);
 void vga_write(const char*, size_t);
