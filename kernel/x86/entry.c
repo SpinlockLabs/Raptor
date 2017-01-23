@@ -2,6 +2,7 @@
 #include "gdt.h"
 #include "idt.h"
 #include "irq.h"
+#include "timer.h"
 #include "tty.h"
 
 void kernel_main(void) {
@@ -16,6 +17,8 @@ void kernel_main(void) {
     terminal_writestring("ISRs Initialized\n");
     irq_init();
     terminal_writestring("IRQs Initialized\n");
+    timer_init(50);
+    terminal_writestring("PIT Initialized\n");
 
     terminal_writestring("Entering idle state\n");
     // Let's idle, while continuously enabling interrupts.

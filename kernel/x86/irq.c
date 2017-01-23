@@ -161,9 +161,9 @@ void irq_handler(regs_t *r) {
                 goto done;
             }
         }
-        irq_ack(r->int_no - 32);
     }
 done:
+    irq_ack(r->int_no - 32);
     int_resume();
 }
 
