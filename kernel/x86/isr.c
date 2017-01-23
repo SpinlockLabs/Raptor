@@ -54,9 +54,9 @@ void fault_handler(regs_t *r) {
     if (handler) {
         handler(r);
     } else {
-        terminal_writestring("Unhandled exception ");
-        terminal_writestring(exceptions[i]);
-        terminal_writestring("\n");
+        vga_writestring("Unhandled exception ");
+        vga_writestring(exceptions[i]);
+        vga_writestring("\n");
         // @TODO: Crash here...
     }
 }

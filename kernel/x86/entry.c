@@ -6,21 +6,21 @@
 #include "tty.h"
 
 void kernel_main(void) {
-    terminal_init();
-    terminal_writestring("Raptor kernel\n");
+    vga_init();
+    vga_writestring("Raptor kernel\n");
 
     gdt_init();
-    terminal_writestring("GDT Initialized\n");
+    vga_writestring("GDT Initialized\n");
     idt_init();
-    terminal_writestring("IDT Initialized\n");
+    vga_writestring("IDT Initialized\n");
     isr_init();
-    terminal_writestring("ISRs Initialized\n");
+    vga_writestring("ISRs Initialized\n");
     irq_init();
-    terminal_writestring("IRQs Initialized\n");
+    vga_writestring("IRQs Initialized\n");
     timer_init(50);
-    terminal_writestring("PIT Initialized\n");
+    vga_writestring("PIT Initialized\n");
 
-    terminal_writestring("Entering idle state\n");
+    vga_writestring("Entering idle state\n");
     // Let's idle, while continuously enabling interrupts.
     for (;;) {
         int_enable();
