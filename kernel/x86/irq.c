@@ -1,6 +1,6 @@
 #include "irq.h"
 #include "io.h"
-#include "tty.h"
+#include "vga.h"
 #include <stdint.h>
 
 #define PIC1 0x20

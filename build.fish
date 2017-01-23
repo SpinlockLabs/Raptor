@@ -18,7 +18,7 @@ function build_x86
     i686-elf-as kernel/x86/isr.s -o out/x86/isr_asm.o
     i686-elf-as kernel/x86/irq.s -o out/x86/irq_asm.o
     i686-elf-gcc -c kernel/x86/entry.c -o out/x86/entry.o $CFLAGS
-    i686-elf-gcc -c kernel/x86/tty.c -o out/x86/tty.o $CFLAGS
+    i686-elf-gcc -c kernel/x86/vga.c -o out/x86/vga.o $CFLAGS
     i686-elf-gcc -c kernel/x86/gdt.c -o out/x86/gdt.o $CFLAGS
     i686-elf-gcc -c kernel/x86/idt.c -o out/x86/idt.o $CFLAGS
     i686-elf-gcc -c kernel/x86/isr.c -o out/x86/isr.o $CFLAGS

@@ -3,7 +3,7 @@
 #include "idt.h"
 #include "irq.h"
 #include "timer.h"
-#include "tty.h"
+#include "vga.h"
 
 void kernel_main(void) {
     vga_init();
