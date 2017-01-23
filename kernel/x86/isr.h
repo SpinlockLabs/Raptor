@@ -10,6 +10,41 @@ typedef struct {
     uint32_t eip, cs, eflags, useresp, ss;
 } regs_t;
 
+static char* exceptions[32] = {
+    "Division by zero",
+    "Debug",
+    "NMI Interrupt",
+    "Breakpoint",
+    "Overflow",
+    "Range Exceeded",
+    "Invalid Opcode",
+    "No Math Coprocessor",
+    "Double Fault",
+    "Coprocessor Overrun",
+    "Invalid TSS",
+    "Segment Not Present",
+    "Stack Segment Fault",
+    "General Protection",
+    "Page Fault",
+    "Reserved",
+    "Floating-Point Error",
+    "Alignment Check",
+    "Machine Check",
+    "SIMD Floating-Point Exception",
+    "Virtualization Exception",
+    "Reserved",
+    "Reserved",
+    "Reserved",
+    "Reserved",
+    "Reserved",
+    "Reserved",
+    "Reserved",
+    "Reserved",
+    "Reserved",
+    "Reserved",
+    "Reserved"
+};
+
 void isr_init(void);
 void fault_handler(regs_t *r);
 

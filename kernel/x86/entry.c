@@ -1,6 +1,3 @@
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
 #include "entry.h"
 #include "gdt.h"
 #include "idt.h"
@@ -8,17 +5,19 @@
 #include "tty.h"
 
 void kernel_main(void) {
-    gdt_init();
-    idt_init();
-    isr_init();
-    irq_init();
     terminal_init();
+    terminal_writestring("Raptor kernel\n");
 
-    asm volatile("int $0x0");
+    gdt_init();
+    terminal_writestring("GDT Initialized\n");
+    idt_init();
+    terminal_writestring("IDT Initialized\n");
+    isr_init();
+    terminal_writestring("ISRs Initialized\n");
+    irq_init();
+    terminal_writestring("IRQs Initialized\n");
 
-    terminal_writestring("Hello World!\n");
-    terminal_writestring("Hello World!\n");
-
+    terminal_writestring("Entering idle state\n");
     // Let's idle, while continuously enabling interrupts.
     for (;;) {
         int_enable();

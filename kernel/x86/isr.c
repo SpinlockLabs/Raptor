@@ -45,9 +45,8 @@ void fault_handler(regs_t *r) {
     int i = r->int_no;
 
     terminal_writestring("Unhandled exception ");
-    char *is;
-    itoa(i, is, 10);
-    terminal_writestring(is);
+    terminal_writestring(exceptions[i]);
     terminal_writestring("\n");
+    // @TODO: Crash here...
 }
 
