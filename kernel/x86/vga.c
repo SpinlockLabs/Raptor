@@ -88,3 +88,10 @@ void vga_writestring(const char* data) {
     vga_write(data, strlen(data));
 }
 
+void vga_writebyte(uint8_t b) {
+    char *s;
+    itoa(b, s, 16);
+    vga_writestring(s);
+    vga_writestring("\n");
+}
+

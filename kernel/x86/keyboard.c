@@ -13,14 +13,17 @@ static int keyboard_callback(regs_t *regs) {
     char c = 0;
 
     c = inb(0x60);
+    c2 = inb(0x60);
 
     switch (c) {
         case 0x2A:
         case 0x36:
+            vga_writestring("Shift pressed");
             shift = true;
             break;
         case 0xAA:
         case 0xB6:
+            vga_writestring("Shift released");
             shift = false;
             break;
     }
@@ -44,6 +47,10 @@ static int keyboard_callback(regs_t *regs) {
 }
 
 void keyboard_init(void) {
+    outb(0xF0, 0x00);
+    vga_writebyte(inb(0x60));
+    vga_writebyte(inb(0x60));
+    vga_writebyte(inb(0x60));
     irq_add_handler(IRQ1, &keyboard_callback);
 }
 
