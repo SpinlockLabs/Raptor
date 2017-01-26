@@ -16,7 +16,7 @@ static int keyboard_callback(regs_t *regs) {
     c = inb(0x60);
     up = c & 0x80;
     if (up) {
-        c = c ^= 0x80;
+        c ^= 0x80;
     }
 
     char kt = key_types[c];
