@@ -11,46 +11,41 @@
  */
 static int keyboard_callback(regs_t *regs) {
     char c = 0;
+    bool up = false;
 
     c = inb(0x60);
-    c2 = inb(0x60);
-
-    switch (c) {
-        case 0x2A:
-        case 0x36:
-            vga_writestring("Shift pressed");
-            shift = true;
-            break;
-        case 0xAA:
-        case 0xB6:
-            vga_writestring("Shift released");
-            shift = false;
-            break;
+    up = c & 0x80;
+    if (up) {
+        c = c ^= 0x80;
     }
-    
-    {
-        char kt = key_types[c];
-        switch (kt) {
-            case N:
+
+    char kt = key_types[c];
+    switch (kt) {
+        case N:
+            if (!up) {
                 vga_putchar((shift ? kb_usu[c] : kb_usl[c]));
-                break;
-        }
+            }
+            break;
+        case S:
+            switch (c) {
+                case 0x2a:
+                case 0x36:
+                    shift = !up;
+                    break;
+            }
+            break;
     }
 
-    char* cs;
+    /*char* cs;
     itoa(c, cs, 16);
     vga_writestring("Code ");
     vga_writestring(cs);
-    vga_writestring("\n");
+    vga_writestring("\n");*/
 
     return 1;
 }
 
 void keyboard_init(void) {
-    outb(0xF0, 0x00);
-    vga_writebyte(inb(0x60));
-    vga_writebyte(inb(0x60));
-    vga_writebyte(inb(0x60));
     irq_add_handler(IRQ1, &keyboard_callback);
 }
 
