@@ -51,4 +51,3 @@ end
 function clean
     rm -rf out/
 end
-

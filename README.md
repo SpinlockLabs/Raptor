@@ -1,3 +1,5 @@
 # Raptor
-A very incomplete x86 kernel. Aiming to have ARM support in the future.
+
+Your not-so-family-friendly Operating System. We really hate clouds.
+
 
