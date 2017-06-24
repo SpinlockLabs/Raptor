@@ -1,4 +1,5 @@
 #pragma once
+
 #include <stdint.h>
 
 void outb(uint16_t, uint8_t);

@@ -1,6 +1,7 @@
-#include "idt.h"
 #include <stddef.h>
 #include <string.h>
+
+#include "idt.h"
 
 // Initializes the IDT.
 void idt_init(void) {

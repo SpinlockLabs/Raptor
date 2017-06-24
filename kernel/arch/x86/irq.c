@@ -1,5 +1,6 @@
 #include <kcommon.h>
 
+#include "idt.h"
 #include "irq.h"
 #include "io.h"
 
@@ -24,7 +25,7 @@
 #define ICW4_BUF_MASTER 0x0C
 #define ICW4_SFNM 0x10
 
-#define irq(i) idt_set_gate(i + 32, (uint32_t)_irq##i, 0x08, 0x8E)
+#define irq(i) idt_set_gate((i) + 32, (uint32_t)_irq##i, 0x08, 0x8E)
 #define sti() asm volatile("sti");
 #define cli() asm volatile("cli");
 
