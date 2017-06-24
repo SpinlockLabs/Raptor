@@ -2,7 +2,8 @@
 
 #include <stdint.h>
 
-// File defining common x86 structures.
+#define cpu_equals(name) __builtin_cpu_is(name)
+#define cpu_supports(feature) __builtin_cpu_supports(feature)
 
 typedef struct regs {
     uint32_t gs, fs, es, ds;

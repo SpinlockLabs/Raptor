@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stddef.h>
+
 // Specifies that a struct should be packed.
 #define packed __attribute__((packed))
 
@@ -35,3 +37,16 @@
 
 // Specifies that a function will not be called often.
 #define cold __attribute__((cold))
+
+// Specifies that the location in the program is unreachable.
+#define unreachable() __builtin_unreachable()
+
+// Allocate the amount given by size on the stack.
+inline void* stack_allocate(size_t size) {
+    return __builtin_alloc(size);
+}
+
+// Allocate the amount given by size and aligned by alignment on the stack.
+inline void* stack_allocate_aligned(size_t size, size_t alignment) {
+    return __builtin_alloca_with_align(size, alignment);
+}
