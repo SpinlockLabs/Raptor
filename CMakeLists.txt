@@ -3,6 +3,7 @@ project(raptor C)
 
 enable_language(ASM)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
 
 set(RAPTOR_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 include(${RAPTOR_DIR}/build/cmake/liblox.cmake)
