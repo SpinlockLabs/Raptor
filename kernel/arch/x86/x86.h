@@ -1,8 +1,10 @@
 #pragma once
 
+#include <stdint.h>
+
 // File defining common x86 structures.
 
-typedef struct {
+typedef struct regs {
     uint32_t gs, fs, es, ds;
     uint32_t edi, esi, ebp, esp, ebx, edx, ecx, eax;
     uint32_t int_no, err_code;
@@ -12,6 +14,5 @@ typedef struct {
 #define IRQ_CHAIN_SIZE 16
 #define IRQ_CHAIN_DEPTH 4
 
-typedef void (*irq_handler_t) (struct regs *);
-typedef int (*irq_handler_chain_t) (struct regs *);
-
+typedef void (*irq_handler_t) (regs_t *);
+typedef int (*irq_handler_chain_t) (regs_t *);

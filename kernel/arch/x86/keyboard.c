@@ -48,4 +48,3 @@ static int keyboard_callback(regs_t *regs) {
 void keyboard_init(void) {
     irq_add_handler(IRQ1, &keyboard_callback);
 }
-
