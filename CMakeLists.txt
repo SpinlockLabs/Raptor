@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.8)
 project(raptor)
 
 enable_language(ASM)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(RAPTOR_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 include(${RAPTOR_DIR}/build/cmake/liblox.cmake)
