@@ -4,7 +4,7 @@ project(raptor)
 enable_language(ASM)
 
 set(RAPTOR_DIR ${CMAKE_CURRENT_SOURCE_DIR})
-include(${RAPTOR_DIR}/build/cmake/libfuel.cmake)
+include(${RAPTOR_DIR}/build/cmake/liblox.cmake)
 
 include(${RAPTOR_DIR}/build/cmake/arch.cmake)
 file(GLOB ARCH_CMAKE_LISTS "${RAPTOR_DIR}/build/cmake/arch-*.cmake")
