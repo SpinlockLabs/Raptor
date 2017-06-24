@@ -1,11 +1,12 @@
-#include "entry.h"
 #include "gdt.h"
 #include "idt.h"
 #include "irq.h"
 #include "timer.h"
 #include "vga.h"
+#include "keyboard.h"
+#include "kcommon.h"
 
-void kernel_main(void) {
+used void kernel_main(void) {
     vga_init();
     vga_writestring("Raptor kernel\n");
 
@@ -23,10 +24,14 @@ void kernel_main(void) {
     vga_writestring("Keyboard Initialized\n");
 
     vga_writestring("Entering idle state\n");
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmissing-noreturn"
     // Let's idle, while continuously enabling interrupts.
     for (;;) {
         int_enable();
         asm("hlt");
     }
+#pragma clang diagnostic pop
 }
 

@@ -1,5 +1,6 @@
-#include "vga.h"
 #include <string.h>
+#include "vga.h"
+#include "io.h"
 
 static inline uint8_t vga_entry_color(enum vga_color fg, enum vga_color bg) {
     return fg | bg << 4;
@@ -44,11 +45,11 @@ void vga_setcolor(uint8_t color) {
 
 void vga_putentryat(char c, uint8_t color, size_t x, size_t y) {
     const size_t index = y * VGA_WIDTH + x;
-    vga_buffer[index] = vga_entry(c, color);
+    vga_buffer[index] = vga_entry((unsigned char) c, color);
 }
 
 void vga_cursor(uint8_t col, uint8_t row) {
-    uint16_t pos = (row * VGA_WIDTH) + col;
+    uint16_t pos = (uint16_t) ((row * VGA_WIDTH) + col);
 
     outb(0x3D4, 0x0F);
     outb(0x3D5, (uint8_t)(pos & 0xFF));
@@ -75,7 +76,7 @@ void vga_putchar(char c) {
             vga_nextrow();
         }
     }
-    vga_cursor(vga_column, vga_row);
+    vga_cursor((uint8_t) vga_column, (uint8_t) vga_row);
 }
 
 void vga_write(const char* data, size_t size) {
@@ -89,7 +90,7 @@ void vga_writestring(const char* data) {
 }
 
 void vga_writebyte(uint8_t b) {
-    char *s;
+    char *s = NULL;
     itoa(b, s, 16);
     vga_writestring(s);
     vga_writestring("\n");

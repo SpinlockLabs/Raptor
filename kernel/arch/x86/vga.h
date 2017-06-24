@@ -39,4 +39,3 @@ void vga_nextrow(void);
 void vga_putchar(char);
 void vga_write(const char*, size_t);
 void vga_writestring(const char*);
-

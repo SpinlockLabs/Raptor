@@ -1,11 +1,14 @@
+#include <kcommon.h>
+
 #include "timer.h"
 #include "io.h"
 #include "irq.h"
-#include <string.h>
 
 static uint32_t tick = 0;
 
 static int timer_callback(regs_t *regs) {
+    unused(regs);
+
     tick++;
     return 1;
 }
@@ -28,4 +31,3 @@ void timer_init(uint32_t freq) {
     outb(0x40, l);
     outb(0x40, h);
 }
-

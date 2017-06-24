@@ -2,19 +2,16 @@
 #include "irq.h"
 #include "io.h"
 #include "vga.h"
-#include "x86.h"
-#include <string.h>
-#include <stdbool.h>
 
 /**
  * Callback for keyboard interrupt(IRQ 1).
  */
 static int keyboard_callback(regs_t *regs) {
     char c = 0;
-    bool up = false;
+    bool up;
 
     c = inb(0x60);
-    up = c & 0x80;
+    up = (bool) (c & 0x80);
     if (up) {
         c ^= 0x80;
     }
@@ -32,8 +29,10 @@ static int keyboard_callback(regs_t *regs) {
                 case 0x36:
                     shift = !up;
                     break;
+                default: break;
             }
             break;
+        default: break;
     }
 
     /*char* cs;

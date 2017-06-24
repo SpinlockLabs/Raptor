@@ -22,5 +22,4 @@ void gdt_init(void);
 void gdt_set_gate(int32_t, uint32_t, uint32_t, uint8_t, uint8_t);
 
 // Reloads new segment registers.
-extern void gdt_flush();
-
+extern void gdt_flush(int);

@@ -28,6 +28,7 @@ void irq_rem_handler(size_t);
 static void irq_remap(void);
 void irq_ack(size_t);
 void irq_handler(regs_t *);
+void irq_init(void);
 
 extern void _irq0();
 extern void _irq1();

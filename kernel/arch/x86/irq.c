@@ -1,7 +1,7 @@
+#include <kcommon.h>
+
 #include "irq.h"
 #include "io.h"
-#include "vga.h"
-#include <stdint.h>
 
 #define PIC1 0x20
 #define PIC2 0xA0
@@ -151,7 +151,7 @@ void irq_ack(size_t irq) {
     outb(PIC1_CMD, 0x20);
 }
 
-void irq_handler(regs_t *r) {
+used void irq_handler(regs_t *r) {
     int_disable();
 
     if (r->int_no <= 47 && r->int_no >= 32) {
@@ -166,4 +166,3 @@ done:
     irq_ack(r->int_no - 32);
     int_resume();
 }
-

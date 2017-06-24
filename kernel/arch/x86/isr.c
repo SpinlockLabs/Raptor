@@ -1,5 +1,6 @@
 #include "isr.h"
 #include "vga.h"
+#include "idt.h"
 
 #define isr(i) idt_set_gate(i, (uint32_t)_isr##i, 0x08, 0x8E)
 
@@ -60,4 +61,3 @@ void fault_handler(regs_t *r) {
         // @TODO: Crash here...
     }
 }
-
