@@ -95,4 +95,3 @@ void vga_writebyte(uint8_t b) {
     vga_writestring(s);
     vga_writestring("\n");
 }
-

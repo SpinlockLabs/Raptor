@@ -1,29 +1,39 @@
+#include <kcommon.h>
+#include <lox-internal.h>
+#include <io.h>
+
 #include "gdt.h"
 #include "idt.h"
 #include "irq.h"
 #include "timer.h"
 #include "vga.h"
 #include "keyboard.h"
-#include "kcommon.h"
+
+void lox_output_string_vga(char* msg) {
+    vga_writestring(msg);
+}
+
+void (*lox_output_string_provider)(char*) = lox_output_string_vga;
 
 used void kernel_main(void) {
     vga_init();
-    vga_writestring("Raptor kernel\n");
+
+    puts("Raptor kernel\n");
 
     gdt_init();
-    vga_writestring("GDT Initialized\n");
+    puts("GDT Initialized\n");
     idt_init();
-    vga_writestring("IDT Initialized\n");
+    puts("IDT Initialized\n");
     isr_init();
-    vga_writestring("ISRs Initialized\n");
+    puts("ISRs Initialized\n");
     irq_init();
-    vga_writestring("IRQs Initialized\n");
+    puts("IRQs Initialized\n");
     timer_init(50);
-    vga_writestring("PIT Initialized\n");
+    puts("PIT Initialized\n");
     keyboard_init();
-    vga_writestring("Keyboard Initialized\n");
+    puts("Keyboard Initialized\n");
 
-    vga_writestring("Entering idle state\n");
+    puts("Entering idle state\n");
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmissing-noreturn"
@@ -34,4 +44,3 @@ used void kernel_main(void) {
     }
 #pragma clang diagnostic pop
 }
-

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <kcommon.h>
 #include <stdint.h>
 
 typedef struct {
@@ -9,12 +10,12 @@ typedef struct {
     uint8_t  access;      // Access flags, ring the segment can be used in.
     uint8_t  granularity;
     uint8_t  base_high;   // Last 8 bits of the base.
-} __attribute__((packed)) gdt_entry_t;
+} packed gdt_entry_t;
 
 typedef struct {
     uint16_t limit;       // Upper 16 bits of all selector limits.
     uint32_t base;        // Address of the first gdt_entry_t struct.
-} __attribute__((packed)) gdt_ptr_t;
+} packed gdt_ptr_t;
 
 gdt_entry_t gdt_entries[5];
 gdt_ptr_t gdt_ptr;
