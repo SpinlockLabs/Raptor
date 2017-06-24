@@ -45,8 +45,3 @@
 inline void* stack_allocate(size_t size) {
     return __builtin_alloc(size);
 }
-
-// Allocate the amount given by size and aligned by alignment on the stack.
-inline void* stack_allocate_aligned(size_t size, size_t alignment) {
-    return __builtin_alloca_with_align(size, alignment);
-}

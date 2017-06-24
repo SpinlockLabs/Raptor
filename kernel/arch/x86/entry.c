@@ -25,6 +25,9 @@ used noreturn void kernel_main(void) {
 
     puts("Raptor kernel\n");
 
+    unsigned int a, b, c, d = 0;
+    get_cpuid(&a, &b, &c, &d);
+
     gdt_init();
     puts("GDT Initialized\n");
     idt_init();
