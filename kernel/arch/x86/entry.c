@@ -13,9 +13,14 @@ void lox_output_string_vga(char* msg) {
     vga_writestring(msg);
 }
 
-void (*lox_output_string_provider)(char*) = lox_output_string_vga;
+void lox_output_char_vga(char c) {
+    vga_putchar(c);
+}
 
-used void kernel_main(void) {
+void (*lox_output_string_provider)(char*) = lox_output_string_vga;
+void (*lox_output_char_provider)(char) = lox_output_char_vga;
+
+used noreturn void kernel_main(void) {
     vga_init();
 
     puts("Raptor kernel\n");
@@ -35,12 +40,8 @@ used void kernel_main(void) {
 
     puts("Entering idle state\n");
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wmissing-noreturn"
-    // Let's idle, while continuously enabling interrupts.
     for (;;) {
         int_enable();
         asm("hlt");
     }
-#pragma clang diagnostic pop
 }
