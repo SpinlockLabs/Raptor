@@ -43,5 +43,5 @@
 
 // Allocate the amount given by size on the stack.
 inline void* stack_allocate(size_t size) {
-    return __builtin_alloc(size);
+    return __builtin_alloca(size);
 }
