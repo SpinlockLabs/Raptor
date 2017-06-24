@@ -5,7 +5,6 @@
 #include "gdt.h"
 #include "idt.h"
 #include "irq.h"
-#include "string.h"
 #include "timer.h"
 #include "vga.h"
 #include "keyboard.h"
@@ -26,8 +25,8 @@ used noreturn void kernel_main(void) {
 
     puts("Raptor kernel\n");
 
-    uint32_t ebx, unused;
-    get_cpuid(0, &ebx, 0, 0);
+    uint32_t ebx;
+    get_cpuid(0, 0, &ebx, 0, 0);
     if (ebx == 0x756e6547) {
         puts("Intel\n");
     } else if (ebx == 0x68747541) {
