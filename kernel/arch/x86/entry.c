@@ -1,5 +1,4 @@
 #include <kcommon.h>
-#include <lox-internal.h>
 #include <io.h>
 
 #include "gdt.h"
@@ -18,23 +17,27 @@ void lox_output_char_vga(char c) {
 void (*lox_output_string_provider)(char*) = lox_output_string_vga;
 void (*lox_output_char_provider)(char) = lox_output_char_vga;
 
-used noreturn void kernel_main(void) {
+used void kernel_main(void) {
     vga_init();
 
-    puts("Raptor kernel\n");
+    puts(INFO "Raptor kernel\n");
 
     uint32_t ebx;
     get_cpuid(0, 0, &ebx, 0, 0);
     if (ebx == 0x756e6547) {
-        puts("Intel\n");
+        puts(INFO "Processor Type: Intel\n");
     } else if (ebx == 0x68747541) {
-        puts("AMD\n");
+        puts(INFO "Processor Type: AMD\n");
     }
 
-    puts("Entering protected mode. See you on the other side!\n");
+    puts(DEBUG "Entering protected mode. See you on the other side!\n");
     enter_protected_mode();
 }
 
-used void kernel_protected_main(void) {
-    puts("Hello from protected mode!\n");
+used noreturn void kernel_protected_main(void) {
+    puts(DEBUG "Hello from protected mode!\n");
+
+    while (1) {
+        asm ("nop");
+    }
 }
