@@ -25,7 +25,6 @@ void int_resume(void);
 void int_enable(void);
 void irq_add_handler(size_t, irq_handler_chain_t);
 void irq_rem_handler(size_t);
-static void irq_remap(void);
 void irq_ack(size_t);
 void irq_handler(regs_t *);
 void irq_init(void);

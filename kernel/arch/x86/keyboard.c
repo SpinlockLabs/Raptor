@@ -16,15 +16,16 @@ static int keyboard_callback(regs_t *regs) {
         c ^= 0x80;
     }
 
-    char kt = key_types[c];
+    unsigned int idx = (unsigned int) c;
+    char kt = key_types[idx];
     switch (kt) {
         case N:
             if (!up) {
-                vga_putchar((shift ? kb_usu[c] : kb_usl[c]));
+                vga_putchar((shift ? kb_usu[idx] : kb_usl[idx]));
             }
             break;
         case S:
-            switch (c) {
+            switch (idx) {
                 case 0x2a:
                 case 0x36:
                     shift = !up;
