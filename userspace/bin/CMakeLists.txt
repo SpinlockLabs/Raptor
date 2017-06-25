@@ -9,6 +9,8 @@ function(add_tool EXE SRCFILES)
   endforeach()
   add_executable(${EXE} ${SOURCE_FULL})
   add_dependencies(${EXE} lox)
+  target_link_libraries(${EXE} lox)
+  target_include_directories(${EXE} PRIVATE ${RAPTOR_DIR})
 endfunction()
 
 foreach(TOOL_LIST ${TOOL_LISTS})
