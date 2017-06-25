@@ -10,8 +10,14 @@ include(${RAPTOR_DIR}/build/cmake/liblox.cmake)
 include(${RAPTOR_DIR}/build/cmake/kernel-common.cmake)
 
 include(${RAPTOR_DIR}/build/cmake/arch.cmake)
-file(GLOB ARCH_CMAKE_LISTS "${RAPTOR_DIR}/build/cmake/arch-*.cmake")
 
-foreach(ARCH_CMAKE_LIST ${ARCH_CMAKE_LISTS})
-  include(${ARCH_CMAKE_LIST})
-endforeach()
+if(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm")
+  if(NOT DEFINED ARM_TARGET)
+    message(FATAL_ERROR "ARM toolchain detected. Please specify an ARM target via -DARM_TARGET={target}.")
+  endif()
+  include(${RAPTOR_DIR}/build/cmake/arch-arm-${ARM_TARGET}.cmake)
+else()
+  include(${RAPTOR_DIR}/build/cmake/arch-x86.cmake)
+endif()
+
+add_subdirectory(userspace)

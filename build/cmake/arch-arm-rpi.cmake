@@ -1,7 +1,6 @@
-raptor_add_arch("arm-rpi" "arch/arm/rpi")
+raptor_set_arch("arm-rpi" "arch/arm/rpi")
 
 raptor_set_arch_cflags(
-        "arm-rpi"
         "-Wall \
         -std=gnu11 \
         -mcpu=arm1176jzf-s \
@@ -12,7 +11,6 @@ raptor_set_arch_cflags(
 )
 
 raptor_set_arch_ldflags(
-        "arm-rpi"
         "-nostartfiles \
         -mcpu=arm1176jzf-s \
         -Wno-unused-command-line-argument \
@@ -21,13 +19,11 @@ raptor_set_arch_ldflags(
         -T${KERNEL_DIR}/arch/arm/rpi/linker.ld"
 )
 
-if(BUILD_ARCH_arm-rpi)
-    add_custom_target(qemu-arm-rpi
-            COMMAND "qemu-system-arm"
-              "-kernel" "${CMAKE_BINARY_DIR}/raptor-arm-rpi.bin"
-              "-m" "256"
-              "-M" "raspi2"
-              "-serial" "stdio"
-            DEPENDS raptor-arm-rpi.bin
-    )
-endif()
+add_custom_target(qemu-arm-rpi
+        COMMAND "qemu-system-arm"
+          "-kernel" "${CMAKE_BINARY_DIR}/raptor.bin"
+          "-m" "256"
+          "-M" "raspi2"
+          "-serial" "stdio"
+        DEPENDS raptor.bin
+)

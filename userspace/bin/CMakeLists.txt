@@ -1,0 +1,16 @@
+file(GLOB_RECURSE TOOL_LISTS RELATIVE "${CMAKE_CURRENT_LIST_DIR}" "*.tool.cmake")
+
+function(add_tool EXE SRCFILES)
+  set(SOURCE_LIST ${ARGV})
+  list(REMOVE_AT SOURCE_LIST 0)
+  set(SOURCE_FULL)
+  foreach(SRC ${SOURCE_LIST})
+    list(APPEND SOURCE_FULL "${CMAKE_CURRENT_LIST_DIR}/${SRC}")
+  endforeach()
+  add_executable(${EXE} ${SOURCE_FULL})
+  add_dependencies(${EXE} lox)
+endfunction()
+
+foreach(TOOL_LIST ${TOOL_LISTS})
+  include(${TOOL_LIST})
+endforeach()

@@ -1,7 +1,6 @@
-raptor_add_arch("x86" "arch/x86")
+raptor_set_arch("x86" "arch/x86")
 
 raptor_set_arch_cflags(
-        "x86"
         "-Wall \
         -std=gnu11 \
         -ffreestanding \
@@ -11,7 +10,6 @@ raptor_set_arch_cflags(
 )
 
 raptor_set_arch_ldflags(
-  "x86"
   "-nostartfiles \
   -Wno-unused-command-line-argument \
   -ffreestanding \
@@ -20,8 +18,6 @@ raptor_set_arch_ldflags(
   -m32"
 )
 
-if(BUILD_ARCH_x86)
-    add_custom_target(qemu-x86
-            COMMAND qemu-system-i386 -kernel ${CMAKE_BINARY_DIR}/raptor-x86.bin -cpu core2duo
-            DEPENDS raptor-x86.bin)
-endif()
+add_custom_target(qemu-x86
+        COMMAND qemu-system-i386 -kernel ${CMAKE_BINARY_DIR}/raptor.bin -cpu core2duo
+        DEPENDS raptor.bin)
