@@ -19,7 +19,7 @@ raptor_set_arch_ldflags(
         -T${KERNEL_DIR}/arch/arm/rpi/linker.ld"
 )
 
-add_custom_target(qemu-arm-rpi
+add_custom_target(qemu
         COMMAND "qemu-system-arm"
           "-kernel" "${CMAKE_BINARY_DIR}/raptor.bin"
           "-m" "256"

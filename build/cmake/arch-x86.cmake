@@ -18,6 +18,6 @@ raptor_set_arch_ldflags(
   -m32"
 )
 
-add_custom_target(qemu-x86
+add_custom_target(qemu
         COMMAND qemu-system-i386 -kernel ${CMAKE_BINARY_DIR}/raptor.bin -cpu core2duo
         DEPENDS raptor.bin)
