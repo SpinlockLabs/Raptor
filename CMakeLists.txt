@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.8)
 project(raptor C)
+option(OPTIMIZE_LTO "Enable Link-Time Optimization" OFF)
 
 enable_language(ASM)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -11,6 +12,10 @@ cflags(
   -std=gnu11
   -pipe
 )
+
+if(OPTIMIZE_LTO)
+  cflags(-flto)
+endif()
 
 set(RAPTOR_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
