@@ -14,7 +14,12 @@ foreach(SUBDIR ${KERNEL_SUBDIRS})
   endif()
 endforeach()
 
-set(KERNEL_COMMON_SRC)
+file(GLOB KERNEL_COMMON_SRC
+  "${KERNEL_DIR}/*.c"
+  "${KERNEL_DIR}/*.h"
+  "${KERNEL_DIR}/*.cpp"
+  "${KERNEL_DIR}/*.hpp"
+)
 
 foreach(COMMON_TYPE ${KERNEL_COMMON_TYPES})
   file(GLOB_RECURSE COMMON_TYPE_SRC
