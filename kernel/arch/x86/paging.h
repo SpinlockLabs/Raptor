@@ -1,15 +1,16 @@
 #pragma once
+
 #include "isr.h"
 #include <stdbool.h>
 
 typedef struct {
-    uint32_t present  : 1;  // Page present in memory
-    uint32_t rw       : 1;  // Read-write if set
-    uint32_t user     : 1;  // Kernel-mode if set
+    uint32_t present : 1;  // Page present in memory
+    uint32_t rw : 1;  // Read-write if set
+    uint32_t user : 1;  // Kernel-mode if set
     uint32_t accessed : 1;  // Page been accessed since last refresh
-    uint32_t dirty    : 1;  // Page been written to since last refresh
-    uint32_t unused   : 7;  // Unused and reserved bits
-    uint32_t frame    : 20; // Frame address - shifted right 12 bits
+    uint32_t dirty : 1;  // Page been written to since last refresh
+    uint32_t unused : 7;  // Unused and reserved bits
+    uint32_t frame : 20; // Frame address - shifted right 12 bits
 } page_t;
 
 typedef struct {
@@ -41,7 +42,7 @@ typedef struct {
 /**
  * Initializes the page table and enables it.
  */
-void paging_init();
+void paging_init(void);
 
 /**
  * Loads a specific page into the CR3 register.
@@ -56,5 +57,5 @@ page_t *paging_get_page(uint32_t, int, page_directory_t *);
 /**
  * Page fault handler.
  */
-void paging_fault(regs_t *regs);
+void page_fault(regs_t regs);
 
