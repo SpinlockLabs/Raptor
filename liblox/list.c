@@ -1,18 +1,38 @@
+#include "kcommon.h"
 #include "list.h"
 #include "string.h"
 
 void list_init_node(list_node *node) {
-    memset(node, 0, sizeof list_node);
+    memset(node, 0, sizeof(list_node));
+}
+
+void list_init(list *list) {
+    memset(list, 0, sizeof(list));
 }
 
 list_node* list_create_node(void) {
-    list_node *node = malloc(sizeof list_node);
+    list_node *node = malloc(sizeof(list_node));
+
+    ensure_allocated(node);
+
     list_init_node(node);
     return node;
 }
 
+list* list_create(void) {
+    list *list = malloc(sizeof(list));
+
+    ensure_allocated(list);
+
+    list_init(list);
+    return list;
+}
+
 list_node* list_insert_after(list_node *node, void *value) {
     list_node *entry = list_create_node();
+
+    ensure_allocated(entry);
+
     entry->value = value;
 
     list_node *tmp = node->next;
@@ -29,6 +49,9 @@ list_node* list_insert_after(list_node *node, void *value) {
 
 list_node* list_add(list *list, void *value) {
     list_node *entry = list_create_node();
+
+    ensure_allocated(entry);
+
     entry->value = value;
 
     if (list->head == NULL) {
@@ -41,12 +64,15 @@ list_node* list_add(list *list, void *value) {
     while (current->next != NULL) {
         current = current->next;
     }
-    current->next = entry;
+    list_insert_after(current, entry);
     return entry;
 }
 
 list_node* list_insert_before(list_node *node, void *value) {
     list_node *entry = list_create_node();
+
+    ensure_allocated(entry);
+
     entry->value = value;
 
     list_node *tmp = node->prev;
@@ -65,6 +91,8 @@ void list_remove(list_node *node) {
     node->prev = node->next;
 
     if (node->list != NULL) {
-        node->list->size-;
+        node->list->size--;
     }
+
+    free(node);
 }

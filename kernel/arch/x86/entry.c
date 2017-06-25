@@ -35,6 +35,6 @@ used noreturn void kernel_main(void) {
     enter_protected_mode();
 }
 
-used noreturn void kernel_protected_main(void) {
+used void kernel_protected_main(void) {
     puts("Hello from protected mode!\n");
 }

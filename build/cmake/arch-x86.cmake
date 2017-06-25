@@ -3,7 +3,6 @@ raptor_add_arch("x86" "kernel/arch/x86")
 raptor_set_arch_cflags(
         "x86"
         "-Wall \
-        -no-integrated-as \
         -std=gnu11 \
         -ffreestanding \
         -O2 \
@@ -14,7 +13,6 @@ raptor_set_arch_cflags(
 raptor_set_arch_ldflags(
   "x86"
   "-nostartfiles \
-  -no-integrated-as \
   -Wno-unused-command-line-argument \
   -ffreestanding \
   -O2 \

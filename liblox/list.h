@@ -16,8 +16,12 @@ typedef struct list {
     size_t size;
 } list;
 
+void list_init(list *list);
 void list_init_node(list_node *node);
+
+list* list_create(void);
 list_node* list_create_node(void);
+
 list_node* list_insert_after(list_node *node, void *value);
 list_node* list_insert_before(list_node *node, void *value);
 list_node* list_add(list *list, void *value);

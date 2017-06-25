@@ -2,4 +2,4 @@
 
 void enter_protected_mode(void);
 
-extern protected_mode_jump(void);
+extern void protected_mode_jump(void);
