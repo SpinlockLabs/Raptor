@@ -4,10 +4,14 @@
 #include "gdt.h"
 #include "idt.h"
 #include "irq.h"
+#include "keyboard.h"
 #include "timer.h"
 #include "vga.h"
 #include "keyboard.h"
 #include "userspace.h"
+
+const uint32_t kProcessorIdIntel = 0x756e6547;
+const uint32_t kProcessorIdAMD = 0x68747541;
 
 void lox_output_string_vga(char* msg) {
     vga_writestring(msg);
@@ -25,12 +29,14 @@ used void kernel_main(void) {
 
     puts(INFO "Raptor kernel\n");
 
-    uint32_t ebx;
+    uint32_t ebx = 0;
     get_cpuid(0, 0, &ebx, 0, 0);
-    if (ebx == 0x756e6547) {
+    if (ebx == kProcessorIdIntel) {
         puts(INFO "Processor Type: Intel\n");
-    } else if (ebx == 0x68747541) {
+    } else if (ebx == kProcessorIdAMD) {
         puts(INFO "Processor Type: AMD\n");
+    } else {
+        puts(INFO "Processor Type: Unknown\n");
     }
 
     gdt_init();

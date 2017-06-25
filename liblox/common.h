@@ -41,9 +41,8 @@
 // Specifies that the location in the program is unreachable.
 #define unreachable() __builtin_unreachable()
 
+// Checks if x is null, and if it is, returns null.
 #define ensure_allocated(x) if ((x) == NULL) return NULL
 
 // Allocate the amount given by size on the stack.
-inline void* stack_allocate(size_t size) {
-    return __builtin_alloca(size);
-}
+#define stack_allocate(size) __builtin_alloca(size)

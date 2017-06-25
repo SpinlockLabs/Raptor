@@ -1,8 +1,8 @@
 #include <liblox/common.h>
 
-#include "timer.h"
 #include "io.h"
 #include "irq.h"
+#include "timer.h"
 
 static uint32_t tick = 0;
 
