@@ -1,8 +1,8 @@
 #include <liblox/common.h>
 
 #include "idt.h"
-#include "irq.h"
 #include "io.h"
+#include "irq.h"
 
 #define PIC1 0x20
 #define PIC2 0xA0

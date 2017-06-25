@@ -1,5 +1,5 @@
-#include "memory.h"
 #include "lox-internal.h"
+#include "memory.h"
 
 void* malloc(size_t size) {
     if (lox_allocate_provider != NULL) {

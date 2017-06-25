@@ -1,7 +1,7 @@
 #pragma once
 
-#include <stdint.h>
 #include <cpuid.h>
+#include <stdint.h>
 
 #define cpu_equals(name) __builtin_cpu_is(name)
 #define cpu_supports(feature) __builtin_cpu_supports(feature)

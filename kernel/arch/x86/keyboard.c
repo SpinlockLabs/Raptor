@@ -1,12 +1,16 @@
-#include "keyboard.h"
-#include "irq.h"
+#include <liblox/common.h>
+
 #include "io.h"
+#include "irq.h"
+#include "keyboard.h"
 #include "vga.h"
 
 /**
  * Callback for keyboard interrupt(IRQ 1).
  */
 static int keyboard_callback(regs_t *regs) {
+    unused(regs);
+
     char c = 0;
     bool up;
 
