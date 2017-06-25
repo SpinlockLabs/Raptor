@@ -11,6 +11,7 @@ cflags(
   -Wall
   -std=gnu11
   -pipe
+  -fno-builtin
 )
 
 if(OPTIMIZE_LTO)
