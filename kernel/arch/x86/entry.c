@@ -33,17 +33,17 @@ used void kernel_main(void) {
     }
 
     gdt_init();
-    puts("GDT Initialized\n");
+    puts(DEBUG "GDT Initialized\n");
     idt_init();
-    puts("IDT Initialized\n");
+    puts(DEBUG "IDT Initialized\n");
     isr_init();
-    puts("ISRs Initialized\n");
+    puts(DEBUG "ISRs Initialized\n");
     irq_init();
-    puts("IRQs Initialized\n");
+    puts(DEBUG "IRQs Initialized\n");
     timer_init(50);
-    puts("PIT Initialized\n");
+    puts(DEBUG "PIT Initialized\n");
     keyboard_init();
-    puts("Keyboard Initialized\n");
+    puts(DEBUG "Keyboard Initialized\n");
 
     puts("Entering idle state\n");
 
