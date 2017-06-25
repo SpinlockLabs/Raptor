@@ -46,3 +46,9 @@
 
 // Allocate the amount given by size on the stack.
 #define stack_allocate(size) __builtin_alloca(size)
+
+// Allows you to use case ranges.
+#define case_range(a, b) case a ... b
+
+// Computes the offset of the given member in the given type.
+#define offset_of_member(type, member) __builtin_offsetof(type, member)

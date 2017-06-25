@@ -14,3 +14,8 @@ function(ldflags)
   endforeach()
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${ARGLIST}" PARENT_SCOPE)
 endfunction()
+
+if(CMAKE_C_COMPILER_ID MATCHES "Clang")
+  set(CLANG ON)
+  cflags(-no-integrated-as -O0)
+endif()

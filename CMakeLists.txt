@@ -9,6 +9,7 @@ include(build/cmake/common.cmake)
 cflags(
   -Wall
   -std=gnu11
+  -pipe
 )
 
 set(RAPTOR_DIR ${CMAKE_CURRENT_SOURCE_DIR})
