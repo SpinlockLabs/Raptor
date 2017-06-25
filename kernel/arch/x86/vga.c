@@ -87,6 +87,9 @@ void vga_write(const char* data, size_t size) {
 }
 
 void vga_writestring(const char* data) {
+    if (data == NULL) {
+        return;
+    }
     vga_write(data, strlen(data));
 }
 

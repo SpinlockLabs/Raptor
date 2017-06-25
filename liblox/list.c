@@ -11,7 +11,7 @@ void list_init(list *list) {
 }
 
 list_node* list_create_node(void) {
-    list_node *node = malloc(sizeof(list_node));
+    list_node *node = (list_node*) malloc(sizeof(list_node));
 
     ensure_allocated(node);
 
@@ -20,12 +20,12 @@ list_node* list_create_node(void) {
 }
 
 list* list_create(void) {
-    list *list = malloc(sizeof(list));
+    list *val = (list*) malloc(sizeof(list));
 
-    ensure_allocated(list);
+    ensure_allocated(val);
 
-    list_init(list);
-    return list;
+    list_init(val);
+    return val;
 }
 
 list_node* list_insert_after(list_node *node, void *value) {
