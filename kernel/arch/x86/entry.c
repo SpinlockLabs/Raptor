@@ -2,9 +2,11 @@
 #include <io.h>
 
 #include "gdt.h"
+#include "idt.h"
 #include "irq.h"
-#include "pm.h"
+#include "timer.h"
 #include "vga.h"
+#include "keyboard.h"
 
 void lox_output_string_vga(char* msg) {
     vga_writestring(msg);
@@ -30,14 +32,23 @@ used void kernel_main(void) {
         puts(INFO "Processor Type: AMD\n");
     }
 
-    puts(DEBUG "Entering protected mode. See you on the other side!\n");
-    enter_protected_mode();
-}
+    gdt_init();
+    puts("GDT Initialized\n");
+    idt_init();
+    puts("IDT Initialized\n");
+    isr_init();
+    puts("ISRs Initialized\n");
+    irq_init();
+    puts("IRQs Initialized\n");
+    timer_init(50);
+    puts("PIT Initialized\n");
+    keyboard_init();
+    puts("Keyboard Initialized\n");
 
-used noreturn void kernel_protected_main(void) {
-    puts(DEBUG "Hello from protected mode!\n");
+    puts("Entering idle state\n");
 
-    while (1) {
-        asm ("nop");
+    for (;;) {
+        int_enable();
+        asm("hlt");
     }
 }
