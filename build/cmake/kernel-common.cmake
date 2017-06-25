@@ -1,7 +1,29 @@
-file(GLOB_RECURSE KERNEL_COMMON_SRC
-  "${RAPTOR_DIR}/kernel/common/*.c"
-  "${RAPTOR_DIR}/kernel/common/*.h"
-  "${RAPTOR_DIR}/kernel/common/*.s"
-  "${RAPTOR_DIR}/kernel/common/*.cpp"
-  "${RAPTOR_DIR}/kernel/common/*.hpp"
+set(KERNEL_DIR "${RAPTOR_DIR}/kernel")
+set(KERNEL_COMMON_TYPES "")
+
+file(GLOB KERNEL_SUBDIRS RELATIVE
+  "${KERNEL_DIR}"
+  "${KERNEL_DIR}/*"
 )
+
+foreach(SUBDIR ${KERNEL_SUBDIRS})
+  if (IS_DIRECTORY "${KERNEL_DIR}/${SUBDIR}")
+    if(NOT SUBDIR STREQUAL "arch")
+      list(APPEND KERNEL_COMMON_TYPES ${SUBDIR})
+    endif()
+  endif()
+endforeach()
+
+set(KERNEL_COMMON_SRC)
+
+foreach(COMMON_TYPE ${KERNEL_COMMON_TYPES})
+  file(GLOB_RECURSE COMMON_TYPE_SRC
+    "${KERNEL_DIR}/${COMMON_TYPE}/*.c"
+    "${KERNEL_DIR}/${COMMON_TYPE}/*.h"
+    "${KERNEL_DIR}/${COMMON_TYPE}/*.s"
+    "${KERNEL_DIR}/${COMMON_TYPE}/*.cpp"
+    "${KERNEL_DIR}/${COMMON_TYPE}/*.hpp"
+  )
+
+  list(APPEND KERNEL_COMMON_SRC ${COMMON_TYPE_SRC})
+endforeach()

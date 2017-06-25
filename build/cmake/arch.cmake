@@ -2,11 +2,11 @@ function(raptor_add_arch ARCH SRC_DIR)
   option(BUILD_ARCH_${ARCH} "Build the ${ARCH} architecture" NO)
   if(BUILD_ARCH_${ARCH})
     file(GLOB_RECURSE ARCH_SRC
-      "${RAPTOR_DIR}/${SRC_DIR}/*.c"
-      "${RAPTOR_DIR}/${SRC_DIR}/*.h"
-      "${RAPTOR_DIR}/${SRC_DIR}/*.s"
-      "${RAPTOR_DIR}/${SRC_DIR}/*.cpp"
-      "${RAPTOR_DIR}/${SRC_DIR}/*.hpp"
+      "${KERNEL_DIR}/${SRC_DIR}/*.c"
+      "${KERNEL_DIR}/${SRC_DIR}/*.h"
+      "${KERNEL_DIR}/${SRC_DIR}/*.s"
+      "${KERNEL_DIR}/${SRC_DIR}/*.cpp"
+      "${KERNEL_DIR}/${SRC_DIR}/*.hpp"
     )
 
     set(KERNEL_NAME "raptor-${ARCH}.bin")

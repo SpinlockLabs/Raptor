@@ -1,4 +1,4 @@
-raptor_add_arch("x86" "kernel/arch/x86")
+raptor_add_arch("x86" "arch/x86")
 
 raptor_set_arch_cflags(
         "x86"
@@ -16,7 +16,7 @@ raptor_set_arch_ldflags(
   -Wno-unused-command-line-argument \
   -ffreestanding \
   -O2 \
-  -T${RAPTOR_DIR}/kernel/arch/x86/linker.ld \
+  -T${KERNEL_DIR}/arch/x86/linker.ld \
   -m32"
 )
 

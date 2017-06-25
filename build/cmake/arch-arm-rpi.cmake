@@ -1,4 +1,4 @@
-raptor_add_arch("arm-rpi" "kernel/arch/arm/rpi")
+raptor_add_arch("arm-rpi" "arch/arm/rpi")
 
 raptor_set_arch_cflags(
         "arm-rpi"
@@ -18,7 +18,7 @@ raptor_set_arch_ldflags(
         -Wno-unused-command-line-argument \
         -ffreestanding \
         -O2 \
-        -T${RAPTOR_DIR}/kernel/arch/arm/rpi/linker.ld"
+        -T${KERNEL_DIR}/arch/arm/rpi/linker.ld"
 )
 
 if(BUILD_ARCH_arm-rpi)
