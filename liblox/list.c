@@ -2,16 +2,16 @@
 #include "list.h"
 #include "string.h"
 
-void list_init_node(list_node *node) {
-    memset(node, 0, sizeof(list_node));
+void list_init_node(list_node_t *node) {
+    memset(node, 0, sizeof(list_node_t));
 }
 
-void list_init(list *list) {
-    memset(list, 0, sizeof(list));
+void list_init(list_t *list) {
+    memset(list, 0, sizeof(list_t));
 }
 
-list_node* list_create_node(void) {
-    list_node *node = (list_node*) malloc(sizeof(list_node));
+list_node_t* list_create_node(void) {
+    list_node_t *node = (list_node_t*) malloc(sizeof(list_node_t));
 
     ensure_allocated(node);
 
@@ -19,8 +19,8 @@ list_node* list_create_node(void) {
     return node;
 }
 
-list* list_create(void) {
-    list *val = (list*) malloc(sizeof(list));
+list_t* list_create(void) {
+    list_t *val = (list_t*) malloc(sizeof(list_t));
 
     ensure_allocated(val);
 
@@ -28,14 +28,14 @@ list* list_create(void) {
     return val;
 }
 
-list_node* list_insert_after(list_node *node, void *value) {
-    list_node *entry = list_create_node();
+list_node_t* list_insert_after(list_node_t *node, void *value) {
+    list_node_t *entry = list_create_node();
 
     ensure_allocated(entry);
 
     entry->value = value;
 
-    list_node *tmp = node->next;
+    list_node_t *tmp = node->next;
     node->next = entry;
     entry->prev = node;
     entry->next = tmp;
@@ -47,8 +47,8 @@ list_node* list_insert_after(list_node *node, void *value) {
     return entry;
 }
 
-list_node* list_add(list *list, void *value) {
-    list_node *entry = list_create_node();
+list_node_t* list_add(list_t *list, void *value) {
+    list_node_t *entry = list_create_node();
 
     ensure_allocated(entry);
 
@@ -60,7 +60,7 @@ list_node* list_add(list *list, void *value) {
         return entry;
     }
 
-    list_node *current = list->head;
+    list_node_t *current = list->head;
     while (current->next != NULL) {
         current = current->next;
     }
@@ -68,14 +68,14 @@ list_node* list_add(list *list, void *value) {
     return entry;
 }
 
-list_node* list_insert_before(list_node *node, void *value) {
-    list_node *entry = list_create_node();
+list_node_t* list_insert_before(list_node_t *node, void *value) {
+    list_node_t *entry = list_create_node();
 
     ensure_allocated(entry);
 
     entry->value = value;
 
-    list_node *tmp = node->prev;
+    list_node_t *tmp = node->prev;
     node->prev = entry;
     entry->prev = tmp;
     entry->next = node;
@@ -87,7 +87,7 @@ list_node* list_insert_before(list_node *node, void *value) {
     return entry;
 }
 
-void list_remove(list_node *node) {
+void list_remove(list_node_t *node) {
     node->prev = node->next;
 
     if (node->list != NULL) {
