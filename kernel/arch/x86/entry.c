@@ -5,10 +5,10 @@
 #include "idt.h"
 #include "irq.h"
 #include "keyboard.h"
+#include "paging.h"
 #include "timer.h"
-#include "vga.h"
-#include "keyboard.h"
 #include "userspace.h"
+#include "vga.h"
 
 const uint32_t kProcessorIdIntel = 0x756e6547;
 const uint32_t kProcessorIdAMD = 0x68747541;
@@ -49,12 +49,14 @@ used void kernel_main(void) {
     puts(DEBUG "IRQs Initialized\n");
     timer_init(50);
     puts(DEBUG "PIT Initialized\n");
+    paging_init();
+    puts(DEBUG "Paging Initialized\n");
     keyboard_init();
     puts(DEBUG "Keyboard Initialized\n");
 
     puts(DEBUG "Entering idle state\n");
 
-    userspace_jump(NULL, 0xB0000000);
+    //userspace_jump(NULL, 0xB0000000);
 
     /*for (;;) {
         int_enable();
