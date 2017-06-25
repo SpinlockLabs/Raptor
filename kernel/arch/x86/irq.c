@@ -1,4 +1,4 @@
-#include <kcommon.h>
+#include <liblox/common.h>
 
 #include "idt.h"
 #include "irq.h"

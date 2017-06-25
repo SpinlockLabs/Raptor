@@ -1,4 +1,5 @@
-#include <string.h>
+#include <liblox/string.h>
+
 #include "vga.h"
 #include "io.h"
 

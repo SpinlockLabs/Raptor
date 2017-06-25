@@ -1,5 +1,5 @@
-#include <kcommon.h>
-#include <io.h>
+#include <liblox/common.h>
+#include <liblox/io.h>
 
 #include "gdt.h"
 #include "idt.h"

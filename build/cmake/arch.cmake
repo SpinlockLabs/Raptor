@@ -12,6 +12,7 @@ function(raptor_add_arch ARCH SRC_DIR)
     set(KERNEL_NAME "raptor-${ARCH}.bin")
     add_executable(${KERNEL_NAME} ${ARCH_SRC} ${KERNEL_COMMON_SRC})
     raptor_add_liblox(${ARCH})
+    target_include_directories(${KERNEL_NAME} BEFORE PRIVATE ${RAPTOR_DIR})
   endif()
 endfunction()
 

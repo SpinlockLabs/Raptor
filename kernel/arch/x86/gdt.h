@@ -1,6 +1,6 @@
 #pragma once
 
-#include <kcommon.h>
+#include <liblox/common.h>
 #include <stdint.h>
 
 typedef struct {
