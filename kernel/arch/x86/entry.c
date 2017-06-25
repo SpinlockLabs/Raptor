@@ -7,6 +7,7 @@
 #include "timer.h"
 #include "vga.h"
 #include "keyboard.h"
+#include "userspace.h"
 
 void lox_output_string_vga(char* msg) {
     vga_writestring(msg);
@@ -45,10 +46,12 @@ used void kernel_main(void) {
     keyboard_init();
     puts(DEBUG "Keyboard Initialized\n");
 
-    puts("Entering idle state\n");
+    puts(DEBUG "Entering idle state\n");
 
-    for (;;) {
+    userspace_jump(NULL, 0xB0000000);
+
+    /*for (;;) {
         int_enable();
         asm("hlt");
-    }
+    }*/
 }
