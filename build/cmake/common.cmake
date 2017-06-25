@@ -17,8 +17,4 @@ endfunction()
 
 if(CMAKE_C_COMPILER_ID MATCHES "Clang")
   set(CLANG ON)
-  cflags(-O0)
-  if(NOT OPTIMIZE_LTO)
-    cflags(-fno-integrated-as)
-  endif()
 endif()

@@ -2,12 +2,7 @@ arch("x86" "arch/x86")
 option(OPTIMIZE_NATIVE "Optimize for the native machine." OFF)
 
 cflags(
-  -nostartfiles
-  -Wall
-  -std=gnu11
-  -ffreestanding
   -m32
-  -Wno-unused-command-line-argument
 )
 
 if(CLANG)

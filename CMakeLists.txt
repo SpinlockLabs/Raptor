@@ -12,7 +12,16 @@ cflags(
   -std=gnu11
   -pipe
   -fno-builtin
+  -nostartfiles
+  -ffreestanding
 )
+
+if(CLANG)
+  cflags(-Wno-unused-command-line-argument -O0)
+  if(NOT OPTIMIZE_LTO)
+    cflags(-fno-integrated-as)
+  endif()
+endif()
 
 if(OPTIMIZE_LTO)
   cflags(-flto)
@@ -23,7 +32,7 @@ set(RAPTOR_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${RAPTOR_DIR})
 
 include(${RAPTOR_DIR}/build/cmake/liblox.cmake)
-include(${RAPTOR_DIR}/build/cmake/kernel-common.cmake)
+include(${RAPTOR_DIR}/build/cmake/kernel.cmake)
 include(${RAPTOR_DIR}/build/cmake/arch.cmake)
 
 if(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm")
