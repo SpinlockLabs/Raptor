@@ -26,14 +26,6 @@ _start:
     # Call the kernel entrypoint.
     call kernel_main
 
-    # Disable interrupts, if we get to this,
-    # the system has likely gone into a bad state.
-    cli
-
-    # Go into an infinite loop with hlt.
-1:  hlt
-    jmp 1b
-
 # Apply the new global descriptor table.
 .global gdt_flush
 gdt_flush:
@@ -58,5 +50,26 @@ idt_flush:
     lidt (%eax)
     ret
 
-.size _start, . - _start
+.code32
+.global protected_mode_jump
+.type protected_mode_jump, @function
+protected_mode_jump:
+    mov %cr0, %edx
+    or $1, %dl
+    mov %edx, %cr0
+    ljmp $0x08, $protected_mode_start
 
+.global protected_mode_start
+.type protected_mode_start, @function
+protected_mode_start:
+    call kernel_protected_main
+
+    # Disable interrupts, if we get to this,
+    # the system has likely gone into a bad state.
+    cli
+
+    # Go into an infinite loop with hlt.
+1:  hlt
+    jmp 1b
+
+.size _start, . - _start
