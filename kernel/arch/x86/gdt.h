@@ -1,5 +1,7 @@
 #pragma once
 
+#include "tss.h"
+
 #include <liblox/common.h>
 #include <stdint.h>
 
@@ -17,11 +19,15 @@ typedef struct {
     uint32_t base;        // Address of the first gdt_entry_t struct.
 } packed gdt_ptr_t;
 
-gdt_entry_t gdt_entries[5];
-gdt_ptr_t gdt_ptr;
+struct {
+    gdt_entry_t entries[6];
+    gdt_ptr_t pointer;
+    tss_entry_t tss;
+} used gdt;
 
 void gdt_init(void);
 void gdt_set_gate(int32_t, uint32_t, uint32_t, uint8_t, uint8_t);
+void write_tss(int32_t num, uint16_t ss0, uint32_t esp0);
 
 // Reloads new segment registers.
 extern void gdt_flush(int);

@@ -6,6 +6,7 @@
 #include "irq.h"
 #include "keyboard.h"
 #include "timer.h"
+#include "userspace.h"
 #include "vga.h"
 
 const uint32_t kProcessorIdIntel = 0x756e6547;
@@ -52,8 +53,10 @@ used void kernel_main(void) {
 
     puts(DEBUG "Entering idle state\n");
 
-    for (;;) {
+    userspace_jump(NULL, 0xB0000000);
+
+    /*for (;;) {
         int_enable();
         asm("hlt");
-    }
+    }*/
 }
