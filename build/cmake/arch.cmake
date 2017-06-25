@@ -9,16 +9,8 @@ function(raptor_add_arch ARCH SRC_DIR)
       "${RAPTOR_DIR}/${SRC_DIR}/*.hpp"
     )
 
-    file(GLOB_RECURSE COMMON_SRC
-      "${RAPTOR_DIR}/kernel/common/*.c"
-      "${RAPTOR_DIR}/kernel/common/*.h"
-      "${RAPTOR_DIR}/kernel/common/*.s"
-      "${RAPTOR_DIR}/kernel/common/*.cpp"
-      "${RAPTOR_DIR}/kernel/common/*.hpp"
-    )
-
     set(KERNEL_NAME "raptor-${ARCH}.bin")
-    add_executable(${KERNEL_NAME} ${ARCH_SRC})
+    add_executable(${KERNEL_NAME} ${ARCH_SRC} ${KERNEL_COMMON_SRC})
     raptor_add_liblox(${ARCH})
   endif()
 endfunction()

@@ -7,6 +7,7 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
 
 set(RAPTOR_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 include(${RAPTOR_DIR}/build/cmake/liblox.cmake)
+include(${RAPTOR_DIR}/build/cmake/kernel-common.cmake)
 
 include(${RAPTOR_DIR}/build/cmake/arch.cmake)
 file(GLOB ARCH_CMAKE_LISTS "${RAPTOR_DIR}/build/cmake/arch-*.cmake")
