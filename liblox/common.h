@@ -52,3 +52,6 @@
 
 // Computes the offset of the given member in the given type.
 #define offset_of_member(type, member) __builtin_offsetof(type, member)
+
+// Specifies that a value can be null.
+#define nullable

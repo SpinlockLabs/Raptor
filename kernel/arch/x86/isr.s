@@ -50,7 +50,8 @@ ISR_NOERR 28
 ISR_NOERR 29
 ISR_NOERR 30
 ISR_NOERR 31
-# I believe this is the syscall interrupt from toaruos.
+
+# Syscall interrupt.
 ISR_NOERR 127
 
 .extern fault_handler
@@ -81,4 +82,3 @@ isr_common:
     popa
     add $8, %esp
     iret
-

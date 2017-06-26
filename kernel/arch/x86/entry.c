@@ -5,7 +5,9 @@
 #include "idt.h"
 #include "irq.h"
 #include "keyboard.h"
+#include "paging.h"
 #include "timer.h"
+#include "userspace.h"
 #include "vga.h"
 
 const uint32_t kProcessorIdIntel = 0x756e6547;
@@ -17,6 +19,16 @@ void lox_output_string_vga(char* msg) {
 
 void lox_output_char_vga(char c) {
     vga_putchar(c);
+}
+
+used void arch_panic_handler(char *msg) {
+    asm("cli");
+    vga_writestring("[PANIC] ");
+    vga_writestring(msg);
+    vga_putchar('\n');
+    while (1) {
+        asm("hlt");
+    }
 }
 
 void (*lox_output_string_provider)(char*) = lox_output_string_vga;
@@ -47,10 +59,14 @@ used void kernel_main(void) {
     puts(DEBUG "IRQs Initialized\n");
     timer_init(50);
     puts(DEBUG "PIT Initialized\n");
-    keyboard_init();
-    puts(DEBUG "Keyboard Initialized\n");
+    paging_init();
+    puts(DEBUG "Paging Initialized\n");
+    /*keyboard_init();
+    puts(DEBUG "Keyboard Initialized\n");*/
 
     puts(DEBUG "Entering idle state\n");
+
+    userspace_jump(NULL, 0xB0000000);
 
     for (;;) {
         int_enable();

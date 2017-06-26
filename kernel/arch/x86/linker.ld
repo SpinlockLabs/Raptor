@@ -33,4 +33,5 @@ SECTIONS
     }
 
     /* The compiler might produce some other sections. By default it will put them in a segment with the same name. Simply add stuff here as needed. */
+    __link_mem_end = .;
 }

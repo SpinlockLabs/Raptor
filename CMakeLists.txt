@@ -16,6 +16,10 @@ cflags(
   -ffreestanding
 )
 
+if(CMAKEBUILD_TYPE STREQUAL "Debug")
+  cflags(-g)
+endif()
+
 if(CLANG)
   cflags(-Wno-unused-command-line-argument -O0)
   if(NOT OPTIMIZE_LTO)
