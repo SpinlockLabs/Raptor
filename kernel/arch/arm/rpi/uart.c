@@ -1,5 +1,8 @@
-#include "uart.h"
+#include <liblox/string.h>
+
+#include "gpio.h"
 #include "mmio.h"
+#include "uart.h"
 
 void uart_init(void) {
     // Disable UART0.
@@ -43,14 +46,14 @@ void uart_init(void) {
 
 void uart_putc(unsigned char byte) {
     // Wait for UART to become ready to transmit.
-    while (mmio_read(UART0_FR) & (1 << 5));
+    while (mmio_read(UART0_FR) & (1 << 5)) {}
     mmio_write(UART0_DR, byte);
 }
 
 unsigned char uart_getc() {
     // Wait for UART to receive something.
-    while (mmio_read(UART0_FR) & (1 << 4));
-    return mmio_read(UART0_DR);
+    while (mmio_read(UART0_FR) & (1 << 4)) {}
+    return (unsigned char) mmio_read(UART0_DR);
 }
 
 void uart_write(const unsigned char *buffer, size_t size) {

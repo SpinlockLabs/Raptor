@@ -2,13 +2,6 @@
 
 enum {
 #ifdef PI_1
-    GPIO_BASE = 0x20200000,
-#else
-    GPIO_BASE = 0x3F200000,
-#endif
-    GPPUD = (GPIO_BASE + 0x94), // Controls actuation of pull up/down to ALL GPIO pins.
-    GPPUDCLK0 = (GPIO_BASE + 0x94), // Controls actuation of pull up/down for specific GPIO pin.
-#ifdef PI_1
     UART0_BASE = 0x20201000, // The base address for UART.
 #else
     UART0_BASE = 0x3F201000,
