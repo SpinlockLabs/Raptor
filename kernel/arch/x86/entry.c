@@ -21,6 +21,16 @@ void lox_output_char_vga(char c) {
     vga_putchar(c);
 }
 
+used void arch_panic_handler(char *msg) {
+    asm("cli");
+    vga_writestring("[PANIC] ");
+    vga_writestring(msg);
+    vga_putchar('\n');
+    while (1) {
+        asm("hlt");
+    }
+}
+
 void (*lox_output_string_provider)(char*) = lox_output_string_vga;
 void (*lox_output_char_provider)(char) = lox_output_char_vga;
 

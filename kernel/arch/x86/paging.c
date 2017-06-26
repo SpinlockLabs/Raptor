@@ -1,6 +1,5 @@
-#include <liblox/io.h>
-#include <liblox/string.h>
 #include <kernel/panic.h>
+#include <liblox/string.h>
 
 #include "heap.h"
 #include "irq.h"
@@ -12,8 +11,8 @@ uint32_t frame_count;
 page_directory_t *kernel_directory;
 page_directory_t *current_directory;
 
-#define INDEX_FROM_BIT(a) ((a)/(8*4))
-#define OFFSET_FROM_BIT(a) ((a)%(8*4))
+#define INDEX_FROM_BIT(a) ((a) / (8 * 4))
+#define OFFSET_FROM_BIT(a) ((a) % (8 * 4))
 
 static void set_frame(uint32_t frameAddr) {
     uint32_t frame = frameAddr / 0x1000;
@@ -60,7 +59,7 @@ void alloc_frame(page_t *page, int isKernel, int isWritable) {
     uint32_t idx = 0;
 
     if (first_frame(&idx) != 0) {
-        panic("First frame in paging is invalid.\n");
+        panic("First frame in paging is invalid.");
     }
 
     set_frame(idx * 0x1000);

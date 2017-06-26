@@ -1,7 +1,8 @@
 #pragma once
 
-#include "isr.h"
 #include <stdbool.h>
+
+#include "isr.h"
 
 typedef struct {
     uint32_t present : 1;  // Page present in memory
