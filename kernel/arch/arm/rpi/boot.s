@@ -40,4 +40,3 @@ _start:
 halt:
     wfe
     b halt
-

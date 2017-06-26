@@ -15,6 +15,16 @@ void lox_output_char_uart(char c) {
     uart_putc((unsigned char) c);
 }
 
+used void arch_panic_handler(char *str) {
+    lox_output_string_uart("[PANIC]");
+
+    if (str != NULL) {
+        lox_output_string_uart(str);
+    }
+
+    lox_output_char_uart('\n');
+}
+
 void (*lox_output_string_provider)(char*) = lox_output_string_uart;
 void (*lox_output_char_provider)(char) = lox_output_char_uart;
 
