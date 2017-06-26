@@ -56,4 +56,3 @@ irq_common:
     popa
     add $8, %esp
     iret
-

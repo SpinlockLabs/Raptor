@@ -51,15 +51,15 @@ used void kernel_main(void) {
     puts(DEBUG "PIT Initialized\n");
     paging_init();
     puts(DEBUG "Paging Initialized\n");
-    keyboard_init();
-    puts(DEBUG "Keyboard Initialized\n");
+    /*keyboard_init();
+    puts(DEBUG "Keyboard Initialized\n");*/
 
     puts(DEBUG "Entering idle state\n");
 
     //userspace_jump(NULL, 0xB0000000);
 
-    /*for (;;) {
+    for (;;) {
         int_enable();
         asm("hlt");
-    }*/
+    }
 }
