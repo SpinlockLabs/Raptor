@@ -90,11 +90,11 @@ void paging_init(void) {
 
     irq_add_handler(14, page_fault);
 
-    switch_page_directory(kernel_directory);
+    paging_switch_directory(kernel_directory);
 }
 
-void switch_page_directory(page_directory_t* dir) {
-   current_directory = dir;
+void paging_switch_directory(page_directory_t* dir) {
+    current_directory = dir;
     asm volatile("mov %0, %%cr3":: "r"(&dir->tablesPhysical));
     uint32_t cr0;
     asm volatile("mov %%cr0, %0": "=r"(cr0));
@@ -137,4 +137,5 @@ void page_fault(regs_t regs) {
     puts(faulting_address);
     puts("\n");
     // TODO: Panic
+    asm volatile("cli; hlt");
 }
