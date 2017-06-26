@@ -1,7 +1,10 @@
 #include "heap.h"
 
+extern char __link_mem_end;
+uint32_t placement_address = (uint32_t) &__link_mem_end;
+
 static uint32_t _kmalloc_int(uint32_t size, int align, uint32_t *phys) {
-    if (align == 1 && (placement_address & 0xFFFFF000)) {
+    if (align && (placement_address & 0xFFFFF000)) {
         placement_address &= 0xFFFFF000;
         placement_address += 0x1000;
     }

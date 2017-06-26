@@ -58,4 +58,3 @@ page_t *paging_get_page(uint32_t, int, page_directory_t *);
  * Page fault handler.
  */
 void page_fault(regs_t regs);
-

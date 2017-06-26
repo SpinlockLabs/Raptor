@@ -62,6 +62,7 @@ void alloc_frame(page_t *page, int isKernel, int isWritable) {
     if (first_frame(&idx) != 0) {
         panic("First frame in paging is invalid.\n");
     }
+
     set_frame(idx * 0x1000);
     page->present = 1;
     page->rw = isWritable ? 1 : 0;
