@@ -23,7 +23,7 @@ struct {
     gdt_entry_t entries[6];
     gdt_ptr_t pointer;
     tss_entry_t tss;
-} used gdt;
+} packed gdt;
 
 void gdt_init(void);
 void gdt_set_gate(int32_t, uint32_t, uint32_t, uint8_t, uint8_t);
