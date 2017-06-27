@@ -33,3 +33,10 @@ add_custom_target(iso
   DEPENDS raptor.bin
   WORKING_DIRECTORY  "${CMAKE_BINARY_DIR}"
 )
+
+add_custom_target(bochs
+  COMMAND bochs -q -f "${CMAKE_SOURCE_DIR}/build/bochs/raptor.bcfg"
+  DEPENDS iso
+  WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+)
+

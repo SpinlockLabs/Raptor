@@ -5,13 +5,11 @@ display_library: x
 memory: host=32, guest=32
 romimage: file="/usr/share/bochs/BIOS-bochs-latest", address=0x0, options=none
 vgaromimage: file="/usr/share/bochs/VGABIOS-lgpl-latest"
-boot: a
 floppy_bootsig_check: disabled=0
-floppya: 1_44=/dev/fd0, status=inserted
-# no floppyb
 ata0: enabled=1, ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14
-ata0-master: type=none
+ata0-master: type=cdrom, path="raptor.iso", status=inserted
 ata0-slave: type=none
+boot: cdrom
 ata1: enabled=1, ioaddr1=0x170, ioaddr2=0x370, irq=15
 ata1-master: type=none
 ata1-slave: type=none
@@ -40,7 +38,7 @@ private_colormap: enabled=0
 clock: sync=none, time0=local, rtc_sync=0
 # no cmosimage
 # no loader
-log: bochs_out.log
+log: -
 logprefix: %t%e%d
 debug: action=ignore
 info: action=report
