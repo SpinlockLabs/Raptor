@@ -1,1 +1,3 @@
-void _start(void) {}
+int main() {
+  return 0;
+}

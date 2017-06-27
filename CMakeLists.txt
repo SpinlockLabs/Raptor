@@ -12,9 +12,6 @@ cflags(
   -Wextra
   -std=gnu11
   -pipe
-  -fno-builtin
-  -nostartfiles
-  -ffreestanding
 )
 
 if(CMAKEBUILD_TYPE STREQUAL "Debug")
@@ -48,5 +45,6 @@ if(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm")
 else()
   include(${RAPTOR_DIR}/build/cmake/arch-x86.cmake)
 endif()
+arch_post_init()
 
 add_subdirectory(userspace)

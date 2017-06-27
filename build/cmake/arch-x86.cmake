@@ -15,7 +15,7 @@ else()
     cflags(-mtune=generic)
 endif()
 
-ldscript(${KERNEL_DIR}/arch/x86/linker.ld)
+kernel_ldscript(${KERNEL_DIR}/arch/x86/linker.ld)
 
 set(QEMU_FLAGS
   qemu-system-i386

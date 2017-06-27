@@ -2,15 +2,11 @@ arch("arm-rpi" "arch/arm/rpi")
 
 cflags(
   -mcpu=arm1176jzf-s
-  -ffreestanding
   -O2
   -fpic
-  -Wno-unused-command-line-argument
 )
 
-ldflags(
-  "-T${KERNEL_DIR}/arch/arm/rpi/linker.ld"
-)
+kernel_ldscript("${KERNEL_DIR}/arch/arm/rpi/linker.ld")
 
 set(QEMU_FLAGS
   qemu-system-arm
