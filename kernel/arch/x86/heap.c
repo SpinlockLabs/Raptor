@@ -32,3 +32,9 @@ uint32_t kmalloc(uint32_t size) {
     return _kmalloc_int(size, 0, 0);
 }
 
+static int32_t find_smallest_hole(uint32_t size, uint8_t pageAlign, heap_t *heap) {
+    uint32_t iterator = 0;
+    while (iterator < heap->index.size) {
+//        header_t *header = (header_t *) list
+    }
+}
