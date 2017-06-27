@@ -1,7 +1,7 @@
 #pragma once
 
-#include <liblox/io.h>
 #include <cpuid.h>
+#include <liblox/io.h>
 #include <stdint.h>
 
 #define cpu_equals(name) __builtin_cpu_is(name)
