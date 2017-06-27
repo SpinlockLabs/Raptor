@@ -8,4 +8,6 @@ file(GLOB_RECURSE LIBLOX_SRC
 )
 
 add_library(lox STATIC ${LIBLOX_SRC})
+target_compile_options(lox PRIVATE "-fno-builtin")
+
 add_library(lox-kernel STATIC ${LIBLOX_SRC})
