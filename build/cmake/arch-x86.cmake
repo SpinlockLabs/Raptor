@@ -27,3 +27,9 @@ add_custom_target(qemu
   COMMAND ${QEMU_FLAGS}
   DEPENDS raptor.bin
 )
+
+add_custom_target(iso
+  COMMAND bash ${CMAKE_SOURCE_DIR}/build/scripts/mkgrubiso.sh "${CMAKE_BINARY_DIR}/raptor.bin"
+  DEPENDS raptor.bin
+  WORKING_DIRECTORY  "${CMAKE_BINARY_DIR}"
+)
