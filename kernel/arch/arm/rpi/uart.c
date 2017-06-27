@@ -1,5 +1,6 @@
 #include <liblox/string.h>
 
+#include "delay.h"
 #include "gpio.h"
 #include "mmio.h"
 #include "uart.h"
@@ -7,6 +8,8 @@
 void uart_init(void) {
     // Disable UART0.
     mmio_write(UART0_CR, 0x00000000);
+
+
     // Setup the GPIO pin 14 && 15.
 
     // Disable pull up/down for all GPIO pins & delay for 150 cycles.
@@ -50,7 +53,7 @@ void uart_putc(unsigned char byte) {
     mmio_write(UART0_DR, byte);
 }
 
-unsigned char uart_getc() {
+unsigned char uart_getc(void) {
     // Wait for UART to receive something.
     while (mmio_read(UART0_FR) & (1 << 4)) {}
     return (unsigned char) mmio_read(UART0_DR);

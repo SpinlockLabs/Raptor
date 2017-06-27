@@ -4,15 +4,16 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "delay.h"
 #include "gpio.h"
 #include "uart.h"
 
 void lox_output_string_uart(char *str) {
-    uart_puts(str);
+    //uart_puts(str);
 }
 
 void lox_output_char_uart(char c) {
-    uart_putc((unsigned char) c);
+    //uart_putc((unsigned char) c);
 }
 
 used void arch_panic_handler(char *str) {
@@ -41,14 +42,10 @@ used noreturn void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags) {
 
     puts(INFO "Raptor kernel\n");
 
+    bool state = false;
     while (true) {
-        unsigned char c = uart_getc();
-        uart_putc(c);
-
-        if (c == 'o') {
-            gpio_set_ok_led_state(true);
-        } else if (c == 'p') {
-            gpio_set_ok_led_state(false);
-        }
+        gpio_set_act_led_state(state);
+        state = !state;
+        delay(50000);
     }
 }

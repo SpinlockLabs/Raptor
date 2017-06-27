@@ -11,15 +11,16 @@ enum {
     GPPUD = (GPIO_BASE + 0x94), // Controls actuation of pull up/down to ALL GPIO pins.
     GPPUDCLK0 = (GPIO_BASE + 0x94), // Controls actuation of pull up/down for specific GPIO pin.
 
-#define _PIN(i, sel, set, clr) \
-    GPIO_GPFSEL ## i = (GPIO_BASE + (sel)), \
-    GPIO_GPFSET ## i = (GPIO_BASE + (set)), \
-    GPIO_GPFCLR ## i = (GPIO_BASE + (clr)), \
+#define _GPF(i, sel, set, clr) \
+    GPIO_SEL ## i = (GPIO_BASE + (sel)), \
+    GPIO_SET ## i = (GPIO_BASE + (set)), \
+    GPIO_CLR ## i = (GPIO_BASE + (clr)), \
 
-    _PIN(1, 0, 8, 11)
+    _GPF(1, 0x04, 0x20, 0x2C)
+#undef _GPF
 
-#undef _PIN
+    GPIO_SEL4 = (GPIO_BASE + 0x10),
 };
 
 void gpio_init(void);
-void gpio_set_ok_led_state(bool);
+void gpio_set_act_led_state(bool);
