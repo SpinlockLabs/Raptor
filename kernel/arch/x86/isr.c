@@ -3,7 +3,6 @@
 
 #include "idt.h"
 #include "isr.h"
-#include "vga.h"
 
 void isr_add_handler(size_t isr, irq_handler_t handler) {
     isr_routines[isr] = handler;
