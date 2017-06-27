@@ -9,6 +9,7 @@ include(build/cmake/common.cmake)
 
 cflags(
   -Wall
+  -Wextra
   -std=gnu11
   -pipe
   -fno-builtin
