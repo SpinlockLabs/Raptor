@@ -18,7 +18,7 @@ void gdt_init(void) {
     write_tss(5, 0x10, 0x0);
 
     gdt_flush((uint32_t)&gdt.pointer);
-    tss_flush();
+    //tss_flush();
 }
 
 void gdt_set_gate(int32_t num, uint32_t base, uint32_t lim, uint8_t acc, uint8_t gran) {

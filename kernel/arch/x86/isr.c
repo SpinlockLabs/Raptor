@@ -1,4 +1,5 @@
 #include <kernel/panic.h>
+#include <liblox/string.h>
 
 #include "idt.h"
 #include "isr.h"
@@ -22,9 +23,29 @@ void fault_handler(regs_t *r) {
     if (handler) {
         handler(r);
     } else {
-        puts("Unhandled exception ");
+        puts("[PANIC] Unhandled exception: ");
         puts(exceptions[i]);
         putc('\n');
-        panic("");
+
+        char buf[64];
+
+#define _PUTRV(name, reg) \
+        puts(name " = 0x"); \
+        itoa(reg, buf, 16); \
+        puts(buf); \
+        putc('\n')
+
+        _PUTRV("cs", r->cs);
+        _PUTRV("ds", r->ds);
+        _PUTRV("fs", r->fs);
+        _PUTRV("gs", r->gs);
+
+        _PUTRV("eip", r->eip);
+        _PUTRV("esp", r->esp);
+        _PUTRV("esi", r->esi);
+        _PUTRV("eax", r->eax);
+#undef _PUTRV
+
+        panic(NULL);
     }
 }

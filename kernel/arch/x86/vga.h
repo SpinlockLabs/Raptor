@@ -40,3 +40,5 @@ void vga_nextrow(void);
 void vga_putchar(char);
 void vga_write(const char*, size_t);
 void vga_writestring(const char*);
+void vga_writebyte(uint8_t b);
+void vga_writeptr(uintptr_t p);

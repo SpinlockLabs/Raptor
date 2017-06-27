@@ -99,3 +99,10 @@ void vga_writebyte(uint8_t b) {
     vga_writestring(s);
     vga_writestring("\n");
 }
+
+void vga_writeptr(uintptr_t p) {
+    char *s = NULL;
+    itoa(p, s, 16);
+    vga_writestring(s);
+    vga_writestring("\n");
+}

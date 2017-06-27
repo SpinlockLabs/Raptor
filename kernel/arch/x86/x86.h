@@ -1,8 +1,11 @@
 #pragma once
 
 #include <cpuid.h>
+#include <kernel/panic.h>
 #include <liblox/io.h>
 #include <stdint.h>
+
+#include "cmdline.h"
 
 #define cpu_equals(name) __builtin_cpu_is(name)
 #define cpu_supports(feature) __builtin_cpu_supports(feature)
@@ -20,3 +23,9 @@ typedef struct regs {
 
 typedef void (*irq_handler_t) (regs_t *);
 typedef int (*irq_handler_chain_t) (regs_t *);
+
+#define breakpoint(name) \
+    if (cmdline_bool_flag("break-" name)) {\
+      puts("[BREAK] " name "\n"); \
+      panic(NULL); \
+    }

@@ -9,6 +9,17 @@
 .long MAGIC
 .long FLAGS
 .long CHECKSUM
+.long 0x00000000 /* header_addr */
+.long 0x00000000 /* load_addr */
+.long 0x00000000 /* load_end_addr */
+.long 0x00000000 /* bss_end_addr */
+.long 0x00000000 /* entry_addr */
+
+/* Request linear graphics mode */
+.long 0x00000000
+.long 0
+.long 0
+.long 32
 
 .section .bss
 .align 16
@@ -22,6 +33,11 @@ stack_top:
 _start:
     # Setup the stack.
     mov $stack_top, %esp
+
+    and $-16, %esp
+
+    pushl %eax /* Multiboot header magic */
+    pushl %ebx /* Multiboot header pointer */
 
     # Call the kernel entrypoint.
     call kernel_main
