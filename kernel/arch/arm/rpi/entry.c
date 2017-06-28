@@ -49,8 +49,8 @@ used noreturn void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags) {
     gpio_init();
     puts(DEBUG "GPIO initialized.\n");
 
-    timer_init(250);
-    puts(DEBUG "Timer initialized.\n");
+//    timer_init(250);
+//    puts(DEBUG "Timer initialized.\n");
 
     framebuffer_init(640, 480);
     puts(DEBUG "Framebuffer initialized.\n");
