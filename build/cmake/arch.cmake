@@ -42,6 +42,7 @@ function(arch_post_init)
 endfunction()
 
 kernel_cflags(
+  -nostdlib
   -nostartfiles
   -ffreestanding
 )
