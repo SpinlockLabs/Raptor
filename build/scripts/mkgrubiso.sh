@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
-ROOT="$(realpath $(dirname ${0})/../..)"
-BIN="raptor.bin"
+ROOT=$(realpath "$(dirname ${0})/../..")
+BIN="kernel.elf"
 
 if [[ ! -z "${1}" ]]
 then
@@ -11,7 +11,7 @@ fi
 
 if [[ ! -f "${BIN}" ]]
 then
-  echo "ERROR: raptor.bin not found."
+  echo "ERROR: kernel.elf not found."
   exit 1
 fi
 
@@ -28,8 +28,10 @@ fi
 
 mkdir -p cdboot/boot
 
-GRUB_ROOT="$(realpath $(dirname $(which grub-mkrescue))/..)"
+GRUB_RESCUE="$(which grub-mkrescue)"
+GRUB_RESCUE_DIR="$(dirname ${GRUB_RESCUE})"
+GRUB_ROOT="$(realpath ${GRUB_RESCUE_DIR}/..)"
 cp -R "${ROOT}/build/grub" cdboot/boot/grub
-cp "${BIN}" cdboot/boot/raptor.bin
+cp "${BIN}" cdboot/boot/kernel.elf
 grub-mkrescue -d "${GRUB_ROOT}/lib/grub/i386-pc" -o raptor.iso cdboot/
 rm -rf cdboot

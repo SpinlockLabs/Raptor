@@ -12,7 +12,7 @@ kernel_ldscript("${KERNEL_DIR}/arch/arm/rpi/linker.ld")
 
 set(QEMU_FLAGS
   qemu-system-arm
-    -kernel "${CMAKE_BINARY_DIR}/raptor.bin"
+    -kernel "${CMAKE_BINARY_DIR}/kernel.elf"
     -m 256
     -M raspi2
     -serial stdio
@@ -32,6 +32,6 @@ if(NOT RPI_BOOT_PART STREQUAL "")
 
     add_custom_target(install-pi-sdcard
       COMMAND ${INSTALL_CMD}
-      DEPENDS raptor.bin
+      DEPENDS kernel
     )
 endif()

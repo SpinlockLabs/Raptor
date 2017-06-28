@@ -19,7 +19,7 @@ kernel_ldscript(${KERNEL_DIR}/arch/x86/linker.ld)
 
 set(QEMU_FLAGS
   qemu-system-i386
-    -kernel "${CMAKE_BINARY_DIR}/raptor.bin"
+    -kernel "${CMAKE_BINARY_DIR}/kernel.elf"
     -cpu core2duo
 )
 
@@ -29,8 +29,10 @@ add_custom_target(qemu
 )
 
 add_custom_target(iso
-  COMMAND bash ${CMAKE_SOURCE_DIR}/build/scripts/mkgrubiso.sh "${CMAKE_BINARY_DIR}/raptor.bin"
-  DEPENDS raptor.bin
+  COMMAND bash
+            ${CMAKE_SOURCE_DIR}/build/scripts/mkgrubiso.sh
+            "${CMAKE_BINARY_DIR}/kernel.elf"
+  DEPENDS kernel
   WORKING_DIRECTORY  "${CMAKE_BINARY_DIR}"
 )
 
@@ -39,4 +41,3 @@ add_custom_target(bochs
   DEPENDS iso
   WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
 )
-

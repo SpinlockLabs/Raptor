@@ -7,8 +7,9 @@ function(arch ARCH SRC_DIR)
     "${KERNEL_DIR}/${SRC_DIR}/*.hpp"
   )
 
-  add_executable(raptor.bin ${ARCH_SRC} ${KERNEL_COMMON_SRC})
-  target_link_libraries(raptor.bin lox-kernel)
+  add_executable(kernel ${ARCH_SRC} ${KERNEL_COMMON_SRC})
+  target_link_libraries(kernel lox-kernel)
+  set_target_properties(kernel PROPERTIES OUTPUT_NAME "kernel.elf")
 endfunction()
 
 set(KERNEL_C_FLAGS "${CMAKE_C_FLAGS}")
@@ -30,7 +31,7 @@ function(kernel_ldscript LDSCRIPT)
 endfunction()
 
 function(arch_post_init)
-  set_target_properties(raptor.bin PROPERTIES
+  set_target_properties(kernel PROPERTIES
     LINK_FLAGS "${KERNEL_LD_FLAGS}"
     COMPILE_FLAGS "${KERNEL_C_FLAGS}"
   )
