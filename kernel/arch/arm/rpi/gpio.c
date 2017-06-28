@@ -8,7 +8,7 @@
 
 void gpio_init(void) {
     /* Enable ACT LED */
-    mmio_u32_op(GPIO_SEL4) |= 1 << GPIO_ACT_LED_SEL_BIT;
+    mmio_op(GPIO_SEL4) |= 1 << GPIO_ACT_LED_SEL_BIT;
 }
 
 void gpio_set_act_led_state(bool state) {
@@ -17,8 +17,8 @@ void gpio_set_act_led_state(bool state) {
 #endif
 
     if (state) {
-        mmio_u32_op(GPIO_SET1) |= 1 << GPIO_ACT_LED_BIT;
+        mmio_op(GPIO_SET1) |= 1 << GPIO_ACT_LED_BIT;
     } else {
-        mmio_u32_op(GPIO_CLR1) |= 1 << GPIO_ACT_LED_BIT;
+        mmio_op(GPIO_CLR1) |= 1 << GPIO_ACT_LED_BIT;
     }
 }

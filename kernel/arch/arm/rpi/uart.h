@@ -1,11 +1,9 @@
 #include <liblox/common.h>
 
+#include "board.h"
+
 enum {
-#ifdef PI_1
-    UART0_BASE = 0x20201000, // The base address for UART.
-#else
-    UART0_BASE = 0x3F201000, // was 0x3F201000
-#endif
+    UART0_BASE = BOARD_UART0_BASE,
     UART0_DR = (UART0_BASE + 0x00), // The offsets for reach register for the UART.
     UART0_RSRECR = (UART0_BASE + 0x04),
     UART0_FR = (UART0_BASE + 0x18),
@@ -31,8 +29,8 @@ void uart_init(void);
 void uart_putc(unsigned char byte);
 
 bool uart_poll(void);
-unsigned char uart_poll_getc(void);
 
+unsigned char uart_poll_getc(void);
 unsigned char uart_getc(void);
 
 void uart_write(const unsigned char *buffer, size_t size);

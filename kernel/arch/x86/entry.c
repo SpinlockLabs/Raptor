@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <kernel/panic.h>
 #include <kernel/cmdline.h>
+#include <kernel/timer.h>
 
 #include "cmdline.h"
 #include "gdt.h"

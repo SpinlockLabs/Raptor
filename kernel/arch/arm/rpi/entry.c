@@ -1,12 +1,14 @@
 #include <liblox/common.h>
 #include <liblox/io.h>
 #include <liblox/lox-internal.h>
+#include <kernel/timer.h>
 #include <stdbool.h>
 #include <stdint.h>
 
 #include "delay.h"
 #include "gpio.h"
 #include "uart.h"
+#include "fb.h"
 
 void lox_output_string_uart(char *str) {
     uart_puts(str);
@@ -40,11 +42,18 @@ used noreturn void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags) {
     (void) atags;
 
     uart_init();
+    puts("\n");
     puts(INFO "Raptor kernel\n");
     puts(DEBUG "UART initialized.\n");
 
     gpio_init();
     puts(DEBUG "GPIO initialized.\n");
+
+    timer_init(250);
+    puts(DEBUG "Timer initialized.\n");
+
+    framebuffer_init(640, 480);
+    puts(DEBUG "Framebuffer initialized.\n");
 
     bool state = false;
     bool blink_act = true;
