@@ -1,7 +1,6 @@
 #pragma once
 
 #include <liblox/common.h>
-#include <liblox/list.h>
 #include <stdint.h>
 
 #define KHEAP_START 0xC0000000
@@ -24,7 +23,7 @@ typedef struct {
 } packed footer_t;
 
 typedef struct {
-    list_t index;
+    ordered_array_t index;
     uint32_t start_address; // The start of our allocated space.
     uint32_t end_address; // The end of our allocated space, may be expanded up to max_address;
     uint32_t max_address; // The maximum address the heap can be expanded to.
