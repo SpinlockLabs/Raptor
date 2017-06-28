@@ -9,11 +9,11 @@
 #include "uart.h"
 
 void lox_output_string_uart(char *str) {
-    //uart_puts(str);
+    uart_puts(str);
 }
 
 void lox_output_char_uart(char c) {
-    //uart_putc((unsigned char) c);
+    uart_putc((unsigned char) c);
 }
 
 used void arch_panic_handler(char *str) {
@@ -35,17 +35,37 @@ used noreturn void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags) {
     (void) atags;
 
     uart_init();
+    puts(INFO "Raptor kernel\n");
     puts(DEBUG "UART initialized.\n");
 
     gpio_init();
     puts(DEBUG "GPIO initialized.\n");
 
-    puts(INFO "Raptor kernel\n");
-
     bool state = false;
+    bool blink_act = true;
+    unsigned int counter = 0;
+
     while (true) {
-        gpio_set_act_led_state(state);
-        state = !state;
-        delay(50000);
+        if (uart_poll()) {
+            unsigned char c = uart_poll_getc();
+            char cc = (char) c;
+
+            if (cc == 't') {
+                blink_act = !blink_act;
+            }
+
+            uart_putc(c);
+        }
+
+        counter++;
+
+        if (counter == 50000) {
+            counter = 0;
+            state = !state;
+
+            if (blink_act) {
+                gpio_set_act_led_state(state);
+            }
+        }
     }
 }

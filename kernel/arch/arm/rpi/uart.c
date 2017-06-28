@@ -7,24 +7,21 @@
 
 void uart_init(void) {
     // Disable UART0.
-    mmio_write(UART0_CR, 0x00000000);
-
+    mmio_u32_write(UART0_CR, 0x00000000);
 
     // Setup the GPIO pin 14 && 15.
 
     // Disable pull up/down for all GPIO pins & delay for 150 cycles.
-    mmio_write(GPPUD, 0x00000000);
-    delay(150);
+    mmio_u32_write(GPPUD, 0x00000000);
 
     // Disable pull up/down for pin 14,15 & delay for 150 cycles.
-    mmio_write(GPPUDCLK0, (1 << 14) | (1 << 15));
-    delay(150);
+    mmio_u32_write(GPPUDCLK0, (1 << 14) | (1 << 15));
 
     // Write 0 to GPPUDCLK0 to make it take effect.
-    mmio_write(GPPUDCLK0, 0x00000000);
+    mmio_u32_write(GPPUDCLK0, 0x00000000);
 
     // Clear pending interrupts.
-    mmio_write(UART0_ICR, 0x7FF);
+    mmio_u32_write(UART0_ICR, 0x7FF);
 
     // Set integer & fractional part of baud rate.
     // Divider = UART_CLOCK/(16 * Baud)
@@ -33,30 +30,37 @@ void uart_init(void) {
 
     // Divider = 3000000 / (16 * 115200) = 1.627 = ~1.
     // Fractional part register = (.627 * 64) + 0.5 = 40.6 = ~40.
-    mmio_write(UART0_IBRD, 1);
-    mmio_write(UART0_FBRD, 40);
+    mmio_u32_write(UART0_IBRD, 1);
+    mmio_u32_write(UART0_FBRD, 40);
 
-    // Enable FIFO & 8 bit data transmissio (1 stop bit, no parity).
-    mmio_write(UART0_LCRH, (1 << 4) | (1 << 5) | (1 << 6));
+    // Enable FIFO & 8 bit data transmission (1 stop bit, no parity).
+    mmio_u32_write(UART0_LCRH, (1 << 4) | (1 << 5) | (1 << 6));
 
     // Mask all interrupts.
-    mmio_write(UART0_IMSC, (1 << 1) | (1 << 4) | (1 << 5) | (1 << 6) |
+    mmio_u32_write(UART0_IMSC, (1 << 1) | (1 << 4) | (1 << 5) | (1 << 6) |
                            (1 << 7) | (1 << 8) | (1 << 9) | (1 << 10));
-
     // Enable UART0, receive & transfer part of UART.
-    mmio_write(UART0_CR, (1 << 0) | (1 << 8) | (1 << 9));
+    mmio_u32_write(UART0_CR, (1 << 0) | (1 << 8) | (1 << 9));
 }
 
 void uart_putc(unsigned char byte) {
     // Wait for UART to become ready to transmit.
-    while (mmio_read(UART0_FR) & (1 << 5)) {}
-    mmio_write(UART0_DR, byte);
+    while (mmio_u32_read(UART0_FR) & (1 << 5)) {}
+    mmio_u32_write(UART0_DR, byte);
+}
+
+unsigned char uart_poll_getc(void) {
+    return (unsigned char) mmio_u32_read(UART0_DR);
+}
+
+bool uart_poll(void) {
+    return (mmio_u32_read(UART0_FR) & (1 << 4)) ? false : true;
 }
 
 unsigned char uart_getc(void) {
     // Wait for UART to receive something.
-    while (mmio_read(UART0_FR) & (1 << 4)) {}
-    return (unsigned char) mmio_read(UART0_DR);
+    while (!uart_poll()) {}
+    return uart_poll_getc();
 }
 
 void uart_write(const unsigned char *buffer, size_t size) {
