@@ -2,7 +2,9 @@
 #include <liblox/io.h>
 #include <assert.h>
 #include <kernel/panic.h>
+#include <kernel/cmdline.h>
 
+#include "cmdline.h"
 #include "gdt.h"
 #include "idt.h"
 #include "irq.h"
@@ -54,7 +56,7 @@ used void kernel_main(multiboot_t *mboot, uint32_t mboot_hdr) {
 
     if (cmdline_bool_flag("debug")) {
         puts(DEBUG "cmdline: ");
-        puts(cmdline);
+        puts(get_cmdline());
         putc('\n');
     }
 

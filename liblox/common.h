@@ -55,3 +55,6 @@
 
 // Specifies that a value can be null.
 #define nullable
+
+// Simplified type for unsigned int
+#define uint unsigned int
