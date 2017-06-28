@@ -25,7 +25,7 @@ set(QEMU_FLAGS
 
 add_custom_target(qemu
   COMMAND ${QEMU_FLAGS}
-  DEPENDS raptor.bin
+  DEPENDS kernel
 )
 
 add_custom_target(iso

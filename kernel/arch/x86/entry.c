@@ -88,9 +88,10 @@ used void kernel_main(multiboot_t *mboot, uint32_t mboot_hdr) {
 
     breakpoint("userspace-jump");
 
-    puts(DEBUG "Entering idle state\n");
+    puts(DEBUG "Making userspace jump\n");
     userspace_jump(NULL, 0xB0000000);
 
+    puts(DEBUG "Entering idle state\n");
     for (;;) {
         int_enable();
         asm("hlt");

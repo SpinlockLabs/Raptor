@@ -6,7 +6,7 @@
 
 void gdt_init(void) {
     gdt.pointer.limit = (sizeof(gdt_entry_t) * 5) - 1;
-    gdt.pointer.base = (uint32_t)&gdt.entries;
+    gdt.pointer.base = (uint32_t) &gdt.entries;
 
     // Data segments
     gdt_set_gate(0, 0, 0, 0, 0);       // Null
@@ -17,8 +17,8 @@ void gdt_init(void) {
 
     write_tss(5, 0x10, 0x0);
 
-    gdt_flush((uint32_t)&gdt.pointer);
-    //tss_flush();
+    gdt_flush((uint32_t) &gdt.pointer);
+    // tss_flush();
 }
 
 void gdt_set_gate(int32_t num, uint32_t base, uint32_t lim, uint8_t acc, uint8_t gran) {
