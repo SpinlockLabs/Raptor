@@ -83,14 +83,10 @@ used void kernel_main(multiboot_t *mboot, uint32_t mboot_hdr) {
     puts(DEBUG "PIT Initialized\n");
 
     breakpoint("paging-init");
-
     paging_init();
     puts(DEBUG "Paging Initialized\n");
-    /*keyboard_init();
-    puts(DEBUG "Keyboard Initialized\n");*/
 
     breakpoint("userspace-jump");
-
     puts(DEBUG "Making userspace jump\n");
     userspace_jump(NULL, 0xB0000000);
 
