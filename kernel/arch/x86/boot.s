@@ -1,14 +1,15 @@
-.set ALIGN, 1<<0
-.set MEMINFO, 1<<1
-.set FLAGS, ALIGN | MEMINFO
-.set MAGIC, 0x1BADB002
-.set CHECKSUM, -(MAGIC + FLAGS)
+.set MB_MAGIC, 0x1BADB002
+.set MB_FLAG_PAGE_ALIGN, 1 << 0
+.set MB_FLAG_MEMORY_INFO, 1 << 1
+.set MB_FLAG_GRAPHICS, 1 << 2
+.set MB_FLAGS, MB_FLAG_PAGE_ALIGN | MB_FLAG_MEMORY_INFO | MB_FLAG_GRAPHICS
+.set MB_CHECKSUM, -(MB_MAGIC + MB_FLAGS)
 
 .section .multiboot
 .align 4
-.long MAGIC
-.long FLAGS
-.long CHECKSUM
+.long MB_MAGIC
+.long MB_FLAGS
+.long MB_CHECKSUM
 .long 0x00000000 /* header_addr */
 .long 0x00000000 /* load_addr */
 .long 0x00000000 /* load_end_addr */
@@ -21,10 +22,9 @@
 .long 0
 .long 32
 
-.section .bss
-.align 16
+.section .stack, "aw", @nobits
 stack_bottom:
-.skip 16384 # 16 KiB
+.skip 32768 # 32 KiB
 stack_top:
 
 .section .text

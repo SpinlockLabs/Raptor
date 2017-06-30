@@ -11,6 +11,10 @@ cflags(
 
 kernel_ldscript("${KERNEL_DIR}/arch/arm/rpi/linker.ld")
 
+if(NOT CLANG)
+  target_link_libraries(kernel gcc)
+endif()
+
 set(QEMU_FLAGS
   qemu-system-arm
     -kernel "${CMAKE_BINARY_DIR}/kernel.elf"

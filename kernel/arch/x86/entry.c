@@ -1,6 +1,7 @@
 #include <liblox/common.h>
 #include <liblox/io.h>
-#include <assert.h>
+
+#include <kernel/entry.h>
 #include <kernel/panic.h>
 #include <kernel/cmdline.h>
 #include <kernel/timer.h>
@@ -10,7 +11,6 @@
 #include "idt.h"
 #include "irq.h"
 #include "paging.h"
-#include "timer.h"
 #include "userspace.h"
 #include "vga.h"
 
@@ -47,13 +47,13 @@ void (*lox_output_string_provider)(char*) = lox_output_string_vga;
 void (*lox_output_char_provider)(char) = lox_output_char_vga;
 
 used void kernel_main(multiboot_t *mboot, uint32_t mboot_hdr) {
-    assert(mboot_hdr == MULTIBOOT_EAX_MAGIC && "Raptor is a kernel, not a user program.");
+    if (mboot_hdr != MULTIBOOT_EAX_MAGIC) {
+        return;
+    }
 
     init_cmdline(mboot);
 
     vga_init();
-
-    puts(INFO "Raptor kernel\n");
 
     if (cmdline_bool_flag("debug")) {
         puts(DEBUG "cmdline: ");
@@ -94,9 +94,5 @@ used void kernel_main(multiboot_t *mboot, uint32_t mboot_hdr) {
     puts(DEBUG "Making userspace jump\n");
     userspace_jump(NULL, 0xB0000000);
 
-    puts(DEBUG "Entering idle state\n");
-    for (;;) {
-        int_enable();
-        asm("hlt");
-    }
+    kernel_init();
 }

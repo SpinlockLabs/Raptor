@@ -1,7 +1,11 @@
 #include <liblox/common.h>
 #include <liblox/io.h>
 #include <liblox/lox-internal.h>
+
+#include <kernel/entry.h>
+#include <kernel/cpu.h>
 #include <kernel/timer.h>
+
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -43,18 +47,18 @@ used noreturn void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags) {
 
     uart_init();
     puts("\n");
-    puts(INFO "Raptor kernel\n");
     puts(DEBUG "UART initialized.\n");
 
     gpio_init();
     puts(DEBUG "GPIO initialized.\n");
 
-//    timer_init(250);
-//    puts(DEBUG "Timer initialized.\n");
-
     framebuffer_init(640, 480);
     puts(DEBUG "Framebuffer initialized.\n");
 
+    kernel_init();
+}
+
+void cpu_run_idle(void) {
     bool state = false;
     bool blink_act = true;
     unsigned int counter = 0;
