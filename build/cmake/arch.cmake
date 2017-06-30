@@ -45,5 +45,4 @@ kernel_cflags(
   -nostdlib
   -nostartfiles
   -ffreestanding
-  -fno-builtin
 )

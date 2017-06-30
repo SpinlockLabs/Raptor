@@ -7,6 +7,7 @@ cflags(
   -O2
   -fpic
   -mfloat-abi=hard
+  --specs=nosys.specs
 )
 
 kernel_ldscript("${KERNEL_DIR}/arch/arm/rpi/linker.ld")
