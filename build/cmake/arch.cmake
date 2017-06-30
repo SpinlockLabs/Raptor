@@ -10,6 +10,10 @@ function(arch ARCH SRC_DIR)
   add_executable(kernel ${ARCH_SRC} ${KERNEL_COMMON_SRC})
   target_link_libraries(kernel lox-kernel)
   set_target_properties(kernel PROPERTIES OUTPUT_NAME "kernel.elf")
+
+  if(NOT CLANG)
+    target_link_libraries(kernel gcc)
+  endif()
 endfunction()
 
 set(KERNEL_C_FLAGS "${CMAKE_C_FLAGS}")
@@ -45,4 +49,5 @@ kernel_cflags(
   -nostdlib
   -nostartfiles
   -ffreestanding
+  -fno-builtin
 )

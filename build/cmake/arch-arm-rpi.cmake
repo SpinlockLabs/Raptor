@@ -6,6 +6,7 @@ cflags(
   -mcpu=arm1176jzf-s
   -O2
   -fpic
+  -mfloat-abi=hard
 )
 
 kernel_ldscript("${KERNEL_DIR}/arch/arm/rpi/linker.ld")

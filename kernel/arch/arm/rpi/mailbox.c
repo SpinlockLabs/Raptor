@@ -20,5 +20,5 @@ uint32_t bcm_mailbox_read(uint8_t channel) {
 
 void bcm_mailbox_write(uint8_t channel, uint32_t data) {
     while (mmio_read(MAIL_STATUS) & MAIL_FULL) {}
-    mmio_write(MAIL_WRITE, (data << 4) | channel);
+    mmio_write(MAIL_WRITE, data + channel);
 }
