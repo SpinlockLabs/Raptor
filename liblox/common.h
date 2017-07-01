@@ -56,5 +56,8 @@
 // Specifies that a value can be null.
 #define nullable
 
-// Simplified type for unsigned int
-#define uint unsigned int
+// Simplified type for unsigned int.
+typedef unsigned int uint;
+
+// Simplified type for unsigned long.
+typedef unsigned long ulong;

@@ -40,12 +40,6 @@ static int keyboard_callback(regs_t *regs) {
         default: break;
     }
 
-    /*char* cs;
-    itoa(c, cs, 16);
-    vga_writestring("Code ");
-    vga_writestring(cs);
-    vga_writestring("\n");*/
-
     return 1;
 }
 

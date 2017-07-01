@@ -17,7 +17,7 @@
 #define MULTIBOOT_FLAG_APM     0x200
 #define MULTIBOOT_FLAG_VBE     0x400
 
-typedef struct multiboot {
+typedef struct {
     uintptr_t flags;
     uintptr_t mem_lower;
     uintptr_t mem_upper;
@@ -82,3 +82,5 @@ typedef struct {
     uint64_t length;
     uint32_t type;
 } packed mboot_memmap_t;
+
+multiboot_t *mboot;

@@ -11,6 +11,7 @@
 #include "idt.h"
 #include "irq.h"
 #include "paging.h"
+#include "pci_init.h"
 #include "userspace.h"
 #include "vga.h"
 
@@ -46,10 +47,12 @@ void (*arch_panic_handler)(char*) = arch_x86_panic_handler;
 void (*lox_output_string_provider)(char*) = lox_output_string_vga;
 void (*lox_output_char_provider)(char) = lox_output_char_vga;
 
-used void kernel_main(multiboot_t *mboot, uint32_t mboot_hdr) {
+used void kernel_main(multiboot_t *_mboot, uint32_t mboot_hdr) {
     if (mboot_hdr != MULTIBOOT_EAX_MAGIC) {
         return;
     }
+
+    mboot = _mboot;
 
     init_cmdline(mboot);
 
@@ -82,13 +85,14 @@ used void kernel_main(multiboot_t *mboot, uint32_t mboot_hdr) {
     timer_init(50);
     puts(DEBUG "PIT Initialized\n");
 
-    breakpoint("paging-init");
-    paging_init();
-    puts(DEBUG "Paging Initialized\n");
+    breakpoint("pci-init");
+    puts(DEBUG "Probing PCI devices...\n");
+    pci_init();
+    puts(DEBUG "PCI probe done.\n");
 
     breakpoint("userspace-jump");
-    puts(DEBUG "Making userspace jump\n");
-    userspace_jump(NULL, 0xB0000000);
+    //puts(DEBUG "Making userspace jump\n");
+    //userspace_jump(NULL, 0xB0000000);
 
     kernel_init();
 }

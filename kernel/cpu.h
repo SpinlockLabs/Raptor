@@ -4,4 +4,4 @@
 #include <stdbool.h>
 
 /* Run the CPU in an idle state */
-noreturn void cpu_run_idle(void);
+noreturn extern void cpu_run_idle(void);
