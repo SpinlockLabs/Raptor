@@ -1,6 +1,6 @@
-#include "common.h"
-#include "list.h"
-#include "string.h"
+#include <liblox/string.h>
+
+#include "klist.h"
 
 #define list_invalid_index(list, idx) (idx) >= (list)->size || (idx) < 0
 
@@ -12,7 +12,7 @@ void list_init(list_t *list) {
     memset(list, 0, sizeof(list_t));
 }
 
-list_node_t* list_create_node(void) {
+list_node_t* list_create_node(list_t *list, void) {
     list_node_t *node = (list_node_t*) malloc(sizeof(list_node_t));
 
     ensure_allocated(node);

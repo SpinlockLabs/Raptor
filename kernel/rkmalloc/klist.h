@@ -2,8 +2,6 @@
 
 #include <stddef.h>
 
-#include "memory.h"
-
 typedef struct list_node_t {
     void *value;
     struct list_node_t *prev;

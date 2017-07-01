@@ -1,4 +1,5 @@
 #include <liblox/string.h>
+
 #include "gdt.h"
 
 // Limit, shortens code in gdt_init.

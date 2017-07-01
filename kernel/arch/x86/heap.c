@@ -31,4 +31,3 @@ uint32_t kmalloc_ap(uint32_t size, uint32_t *phys) {
 uint32_t kmalloc(uint32_t size) {
     return _kmalloc_int(size, 0, 0);
 }
-

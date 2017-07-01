@@ -1,5 +1,6 @@
 #pragma once
 
+#include <liblox/common.h>
 #include <stdint.h>
 
 extern uint32_t placement_address;
