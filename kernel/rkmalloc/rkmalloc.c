@@ -1,3 +1,4 @@
+#include <liblox/hex.h>
 #include "rkmalloc.h"
 
 typedef struct {
@@ -21,7 +22,7 @@ void rkmalloc_init_heap(rkmalloc_heap *heap) {
 
     heap->error_code = RKMALLOC_ERROR_NONE;
     heap->total_allocated_blocks_size = 0;
-    heap->last_allocated_entry = 0;
+    heap->total_allocated_used_size = 0;
     list_init(&heap->index);
 
     CHKSIZE(heap->types.tiny)
@@ -89,7 +90,51 @@ void* rkmalloc_allocate(rkmalloc_heap *heap, size_t size) {
         return entry->ptr;
     }
 
-    node = heap->index.head;
+    /* TODO(kaendfinger): Implement combining blocks. */
 
+    size_t header_and_size =
+        sizeof(list_node_t) + sizeof(rkmalloc_entry) + block_size;
 
+    list_node_t *lnode = heap->kmalloc(header_and_size);
+    rkmalloc_entry *entry = (rkmalloc_entry*) (lnode + sizeof(list_node_t));
+
+    entry->free = false;
+    entry->block_size = block_size;
+    entry->used_size = size;
+    entry->ptr = (void*) (entry + sizeof(rkmalloc_entry));
+
+    list_insert_node_before(heap->index.head, lnode);
+
+    return entry->ptr;
+}
+
+void rkmalloc_free(rkmalloc_heap *heap, void *ptr) {
+    if (ptr == NULL) {
+        return;
+    }
+
+    list_node_t *node = heap->index.head;
+    rkmalloc_entry *entry = NULL;
+    while (node != NULL) {
+        entry = node->value;
+        if (entry->ptr == ptr) {
+            break;
+        }
+
+        node = node->next;
+    }
+
+    if (node == NULL) {
+        puts(WARN "Attempted to free an invalid pointer (");
+        putint_hex((int) ptr);
+        puts(")\n");
+    } else if (entry->free) {
+        puts(WARN "Attempted to free an already freed pointer (");
+        putint_hex((int) ptr);
+        puts(")\n");
+    } else {
+        entry->free = true;
+        heap->total_allocated_blocks_size -= entry->block_size;
+        heap->total_allocated_used_size -= entry->used_size;
+    }
 }

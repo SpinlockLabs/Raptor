@@ -7,7 +7,9 @@
 #include <liblox/string.h>
 #include <liblox/list.h>
 
-typedef size_t (*kmalloc_func_t)(size_t size);
+#include <kernel/panic.h>
+
+typedef void* (*kmalloc_func_t)(size_t size);
 
 typedef struct {
     size_t tiny;
@@ -29,7 +31,7 @@ typedef struct {
     rkmalloc_error error_code;
     size_t total_allocated_blocks_size;
     size_t total_allocated_used_size;
-    size_t last_allocated_entry;
+    size_t max_allocated_size;
     list_t index;
     rkmalloc_heap_types types;
 } rkmalloc_heap;

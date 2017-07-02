@@ -3,9 +3,11 @@
 #include <liblox/common.h>
 #include <stdint.h>
 
-extern uint32_t placement_address;
+extern uint32_t kheap_placement_address;
 
-uint32_t kmalloc_a(uint32_t);
-uint32_t kmalloc_p(uint32_t, uint32_t *);
-uint32_t kmalloc_ap(uint32_t, uint32_t *);
-uint32_t kmalloc(uint32_t);
+uint32_t kpmalloc_a(uint32_t);
+uint32_t kpmalloc_p(uint32_t, uint32_t *);
+uint32_t kpmalloc_ap(uint32_t, uint32_t *);
+uint32_t kpmalloc(uint32_t);
+
+void heap_init(void);

@@ -1,5 +1,7 @@
 #include <kernel/panic.h>
+#include <liblox/hex.h>
 #include <liblox/string.h>
+#include <kernel/cmdline.h>
 
 #include "heap.h"
 #include "irq.h"
@@ -80,20 +82,20 @@ void free_frame(page_t *page) {
 void paging_init(void) {
     uint32_t memEndPage = 0x10000000;
     frame_count = memEndPage / 0x1000;
-    frames = (uint32_t *) kmalloc(INDEX_FROM_BIT(frame_count));
+    frames = (uint32_t *) kpmalloc(INDEX_FROM_BIT(frame_count));
     memset(frames, 0, INDEX_FROM_BIT(frame_count));
 
-    kernel_directory = (page_directory_t *) kmalloc_a(sizeof(page_directory_t));
+    kernel_directory = (page_directory_t *) kpmalloc_a(sizeof(page_directory_t));
     memset(kernel_directory, 0, sizeof(page_directory_t));
     current_directory = kernel_directory;
 
     int i = 0;
-    while (i < placement_address) {
+    while (i < kheap_placement_address) {
         alloc_frame(paging_get_page((uint32_t) i, 1, kernel_directory), 0, 0);
         i += 0x1000;
     }
 
-    irq_add_handler(14, (irq_handler_chain_t) page_fault);
+    isr_add_handler(14, (irq_handler_t) page_fault);
 
     paging_switch_directory(kernel_directory);
 }
@@ -116,16 +118,17 @@ page_t *paging_get_page(uint32_t address, int make, page_directory_t *dir) {
 
     if (make) {
         uint32_t tmp;
-        dir->tables[table_idx] = (page_table_t *) kmalloc_ap(sizeof(page_table_t), &tmp);
+        dir->tables[table_idx] = (page_table_t *) kpmalloc_ap(sizeof(page_table_t), &tmp);
         memset(dir->tables[table_idx], 0, 0x1000);
         dir->tablesPhysical[table_idx] = tmp | 0x7;
         return &dir->tables[table_idx]->pages[address % 1024];
     }
 
-    return 0;
+    return NULL;
 }
 
 void page_fault(regs_t regs) {
+    int_disable();
     uint32_t faulting_address;
     asm volatile("mov %%cr2, %0" : "=r" (faulting_address));
 
@@ -135,7 +138,7 @@ void page_fault(regs_t regs) {
     int reserved = regs.err_code & 0x8;
     int id = regs.err_code & 0x10;
 
-    puts("Page fault (");
+    puts(DEBUG "Page fault (");
     if (present) {
         puts("present ");
     }
@@ -151,9 +154,10 @@ void page_fault(regs_t regs) {
     if (reserved) {
         puts("reserved ");
     }
-    puts(") at 0x");
-    puts((char *) faulting_address);
+    puts(") at ");
+    putint_hex((int) faulting_address);
     puts("\n");
 
-    asm volatile("cli; hlt");
+    page_t *page = paging_get_page(faulting_address, !present, current_directory);
+    alloc_frame(page, !us, 1);
 }
