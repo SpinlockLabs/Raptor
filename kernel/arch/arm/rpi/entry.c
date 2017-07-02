@@ -38,7 +38,6 @@ char* arch_arm_rpi_get_cmdline(void) {
 
 void kernel_modules_load(void) {}
 void paging_init(void) {}
-void heap_init(void) {}
 
 char* (*arch_get_cmdline)(void) = arch_arm_rpi_get_cmdline;
 void (*lox_output_string_provider)(char*) = lox_output_string_uart;

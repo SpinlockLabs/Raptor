@@ -1,24 +1,17 @@
 #include <liblox/common.h>
+#include <liblox/hex.h>
 
 #include <kernel/timer.h>
-
-#include <stdbool.h>
 
 #include "io.h"
 #include "irq.h"
 
-#define SUBTICKS_PER_TICK 1000
-
 static ulong timer_ticks = 0;
-static ulong timer_subticks = 0;
 
 static int timer_callback(regs_t *regs) {
     unused(regs);
 
-    if (++timer_subticks == SUBTICKS_PER_TICK) {
-        timer_ticks++;
-        timer_subticks = 0;
-    }
+    timer_ticks++;
 
     return 1;
 }
@@ -46,13 +39,13 @@ ulong timer_get_ticks(void) {
     return timer_ticks;
 }
 
-void timer_get_relative_time(ulong seconds, ulong subseconds, ulong *out_seconds,
-                             ulong *out_subseconds) {
-    if (subseconds + timer_subticks > SUBTICKS_PER_TICK) {
-        *out_seconds = timer_ticks + seconds + 1;
-        *out_subseconds = (subseconds + timer_subticks) - SUBTICKS_PER_TICK;
-    } else {
-        *out_seconds = timer_ticks + seconds;
-        *out_subseconds = timer_subticks + subseconds;
+void timer_sleep(ulong ticks) {
+    ulong start = timer_ticks;
+
+    while ((timer_ticks - start) < ticks) {
+        int_enable();
+        asm("hlt");
     }
 }
+
+void (*lox_sleep_provider)(ulong ms) = timer_sleep;

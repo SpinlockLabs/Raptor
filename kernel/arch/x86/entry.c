@@ -80,7 +80,7 @@ used void kernel_main(multiboot_t *_mboot, uint32_t mboot_hdr) {
     puts(DEBUG "ISRs Initialized.\n");
     irq_init();
     puts(DEBUG "IRQs Initialized.\n");
-    timer_init(50);
+    timer_init(1000);
     puts(DEBUG "PIT Initialized.\n");
 
     breakpoint("pci-init");

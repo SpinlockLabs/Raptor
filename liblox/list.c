@@ -2,7 +2,7 @@
 #include "list.h"
 #include "string.h"
 
-#define list_invalid_index(list, idx) (idx) >= (list)->size || (idx) < 0
+#define list_invalid_index(list, idx) (idx) >= (list)->size
 
 void list_init_node(list_node_t *node) {
     memset(node, 0, sizeof(list_node_t));

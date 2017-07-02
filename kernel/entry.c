@@ -1,6 +1,7 @@
 #include <liblox/common.h>
 #include <liblox/memory.h>
 #include <liblox/io.h>
+#include <liblox/sleep.h>
 
 #include <kernel/cmdline.h>
 #include <kernel/cpu.h>

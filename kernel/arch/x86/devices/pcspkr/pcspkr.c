@@ -1,4 +1,5 @@
 #include <liblox/common.h>
+#include <liblox/sleep.h>
 
 #include <kernel/timer.h>
 
@@ -16,8 +17,7 @@ void pcspkr_note(int length, int freq) {
     t = inb(0x61);
     outb(0x61, (uint8_t) (t | 0x3));
 
-    ulong s, ss = 0;
-    timer_get_relative_time(0, (ulong) length * 10, &s, &ss);
+    sleep((uint32_t) (length * 10));
 
     t = (uint8_t) (inb(0x61) & 0xFC);
     outb(0x61, t);
