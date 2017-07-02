@@ -43,9 +43,14 @@ uint32_t kpmalloc(uint32_t size) {
     return _kpmalloc_int(size, 0, 0);
 }
 
+void* rkpmalloc(size_t size) {
+    uint32_t p = 0;
+    return (void*) kpmalloc_ap(size, &p);
+}
+
 void heap_init(void) {
     kheap = (rkmalloc_heap*) kpmalloc(sizeof(rkmalloc_heap));
-    kheap->kmalloc = (kmalloc_func_t) kpmalloc;
+    kheap->kmalloc = rkpmalloc;
     kheap->types = (rkmalloc_heap_types) {
         .tiny = 1 * 1024, // 1 kb
         .small = 2 * 1024, // 2 KB

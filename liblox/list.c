@@ -32,6 +32,13 @@ list_t* list_create(void) {
 
 list_node_t* list_insert_node_after(list_node_t *node, list_node_t *entry) {
     ensure_allocated(entry);
+    ensure_allocated(entry->list);
+
+    if (node == NULL) {
+        entry->list->head = entry;
+        entry->list->size = 1;
+        return entry;
+    }
 
     list_node_t *tmp = node->next;
     node->next = entry;
@@ -48,6 +55,7 @@ list_node_t* list_insert_node_after(list_node_t *node, list_node_t *entry) {
 list_node_t* list_insert_after(list_node_t *node, void *value) {
     list_node_t *entry = list_create_node();
     ensure_allocated(entry);
+    entry->list = node->list;
     entry->value = value;
 
     return list_insert_node_after(node, entry);
@@ -55,6 +63,13 @@ list_node_t* list_insert_after(list_node_t *node, void *value) {
 
 list_node_t* list_insert_node_before(list_node_t *node, list_node_t *entry) {
     ensure_allocated(entry);
+    ensure_allocated(entry->list);
+
+    if (node == NULL) {
+        entry->list->head = entry;
+        entry->list->size = 1;
+        return entry;
+    }
 
     list_node_t *tmp = node->prev;
     node->prev = entry;
@@ -71,17 +86,15 @@ list_node_t* list_insert_node_before(list_node_t *node, list_node_t *entry) {
 list_node_t* list_insert_before(list_node_t *node, void *value) {
     list_node_t *entry = list_create_node();
     ensure_allocated(entry);
+    entry->list = node->list;
     entry->value = value;
 
     return list_insert_node_before(node, entry);
 }
 
-list_node_t* list_add(list_t *list, void *value) {
-    list_node_t *entry = list_create_node();
-
+list_node_t* list_add_node(list_t *list, list_node_t *entry) {
+    ensure_allocated(list);
     ensure_allocated(entry);
-
-    entry->value = value;
 
     if (list->head == NULL) {
         list->head = entry;
@@ -95,6 +108,15 @@ list_node_t* list_add(list_t *list, void *value) {
     }
     list_insert_after(current, entry);
     return entry;
+}
+
+list_node_t* list_add(list_t *list, void *value) {
+    list_node_t *entry = list_create_node();
+    ensure_allocated(entry);
+    entry->list = list;
+    entry->value = value;
+
+    return list_add_node(list, entry);
 }
 
 list_node_t* list_get_at(list_t *list, size_t index) {
@@ -123,11 +145,18 @@ void* list_get_value_at(list_t *list, size_t index) {
 }
 
 void list_remove(list_node_t *node) {
-    node->prev = node->next;
+    list_node_t *prev = node->prev;
+    list_node_t *next = node->next;
 
-    if (node->list != NULL) {
-        node->list->size--;
+    if (prev != NULL) {
+        prev->next = next;
     }
 
-    free(node);
+    if (next != NULL) {
+        next->prev = prev;
+    }
+
+    if (node->list != NULL && node->list->head == node) {
+        node->list->head = next;
+    }
 }

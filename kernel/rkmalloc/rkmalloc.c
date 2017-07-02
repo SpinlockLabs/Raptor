@@ -96,6 +96,9 @@ void* rkmalloc_allocate(rkmalloc_heap *heap, size_t size) {
         sizeof(list_node_t) + sizeof(rkmalloc_entry) + block_size;
 
     list_node_t *lnode = heap->kmalloc(header_and_size);
+    list_init_node(lnode);
+    lnode->list = &heap->index;
+
     rkmalloc_entry *entry = (rkmalloc_entry*) (lnode + sizeof(list_node_t));
 
     entry->free = false;
@@ -103,7 +106,9 @@ void* rkmalloc_allocate(rkmalloc_heap *heap, size_t size) {
     entry->used_size = size;
     entry->ptr = (void*) (entry + sizeof(rkmalloc_entry));
 
-    list_insert_node_before(heap->index.head, lnode);
+    lnode->value = entry;
+
+    list_add_node(&heap->index, lnode);
 
     return entry->ptr;
 }

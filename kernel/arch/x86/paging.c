@@ -118,7 +118,7 @@ page_t *paging_get_page(uint32_t address, int make, page_directory_t *dir) {
 
     if (make) {
         uint32_t tmp;
-        dir->tables[table_idx] = (page_table_t *) kpmalloc_ap(sizeof(page_table_t), &tmp);
+        dir->tables[table_idx] = (page_table_t*) kpmalloc_ap(sizeof(page_table_t), &tmp);
         memset(dir->tables[table_idx], 0, 0x1000);
         dir->tablesPhysical[table_idx] = tmp | 0x7;
         return &dir->tables[table_idx]->pages[address % 1024];
@@ -138,26 +138,30 @@ void page_fault(regs_t regs) {
     int reserved = regs.err_code & 0x8;
     int id = regs.err_code & 0x10;
 
-    puts(DEBUG "Page fault (");
-    if (present) {
-        puts("present ");
-    }
+    if (cmdline_bool_flag("show-page-faults")) {
+        puts(DEBUG "Page fault (");
+        if (present) {
+            puts(" present");
+        }
 
-    if (rw) {
-        puts("rw ");
-    }
+        if (rw) {
+            puts(" rw");
+        }
 
-    if (us) {
-        puts("usermode ");
-    }
+        if (us) {
+            puts(" usermode");
+        }
 
-    if (reserved) {
-        puts("reserved ");
+        if (reserved) {
+            puts(" reserved");
+        }
+        puts(" ) at ");
+        putint_hex((int) faulting_address);
+        puts("\n");
     }
-    puts(") at ");
-    putint_hex((int) faulting_address);
-    puts("\n");
 
     page_t *page = paging_get_page(faulting_address, !present, current_directory);
     alloc_frame(page, !us, 1);
+
+    int_enable();
 }
