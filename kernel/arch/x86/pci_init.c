@@ -1,7 +1,7 @@
 #include <liblox/io.h>
 #include <liblox/hex.h>
 
-#include <kernel/devices/pci/pci.h>
+#include <kernel/arch/x86/devices/pci/pci.h>
 
 #include "pci_init.h"
 
