@@ -26,7 +26,7 @@ set(QEMU_FLAGS
 
 add_custom_target(qemu
   COMMAND ${QEMU_FLAGS}
-  DEPENDS raptor.bin
+  DEPENDS kernel
 )
 
 if(NOT RPI_BOOT_PART STREQUAL "")
