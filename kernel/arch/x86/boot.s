@@ -2,7 +2,7 @@
 .set MB_FLAG_PAGE_ALIGN, 1 << 0
 .set MB_FLAG_MEMORY_INFO, 1 << 1
 .set MB_FLAG_GRAPHICS, 1 << 2
-.set MB_FLAGS, MB_FLAG_PAGE_ALIGN | MB_FLAG_MEMORY_INFO | MB_FLAG_GRAPHICS
+.set MB_FLAGS, MB_FLAG_PAGE_ALIGN | MB_FLAG_MEMORY_INFO
 .set MB_CHECKSUM, -(MB_MAGIC + MB_FLAGS)
 
 .section .multiboot
@@ -75,4 +75,3 @@ idt_flush:
     ret
 
 .size _start, . - _start
-
