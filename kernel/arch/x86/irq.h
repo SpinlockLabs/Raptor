@@ -19,7 +19,7 @@
 #define IRQ14 46
 #define IRQ15 47
 
-static irq_handler_chain_t irq_routines[IRQ_CHAIN_SIZE * IRQ_CHAIN_DEPTH] = { NULL  };
+used static irq_handler_chain_t irq_routines[IRQ_CHAIN_SIZE * IRQ_CHAIN_DEPTH] = { NULL  };
 
 void int_disable(void);
 void int_resume(void);

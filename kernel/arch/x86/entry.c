@@ -1,4 +1,5 @@
 #include <liblox/common.h>
+#include <liblox/string.h>
 #include <liblox/io.h>
 
 #include <kernel/entry.h>
@@ -12,38 +13,57 @@
 #include "irq.h"
 #include "pci_init.h"
 #include "userspace.h"
+#include "io.h"
 #include "vga.h"
 
 const uint32_t kProcessorIdIntel = 0x756e6547;
 const uint32_t kProcessorIdAMD = 0x68747541;
+
+void lox_output_char_ebl(char c) {
+    outb(0x3F8, c);
+}
+
+void lox_output_string_ebl(char* msg) {
+    if (msg == NULL) {
+        return;
+    }
+
+    size_t len = strlen(msg);
+    for (size_t i = 0; i < len; ++i) {
+        lox_output_char_ebl(msg[i]);
+    }
+}
 
 void lox_output_string_vga(char* msg) {
     if (msg == NULL) {
         return;
     }
     vga_writestring(msg);
+    lox_output_string_ebl(msg);
 }
 
 void lox_output_char_vga(char c) {
     vga_putchar(c);
+    lox_output_char_ebl(c);
 }
 
 used void arch_panic_handler(nullable char *msg) {
-    asm("cli");
+    asm("cli;");
 
     if (msg != NULL) {
+        vga_putchar('\n');
         vga_writestring("[PANIC] ");
         vga_writestring(msg);
         vga_putchar('\n');
     }
 
     while (1) {
-        asm("hlt");
+        asm("hlt;");
     }
 }
 
-void (*lox_output_string_provider)(char*) = lox_output_string_vga;
-void (*lox_output_char_provider)(char) = lox_output_char_vga;
+void (*lox_output_string_provider)(char*) = lox_output_string_ebl;
+void (*lox_output_char_provider)(char) = lox_output_char_ebl;
 
 used void kernel_main(multiboot_t *_mboot, uint32_t mboot_hdr) {
     if (mboot_hdr != MULTIBOOT_EAX_MAGIC) {
@@ -55,6 +75,11 @@ used void kernel_main(multiboot_t *_mboot, uint32_t mboot_hdr) {
     init_cmdline(mboot);
 
     vga_init();
+
+    if (!cmdline_bool_flag("disable-vga")) {
+        lox_output_string_provider = lox_output_string_vga;
+        lox_output_char_provider = lox_output_char_vga;
+    }
 
     if (cmdline_bool_flag("debug")) {
         puts(DEBUG "cmdline: ");
@@ -73,15 +98,15 @@ used void kernel_main(multiboot_t *_mboot, uint32_t mboot_hdr) {
     }
 
     gdt_init();
-    puts(DEBUG "GDT Initialized.\n");
+    puts(DEBUG "GDT initialized.\n");
     idt_init();
-    puts(DEBUG "IDT Initialized.\n");
+    puts(DEBUG "IDT initialized.\n");
     isr_init();
-    puts(DEBUG "ISRs Initialized.\n");
+    puts(DEBUG "ISRs initialized.\n");
     irq_init();
-    puts(DEBUG "IRQs Initialized.\n");
+    puts(DEBUG "IRQs initialized.\n");
     timer_init(1000);
-    puts(DEBUG "PIT Initialized.\n");
+    puts(DEBUG "PIT initialized.\n");
 
     breakpoint("pci-init");
     puts(DEBUG "Probing PCI devices...\n");

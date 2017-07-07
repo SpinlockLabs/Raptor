@@ -46,3 +46,7 @@ kernel_cflags(
   -nostartfiles
   -ffreestanding
 )
+
+if(UBSAN)
+  kernel_cflags(-fsanitize=undefined)
+endif()

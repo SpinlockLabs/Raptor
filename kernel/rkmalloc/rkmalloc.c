@@ -1,4 +1,7 @@
 #include <liblox/hex.h>
+
+#include <kernel/spin.h>
+
 #include "rkmalloc.h"
 
 typedef struct {
@@ -23,6 +26,9 @@ void rkmalloc_init_heap(rkmalloc_heap *heap) {
     heap->error_code = RKMALLOC_ERROR_NONE;
     heap->total_allocated_blocks_size = 0;
     heap->total_allocated_used_size = 0;
+    heap->lock[0] = 0;
+    heap->lock[1] = 0;
+
     list_init(&heap->index);
 
     CHKSIZE(heap->types.tiny)
@@ -69,6 +75,8 @@ static bool is_block_usable(rkmalloc_entry *entry, size_t block_size) {
 }
 
 void* rkmalloc_allocate(rkmalloc_heap *heap, size_t size) {
+    spin_lock(heap->lock);
+
     size_t block_size = get_block_size(heap->types, size);
     list_node_t *node = heap->index.head;
 
@@ -86,6 +94,8 @@ void* rkmalloc_allocate(rkmalloc_heap *heap, size_t size) {
         entry->block_size = block_size;
         heap->total_allocated_blocks_size += block_size;
         heap->total_allocated_used_size += size;
+
+        spin_unlock(heap->lock);
 
         return entry->ptr;
     }
@@ -110,6 +120,8 @@ void* rkmalloc_allocate(rkmalloc_heap *heap, size_t size) {
 
     list_add_node(&heap->index, lnode);
 
+    spin_unlock(heap->lock);
+
     return entry->ptr;
 }
 
@@ -117,6 +129,8 @@ void rkmalloc_free(rkmalloc_heap *heap, void *ptr) {
     if (ptr == NULL) {
         return;
     }
+
+    spin_lock(heap->lock);
 
     list_node_t *node = heap->index.head;
     rkmalloc_entry *entry = NULL;
@@ -142,4 +156,6 @@ void rkmalloc_free(rkmalloc_heap *heap, void *ptr) {
         heap->total_allocated_blocks_size -= entry->block_size;
         heap->total_allocated_used_size -= entry->used_size;
     }
+
+    spin_unlock(heap->lock);
 }

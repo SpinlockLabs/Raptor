@@ -38,6 +38,9 @@
 // Specifies that a function will not be called often.
 #define cold __attribute__((cold))
 
+// Specifies that a function is pure, and has no side effects.
+#define pure __attribute__((pure))
+
 // Specifies that the location in the program is unreachable.
 #define unreachable() __builtin_unreachable()
 

@@ -37,6 +37,11 @@ add_custom_target(qemu-gdb
   DEPENDS kernel
 )
 
+add_custom_target(qemu-cli
+  COMMAND ${QEMU_CMD} -monitor none -nographic
+  DEPENDS kernel
+)
+
 add_custom_command(
   OUTPUT raptor.iso
   DEPENDS kernel

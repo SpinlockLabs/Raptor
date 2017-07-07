@@ -1,12 +1,14 @@
 #pragma once
 
+#include <liblox/common.h>
+
 #include <stddef.h>
 #include <stdint.h>
 #include "x86.h"
 
-static irq_handler_t isr_routines[256] = { 0 };
+used static irq_handler_t isr_routines[256] = { 0 };
 
-static char* exceptions[32] = {
+used static char* exceptions[32] = {
     "Division by zero",
     "Debug",
     "NMI Interrupt",

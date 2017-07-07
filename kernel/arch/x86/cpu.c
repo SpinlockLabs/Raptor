@@ -1,4 +1,5 @@
-#include <kernel/cpu.h>
+#include <kernel/cpu/idle.h>
+#include <kernel/cpu/task.h>
 
 #include "irq.h"
 

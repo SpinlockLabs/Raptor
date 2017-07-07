@@ -106,7 +106,7 @@ list_node_t* list_add_node(list_t *list, list_node_t *entry) {
     while (current->next != NULL) {
         current = current->next;
     }
-    list_insert_after(current, entry);
+    list_insert_node_after(current, entry);
     return entry;
 }
 

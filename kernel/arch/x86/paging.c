@@ -1,6 +1,8 @@
-#include <kernel/panic.h>
-#include <liblox/hex.h>
+#include <liblox/common.h>
 #include <liblox/string.h>
+#include <liblox/hex.h>
+
+#include <kernel/panic.h>
 #include <kernel/cmdline.h>
 
 #include "heap.h"
@@ -30,7 +32,7 @@ static void clear_frame(uint32_t frameAddr) {
     frames[idx] &= ~(0x1 << off);
 }
 
-static uint32_t test_frame(uint32_t frameAddr) {
+used static uint32_t test_frame(uint32_t frameAddr) {
     uint32_t frame = frameAddr / 0x1000;
     uint32_t idx = INDEX_FROM_BIT(frame);
     uint32_t off = OFFSET_FROM_BIT(frame);
@@ -89,7 +91,7 @@ void paging_init(void) {
     memset(kernel_directory, 0, sizeof(page_directory_t));
     current_directory = kernel_directory;
 
-    int i = 0;
+    uint i = 0;
     while (i < kheap_placement_address) {
         alloc_frame(paging_get_page((uint32_t) i, 1, kernel_directory), 0, 0);
         i += 0x1000;
@@ -136,7 +138,7 @@ void page_fault(regs_t regs) {
     int rw = regs.err_code & 0x2;
     int us = regs.err_code & 0x4;
     int reserved = regs.err_code & 0x8;
-    int id = regs.err_code & 0x10;
+    // int id = regs.err_code & 0x10;
 
     if (cmdline_bool_flag("show-page-faults")) {
         puts(DEBUG "Page fault (");

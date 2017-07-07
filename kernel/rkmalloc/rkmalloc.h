@@ -7,6 +7,7 @@
 #include <liblox/string.h>
 #include <liblox/list.h>
 
+#include <kernel/spin.h>
 #include <kernel/panic.h>
 
 typedef void* (*kmalloc_func_t)(size_t size);
@@ -33,6 +34,7 @@ typedef struct {
     size_t total_allocated_used_size;
     list_t index;
     rkmalloc_heap_types types;
+    spin_lock_t lock;
 } rkmalloc_heap;
 
 extern uint8_t rkmalloc_error_code;

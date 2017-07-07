@@ -2,6 +2,7 @@
 #include <liblox/hex.h>
 
 #include <kernel/timer.h>
+#include <kernel/cpu/task.h>
 
 #include "io.h"
 #include "irq.h"
@@ -12,6 +13,7 @@ static int timer_callback(regs_t *regs) {
     unused(regs);
 
     timer_ticks++;
+    cpu_task_queue_flush();
 
     return 1;
 }
