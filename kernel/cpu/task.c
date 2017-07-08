@@ -2,10 +2,7 @@
 
 #include <kernel/timer.h>
 
-#include <liblox/io.h>
 #include <liblox/list.h>
-#include <liblox/string.h>
-#include <liblox/memory.h>
 
 typedef struct cpu_task_t {
     task_id id;

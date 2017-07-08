@@ -1,7 +1,7 @@
 #include "lox-internal.h"
 #include "memory.h"
 
-void* malloc(size_t size) {
+__attribute__((malloc)) void* malloc(size_t size) {
     if (lox_allocate_provider != NULL) {
         return lox_allocate_provider(size);
     }
