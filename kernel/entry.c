@@ -1,16 +1,6 @@
-#include <liblox/common.h>
-
-#include <liblox/memory.h>
 #include <liblox/io.h>
-#include <liblox/sleep.h>
-#include <liblox/string.h>
-#include <liblox/hex.h>
 
 #include <kernel/cpu/idle.h>
-#include <kernel/cpu/task.h>
-
-#include <kernel/cmdline.h>
-#include <kernel/timer.h>
 #include <kernel/modload.h>
 
 #include "paging.h"

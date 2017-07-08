@@ -4,10 +4,7 @@ static rkmalloc_heap *kheap = NULL;
 
 extern char __end;
 
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "ClangTidyInspection"
 uint32_t kheap_placement_address = (uint32_t) &__end;
-#pragma clang diagnostic pop
 
 static uint32_t _kpmalloc_int(uint32_t size, int align, uint32_t *phys) {
     if (align && (kheap_placement_address & 0xFFFFF000)) {
