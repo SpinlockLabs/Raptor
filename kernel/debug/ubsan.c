@@ -95,4 +95,3 @@ void __ubsan_handle_load_invalid_value(struct InvalidValueData *data,
     ubsan_debug(&data->location);
     printf("Invalid load of value at %d for the type %s: %d\n", val, data->type->type_name);
 }
-

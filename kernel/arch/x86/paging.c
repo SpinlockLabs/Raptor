@@ -9,11 +9,11 @@
 #include "irq.h"
 #include "paging.h"
 
-uint32_t *frames;
+uint32_t* frames;
 uint32_t frame_count;
 
-page_directory_t *kernel_directory;
-page_directory_t *current_directory;
+page_directory_t* kernel_directory;
+page_directory_t* current_directory;
 
 #define INDEX_FROM_BIT(a) ((a) / (8 * 4))
 #define OFFSET_FROM_BIT(a) ((a) % (8 * 4))
@@ -39,23 +39,29 @@ used static uint32_t test_frame(uint32_t frameAddr) {
     return (frames[idx] & (0x1 << off));
 }
 
-static int first_frame(uint32_t *val) {
+static int first_frame(uint32_t* val) {
     for (uint32_t i = 0; i < INDEX_FROM_BIT(frame_count); i++) {
-        // Check for free frames
-        if (frames[i] != 0xFFFFFFFF) {
-            for (uint32_t j = 0; j < 32; j++) {
-                uint32_t toTest = (uint32_t) (0x1 << j);
-                if (!(frames[i] & toTest)) {
-                    *val = i * 4 * 8 + j;
-                    return 0;
-                }
+        // Check for free frames.
+
+        if (frames[i] == 0xFFFFFFFF) {
+            continue;
+        }
+
+        for (uint32_t j = 0; j < 32; j++) {
+            uint32_t toTest = (uint32_t) (0x1 << j);
+
+            if (frames[i] & toTest) {
+                continue;
             }
+
+            *val = i * 4 * 8 + j;
+            return 0;
         }
     }
     return 1;
 }
 
-void alloc_frame(page_t *page, int isKernel, int isWritable) {
+void alloc_frame(page_t* page, int isKernel, int isWritable) {
     if (page->frame != 0) {
         return;
     }
@@ -73,7 +79,7 @@ void alloc_frame(page_t *page, int isKernel, int isWritable) {
     page->frame = idx;
 }
 
-void free_frame(page_t *page) {
+void free_frame(page_t* page) {
     if (page->frame == 0) {
         return;
     }
@@ -84,10 +90,10 @@ void free_frame(page_t *page) {
 void paging_init(void) {
     uint32_t memEndPage = 0x10000000;
     frame_count = memEndPage / 0x1000;
-    frames = (uint32_t *) kpmalloc(INDEX_FROM_BIT(frame_count));
+    frames = (uint32_t*) kpmalloc(INDEX_FROM_BIT(frame_count));
     memset(frames, 0, INDEX_FROM_BIT(frame_count));
 
-    kernel_directory = (page_directory_t *) kpmalloc_a(sizeof(page_directory_t));
+    kernel_directory = (page_directory_t*) kpmalloc_a(sizeof(page_directory_t));
     memset(kernel_directory, 0, sizeof(page_directory_t));
     current_directory = kernel_directory;
 
@@ -102,7 +108,7 @@ void paging_init(void) {
     paging_switch_directory(kernel_directory);
 }
 
-void paging_switch_directory(page_directory_t *dir) {
+void paging_switch_directory(page_directory_t* dir) {
     current_directory = dir;
     asm volatile("mov %0, %%cr3"::"r"(&dir->tablesPhysical));
     uint32_t cr0 = 0;
@@ -111,7 +117,7 @@ void paging_switch_directory(page_directory_t *dir) {
     asm volatile("mov %0, %%cr0"::"r"(cr0));
 }
 
-page_t *paging_get_page(uint32_t address, int make, page_directory_t *dir) {
+page_t* paging_get_page(uint32_t address, int make, page_directory_t* dir) {
     address /= 0x1000;
     uint32_t table_idx = address / 1024;
     if (dir->tables[table_idx]) {
@@ -162,7 +168,7 @@ void page_fault(regs_t regs) {
         puts("\n");
     }
 
-    page_t *page = paging_get_page(faulting_address, !present, current_directory);
+    page_t* page = paging_get_page(faulting_address, !present, current_directory);
     alloc_frame(page, !us, 1);
 
     int_enable();
