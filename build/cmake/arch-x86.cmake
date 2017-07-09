@@ -3,6 +3,7 @@ option(OPTIMIZE_NATIVE "Optimize for the native machine." OFF)
 
 cflags(
   -m32
+  -nostartfiles
 )
 
 if(CLANG)
@@ -48,7 +49,7 @@ add_custom_command(
   COMMAND bash
             ${CMAKE_SOURCE_DIR}/build/scripts/mkgrubiso.sh
             "${CMAKE_BINARY_DIR}/kernel.elf"
-  WORKING_DIRECTORY  "${CMAKE_BINARY_DIR}"
+  WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
 )
 
 add_custom_target(iso
