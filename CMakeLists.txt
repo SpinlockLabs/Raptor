@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.8)
 project(raptor C)
 option(OPTIMIZE_LTO "Enable Link-Time Optimization" OFF)
+option(TESTS "Enable Tests" OFF)
 
 enable_language(ASM)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -48,3 +49,7 @@ endif()
 arch_post_init()
 
 add_subdirectory(userspace)
+
+if(TESTS)
+  include(${RAPTOR_DIR}/build/cmake/tests.cmake)
+endif()

@@ -11,6 +11,7 @@ function(program EXE SRCFILES)
   add_dependencies(${EXE} lox)
   target_link_libraries(${EXE} lox crt0)
   target_include_directories(${EXE} PRIVATE ${RAPTOR_DIR})
+  target_compile_options(${EXE} PRIVATE "-nostartfiles")
 endfunction()
 
 foreach(PROGRAM_LIST ${PROGRAM_LISTS})

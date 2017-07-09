@@ -3,7 +3,6 @@ option(OPTIMIZE_NATIVE "Optimize for the native machine." OFF)
 
 cflags(
   -m32
-  -nostartfiles
 )
 
 if(CLANG)
