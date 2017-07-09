@@ -8,10 +8,10 @@ typedef struct {
     bool free;
     size_t used_size;
     size_t block_size;
-    void *ptr;
+    void* ptr;
 } rkmalloc_entry;
 
-void rkmalloc_init_heap(rkmalloc_heap *heap) {
+void rkmalloc_init_heap(rkmalloc_heap* heap) {
 #define CHKSIZE(size) \
     if ((size) == 0) { \
         heap->error_code = RKMALLOC_ERROR_TYPE_TOO_SMALL; \
@@ -62,7 +62,7 @@ static size_t get_block_size(rkmalloc_heap_types types, size_t size) {
     return size;
 }
 
-static bool is_block_usable(rkmalloc_entry *entry, size_t block_size) {
+static bool is_block_usable(rkmalloc_entry* entry, size_t block_size) {
     if (!entry->free) {
         return false;
     }
@@ -74,11 +74,11 @@ static bool is_block_usable(rkmalloc_entry *entry, size_t block_size) {
     return false;
 }
 
-void* rkmalloc_allocate(rkmalloc_heap *heap, size_t size) {
+void* rkmalloc_allocate(rkmalloc_heap* heap, size_t size) {
     spin_lock(heap->lock);
 
     size_t block_size = get_block_size(heap->types, size);
-    list_node_t *node = heap->index.head;
+    list_node_t* node = heap->index.head;
 
     while (node != NULL && !is_block_usable(node->value, block_size)) {
         node = node->next;
@@ -88,7 +88,7 @@ void* rkmalloc_allocate(rkmalloc_heap *heap, size_t size) {
      * Our best case is that we find a node in the index that can fit the size.
      */
     if (node != NULL) {
-        rkmalloc_entry *entry = node->value;
+        rkmalloc_entry* entry = node->value;
         entry->free = false;
         entry->used_size = size;
         entry->block_size = block_size;
@@ -105,11 +105,11 @@ void* rkmalloc_allocate(rkmalloc_heap *heap, size_t size) {
     size_t header_and_size =
         sizeof(list_node_t) + sizeof(rkmalloc_entry) + block_size;
 
-    list_node_t *lnode = heap->kmalloc(header_and_size);
+    list_node_t* lnode = heap->kmalloc(header_and_size);
     list_init_node(lnode);
     lnode->list = &heap->index;
 
-    rkmalloc_entry *entry = (rkmalloc_entry*) (lnode + sizeof(list_node_t));
+    rkmalloc_entry* entry = (rkmalloc_entry*) (lnode + sizeof(list_node_t));
 
     entry->free = false;
     entry->block_size = block_size;
@@ -125,15 +125,15 @@ void* rkmalloc_allocate(rkmalloc_heap *heap, size_t size) {
     return entry->ptr;
 }
 
-void rkmalloc_free(rkmalloc_heap *heap, void *ptr) {
+void rkmalloc_free(rkmalloc_heap* heap, void* ptr) {
     if (ptr == NULL) {
         return;
     }
 
     spin_lock(heap->lock);
 
-    list_node_t *node = heap->index.head;
-    rkmalloc_entry *entry = NULL;
+    list_node_t* node = heap->index.head;
+    rkmalloc_entry* entry = NULL;
     while (node != NULL) {
         entry = node->value;
         if (entry->ptr == ptr) {
