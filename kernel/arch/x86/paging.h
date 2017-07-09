@@ -22,7 +22,7 @@ typedef struct {
     /**
      * Array of pointers to the page tables.
      */
-    page_table_t *tables[1024];
+    page_table_t* tables[1024];
 
     /**
      * Array of pointers to the page tables above,
@@ -48,12 +48,12 @@ void paging_init(void);
 /**
  * Loads a specific page into the CR3 register.
  */
-void paging_switch_directory(page_directory_t *);
+void paging_switch_directory(page_directory_t*);
 
 /**
  * Retrieves a pointer to the page
  */
-page_t *paging_get_page(uint32_t, int, page_directory_t *);
+page_t* paging_get_page(uint32_t, int, page_directory_t*);
 
 /**
  * Page fault handler.

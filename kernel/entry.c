@@ -2,6 +2,8 @@
 
 #include <kernel/cpu/idle.h>
 #include <kernel/modload.h>
+#include <liblox/memory.h>
+#include <liblox/string.h>
 
 #include "paging.h"
 #include "heap.h"

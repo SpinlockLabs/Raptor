@@ -27,7 +27,7 @@ typedef enum {
     RKMALLOC_ERROR_FAILED_TO_ALLOCATE = 3
 } rkmalloc_error;
 
-typedef struct {
+typedef struct rkmalloc_heap {
     kmalloc_func_t kmalloc;
     rkmalloc_error error_code;
     size_t total_allocated_blocks_size;

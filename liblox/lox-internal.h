@@ -10,3 +10,4 @@ extern void (*lox_output_char_provider)(char);
 extern void* (*lox_allocate_provider)(size_t);
 extern void (*lox_free_provider)(nullable void*);
 extern void (*lox_sleep_provider)(ulong ms);
+extern void (*lox_abort_provider)(char* msg);

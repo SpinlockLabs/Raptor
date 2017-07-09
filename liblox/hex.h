@@ -6,5 +6,4 @@
 #include "string.h"
 #include "io.h"
 
-void putint_hex(int value);
-void putint_phexl(char *prefix, int value);
+void puthex(int value);

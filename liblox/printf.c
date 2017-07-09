@@ -29,7 +29,7 @@ static void print_dec(unsigned int value, unsigned int width, char *buf,
     while (i > 0) {
         unsigned int n = value / 10;
         int r = value % 10;
-        buf[*ptr + i - 1] = r + '0';
+        buf[*ptr + i - 1] = (char) (r + '0');
         i--;
         value = n;
     }
@@ -43,8 +43,9 @@ static void print_hex(unsigned int value, unsigned int width, char *buf,
                       int *ptr) {
     int i = width;
 
-    if (i == 0)
+    if (i == 0) {
         i = 8;
+    }
 
     unsigned int n_width = 1;
     unsigned int j = 0x0F;
@@ -86,7 +87,7 @@ size_t vasprintf(char *buf, const char *fmt, va_list args) {
         /* fmt[i] == '%' */
         switch (*f) {
         case 's': /* String pointer -> String */
-            s = (char *)va_arg(args, char *);
+            s = va_arg(args, char *);
             if (s == NULL) {
                 s = "(null)";
             }
@@ -98,14 +99,14 @@ size_t vasprintf(char *buf, const char *fmt, va_list args) {
             *b++ = (char)va_arg(args, int);
             break;
         case 'x': /* Hexadecimal number */
-            i = b - buf;
-            print_hex((unsigned long)va_arg(args, unsigned long), arg_width,
+            i = (int) (b - (uintptr_t) buf);
+            print_hex(va_arg(args, unsigned long), arg_width,
                       buf, &i);
             b = buf + i;
             break;
         case 'd': /* Decimal number */
-            i = b - buf;
-            print_dec((unsigned long)va_arg(args, unsigned long), arg_width,
+            i = (int) (b - (uintptr_t) buf);
+            print_dec(va_arg(args, unsigned long), arg_width,
                       buf, &i);
             b = buf + i;
             break;

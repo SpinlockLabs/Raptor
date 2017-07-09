@@ -1,7 +1,7 @@
-#include <kernel/panic.h>
 #include <liblox/string.h>
 
-#include "idt.h"
+#include <kernel/panic.h>
+
 #include "isr.h"
 
 void isr_add_handler(size_t isr, irq_handler_t handler) {
@@ -15,7 +15,7 @@ void isr_rem_handler(size_t isr) {
 void isr_init(void) {
 }
 
-void fault_handler(regs_t *r) {
+used void fault_handler(regs_t *r) {
     int i = r->int_no;
     irq_handler_t handler = isr_routines[i];
 

@@ -20,6 +20,7 @@ kernel_ldscript(${KERNEL_DIR}/arch/x86/linker.ld)
 set(QEMU_CMD_BASE
   qemu-system-i386
   -cpu core2duo
+  -m 1024
 )
 
 set(QEMU_CMD
@@ -39,6 +40,11 @@ add_custom_target(qemu-gdb
 
 add_custom_target(qemu-cli
   COMMAND ${QEMU_CMD} -monitor none -nographic
+  DEPENDS kernel
+)
+
+add_custom_target(qemu-cli-gdb
+  COMMAND ${QEMU_CMD} -S -s -append debug -monitor none -nographic
   DEPENDS kernel
 )
 

@@ -1,5 +1,4 @@
 #include <liblox/common.h>
-#include <liblox/hex.h>
 
 #include <kernel/timer.h>
 #include <kernel/cpu/task.h>

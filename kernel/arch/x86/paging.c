@@ -1,9 +1,5 @@
 #include <liblox/common.h>
-#include <liblox/string.h>
 #include <liblox/hex.h>
-
-#include <kernel/panic.h>
-#include <kernel/cmdline.h>
 
 #include "heap.h"
 #include "irq.h"
@@ -97,10 +93,20 @@ void paging_init(void) {
     memset(kernel_directory, 0, sizeof(page_directory_t));
     current_directory = kernel_directory;
 
-    uint i = 0;
+    uint32_t i = 0;
     while (i < kheap_placement_address) {
-        alloc_frame(paging_get_page((uint32_t) i, 1, kernel_directory), 0, 0);
+        alloc_frame(paging_get_page(i, 1, kernel_directory), 0, 0);
         i += 0x1000;
+    }
+
+    uintptr_t tmp_heap_start = kheap_init_address;
+
+    for (i = kheap_placement_address + 0x3000; i < tmp_heap_start; i += 0x1000) {
+        alloc_frame(paging_get_page(i, 1, kernel_directory), 1, 0);
+    }
+
+    for (i = tmp_heap_start; i < kheap_end_address; i += 0x1000) {
+        paging_get_page(i, 1, kernel_directory);
     }
 
     isr_add_handler(14, (irq_handler_t) page_fault);
@@ -146,30 +152,28 @@ void page_fault(regs_t regs) {
     int reserved = regs.err_code & 0x8;
     // int id = regs.err_code & 0x10;
 
-    if (cmdline_bool_flag("show-page-faults")) {
-        puts(DEBUG "Page fault (");
-        if (present) {
-            puts(" present");
-        }
-
-        if (rw) {
-            puts(" rw");
-        }
-
-        if (us) {
-            puts(" usermode");
-        }
-
-        if (reserved) {
-            puts(" reserved");
-        }
-        puts(" ) at ");
-        putint_hex((int) faulting_address);
-        puts("\n");
+    puts(ERROR "Segmentation fault (");
+    if (present) {
+        puts(" present");
     }
 
-    page_t* page = paging_get_page(faulting_address, !present, current_directory);
-    alloc_frame(page, !us, 1);
+    if (rw) {
+        puts(" rw");
+    }
 
-    int_enable();
+    if (us) {
+        puts(" usermode");
+    }
+
+    if (reserved) {
+        puts(" reserved");
+    }
+
+    puts(" ) at ");
+    puthex((int) faulting_address);
+    puts(" by ");
+    puthex((int) regs.eip);
+    puts("\n");
+
+    panic(NULL);
 }

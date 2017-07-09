@@ -1,6 +1,6 @@
-#include <liblox/hex.h>
-
 #include <kernel/spin.h>
+
+#include <liblox/hex.h>
 
 #include "rkmalloc.h"
 
@@ -26,8 +26,7 @@ void rkmalloc_init_heap(rkmalloc_heap* heap) {
     heap->error_code = RKMALLOC_ERROR_NONE;
     heap->total_allocated_blocks_size = 0;
     heap->total_allocated_used_size = 0;
-    heap->lock[0] = 0;
-    heap->lock[1] = 0;
+    spin_init(heap->lock);
 
     list_init(&heap->index);
 
@@ -145,12 +144,12 @@ void rkmalloc_free(rkmalloc_heap* heap, void* ptr) {
 
     if (node == NULL) {
         puts(WARN "Attempted to free an invalid pointer (");
-        putint_hex((int) ptr);
-        puts(")\n");
+        puthex((int) ptr);
+        puts("\n");
     } else if (entry->free) {
         puts(WARN "Attempted to free an already freed pointer (");
-        putint_hex((int) ptr);
-        puts(")\n");
+        puthex((int) ptr);
+        puts("\n");
     } else {
         entry->free = true;
         heap->total_allocated_blocks_size -= entry->block_size;
