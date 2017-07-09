@@ -2,22 +2,25 @@
 
 #include <kernel/rkmalloc/rkmalloc.h>
 
-static rkmalloc_heap *kheap = NULL;
+static rkmalloc_heap* kheap = NULL;
 
 extern char __link_mem_end;
 
 uintptr_t kheap_placement_address = (uintptr_t) &__link_mem_end;
 uintptr_t kheap_init_address = 0x00800000;
 uintptr_t kheap_end_address = 0x20000000;
-uintptr_t kheap_end = (uintptr_t) NULL;
 
-static uint32_t _kpmalloc_int(uint32_t size, int align, uint32_t *phys) {
+static uintptr_t _kpmalloc_int(size_t size, int align, uintptr_t* phys) {
     if (align && (kheap_placement_address & 0xFFFFF000)) {
         kheap_placement_address &= 0xFFFFF000;
         kheap_placement_address += 0x1000;
     }
 
     uint32_t addr = kheap_placement_address;
+
+    if (addr + size > kheap_end_address) {
+        return (uintptr_t) NULL;
+    }
 
     if (phys) {
         *phys = addr;
@@ -31,11 +34,11 @@ uint32_t kpmalloc_a(uint32_t size) {
     return _kpmalloc_int(size, 1, 0);
 }
 
-uint32_t kpmalloc_p(uint32_t size, uint32_t *phys) {
+uint32_t kpmalloc_p(uint32_t size, uint32_t* phys) {
     return _kpmalloc_int(size, 0, phys);
 }
 
-uint32_t kpmalloc_ap(uint32_t size, uint32_t *phys) {
+uint32_t kpmalloc_ap(uint32_t size, uint32_t* phys) {
     return _kpmalloc_int(size, 1, phys);
 }
 
@@ -48,7 +51,7 @@ void kpmalloc_startat(uintptr_t addr) {
 }
 
 void* rkpmalloc(size_t size) {
-    return (void*) kpmalloc(size);
+    return (void*) kpmalloc_a(size);
 }
 
 void heap_init(void) {
@@ -68,7 +71,7 @@ void* kheap_allocate(size_t size) {
     return rkmalloc_allocate(kheap, size);
 }
 
-void kheap_free(void *ptr) {
+void kheap_free(void* ptr) {
     rkmalloc_free(kheap, ptr);
 }
 
@@ -77,4 +80,4 @@ size_t kpused(void) {
 }
 
 void* (*lox_allocate_provider)(size_t) = kheap_allocate;
-void (*lox_free_provider)(void *ptr) = kheap_free;
+void (*lox_free_provider)(void* ptr) = kheap_free;

@@ -105,6 +105,12 @@ void* rkmalloc_allocate(rkmalloc_heap* heap, size_t size) {
         sizeof(list_node_t) + sizeof(rkmalloc_entry) + block_size;
 
     list_node_t* lnode = heap->kmalloc(header_and_size);
+
+    if (lnode == NULL) {
+        spin_unlock(heap->lock);
+        return NULL;
+    }
+
     list_init_node(lnode);
     lnode->list = &heap->index;
 
