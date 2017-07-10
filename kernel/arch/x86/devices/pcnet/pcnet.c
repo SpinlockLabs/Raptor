@@ -22,7 +22,7 @@ static uint32_t pcnet_mem_base = 0;
 static int pcnet_irq;
 static uint8_t mac[6];
 
-static uint32_t pcnet_buffer_phys;
+static uintptr_t pcnet_buffer_phys;
 static uint8_t* pcnet_buffer_virt;
 
 static uint8_t* pcnet_rx_de_start;
@@ -42,6 +42,11 @@ static int pcnet_tx_buffer_id = 0;
 #define PCNET_BUFFER_SIZE 1548
 #define PCNET_RX_COUNT 32
 #define PCNET_TX_COUNT 8
+
+typedef struct pcnet_network_iface {
+    network_iface_t* iface;
+    task_id poll_task;
+} pcnet_network_iface_t;
 
 static void find_pcnet(uint32_t device, uint16_t vendorid, uint16_t deviceid, void* extra) {
     if ((vendorid == 0x1022) && (deviceid == 0x2000)) {
@@ -121,9 +126,12 @@ static void enqueue_packet(void* buffer) {
     spin_unlock(net_queue_lock);
 }
 
-static uint8_t* dequeue_packet(void) {
-    while (net_queue->size == 0) {
-        cpu_task_queue_flush();
+static void dequeue_packet_task(void* extra) {
+    pcnet_network_iface_t* net = extra;
+    network_iface_t* iface = net->iface;
+
+    if (net_queue->size == 0) {
+        return;
     }
 
     spin_lock(net_queue_lock);
@@ -132,24 +140,29 @@ static uint8_t* dequeue_packet(void) {
     free(n);
     spin_unlock(net_queue_lock);
 
-    return value;
+    if (iface->handle_receive != NULL) {
+        iface->handle_receive(iface, value);
+    }
 }
 
 uint8_t* pcnet_get_mac() {
     return mac;
 }
 
-static void pcnet_send_packet(uint8_t* payload, size_t payload_size) {
+static network_iface_error_t pcnet_send_packet(network_iface_t* iface, uint8_t* payload, size_t payload_size) {
+    unused(iface);
+
     if (!driver_owns(pcnet_tx_de_start, pcnet_tx_buffer_id)) {
         /* sleep? */
-        printf(ERROR, "No transmit descriptors available. Bailing.\n");
-        return;
+        return IFACE_ERR_FULL;
     }
+
     if (payload_size > PCNET_BUFFER_SIZE) {
-        printf(ERROR "Packet too big; max is %d, got %d\n", PCNET_BUFFER_SIZE, payload_size);
-        return;
+        return IFACE_ERR_TOO_BIG;
     }
-    memcpy((void*) (pcnet_tx_start + pcnet_tx_buffer_id * PCNET_BUFFER_SIZE), payload, payload_size);
+
+    void* ptr = (void*) (pcnet_tx_start + pcnet_tx_buffer_id * PCNET_BUFFER_SIZE);
+    memcpy(ptr, payload, payload_size);
 
     pcnet_tx_de_start[pcnet_tx_buffer_id * PCNET_DE_SIZE + 7] |= 0x3;
 
@@ -163,6 +176,8 @@ static void pcnet_send_packet(uint8_t* payload, size_t payload_size) {
     write_csr32(0, read_csr32(0) | (1 << 3));
 
     pcnet_tx_buffer_id = next_tx_index(pcnet_tx_buffer_id);
+
+    return IFACE_ERR_OK;
 }
 
 static network_iface_t* pcnet_iface = NULL;
@@ -195,10 +210,10 @@ static uint8_t* pcnet_get_iface_mac(network_iface_t* iface) {
     return mac;
 }
 
-static void pcnet_iface_send_packet(network_iface_t* iface, uint8_t* buff, size_t size) {
-    unused(iface);
-
-    pcnet_send_packet(buff, size);
+static network_iface_error_t pcnet_iface_destroy(network_iface_t* iface) {
+    pcnet_network_iface_t* net = iface->data;
+    cpu_task_cancel(net->poll_task);
+    return IFACE_ERR_OK;
 }
 
 static void pcnet_init(void* data) {
@@ -334,6 +349,7 @@ static void pcnet_init(void* data) {
     if (csr0 & (1 << 0)) {
         csr0 ^= (1 << 0);
     }
+
     if (csr0 & (1 << 2)) {
         csr0 ^= (1 << 2);
     }
@@ -341,13 +357,19 @@ static void pcnet_init(void* data) {
     write_csr32(0, csr0);
     pcnet_get_mac();
 
-    pcnet_iface = zalloc(sizeof(network_iface_t));
-    pcnet_iface->name = "pcnet";
+    pcnet_iface = network_iface_create("pcnet");
 
+    pcnet_network_iface_t* dat = zalloc(sizeof(pcnet_network_iface_t));
+    dat->iface = pcnet_iface;
+    pcnet_iface->class_type = IFACE_CLASS_ETHERNET;
     pcnet_iface->get_mac = pcnet_get_iface_mac;
-    pcnet_iface->send = pcnet_iface_send_packet;
+    pcnet_iface->send = pcnet_send_packet;
+    pcnet_iface->destroy = pcnet_iface_destroy;
+    pcnet_iface->data = dat;
 
     network_iface_register(pcnet_iface);
+
+    dat->poll_task = cpu_task_repeat(1, dequeue_packet_task, dat);
 }
 
 void pcnet_setup(void) {

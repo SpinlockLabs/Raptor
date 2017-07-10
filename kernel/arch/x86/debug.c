@@ -2,10 +2,11 @@
 #include "heap.h"
 
 #include <kernel/tty.h>
+#include <kernel/network/iface.h>
+
 #include <kernel/debug/console.h>
 
 #include <kernel/arch/x86/devices/pci/pci.h>
-#include <kernel/arch/x86/devices/pcnet/pcnet.h>
 
 #include <kernel/rkmalloc/rkmalloc.h>
 
@@ -30,7 +31,18 @@ void debug_kheap_used(tty_t* tty, const char* input) {
 void debug_pcnet_mac(tty_t* tty, const char* input) {
     unused(input);
 
-    uint8_t* mac = pcnet_get_mac();
+    network_iface_t* iface = network_iface_get("pcnet");
+
+    if (iface == NULL) {
+        tty_printf(tty, "PCNET is not configured.\n");
+        return;
+    }
+
+    uint8_t mac[6] = {0};
+    if (network_iface_get_mac(iface, mac) != IFACE_ERR_OK) {
+        tty_printf(tty, "Network interface error.\n");
+        return;
+    }
 
     tty_printf(tty,
                "%2x:%2x:%2x:%2x:%2x:%2x\n",
