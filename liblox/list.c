@@ -246,3 +246,13 @@ void list_free(list_t* list) {
         node = next;
     }
 }
+
+list_node_t* list_dequeue(list_t* list) {
+    if (list->head == NULL) {
+        return NULL;
+    }
+
+    list_node_t* out = list->head;
+    list_remove(out);
+    return out;
+}

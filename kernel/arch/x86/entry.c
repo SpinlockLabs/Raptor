@@ -7,6 +7,7 @@
 #include <kernel/panic.h>
 #include <kernel/cmdline.h>
 #include <kernel/timer.h>
+#include <kernel/arch/x86/devices/pcnet/pcnet.h>
 
 #include "cmdline.h"
 #include "gdt.h"
@@ -88,6 +89,7 @@ void post_subsystem_init(void) {
     serial_port_a->tty->flags.write_kernel_log = true;
     tty_register(serial_port_a->tty);
 
+    pcnet_setup();
     debug_x86_init();
 }
 
