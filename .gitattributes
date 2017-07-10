@@ -2,6 +2,7 @@
 *.h text eol=lf
 *.cmake text eol=lf
 *.txt text eol=lf
+*.sh text eol=lf
 *.md text eol=lf
 
 *.c linguist-language=C
