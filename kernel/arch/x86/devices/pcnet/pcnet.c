@@ -232,7 +232,7 @@ static void pcnet_init(void* data) {
     pcnet_mem_base = pci_read_field(pcnet_device_pci, PCI_BAR1, 4) & 0xFFFFFFF0;
 
     pcnet_irq = pci_read_field(pcnet_device_pci, PCI_INTERRUPT_LINE, 1);
-    irq_add_handler((size_t) pcnet_irq, pcnet_irq_handler);
+    irq_add_handler((size_t) pcnet_irq, &pcnet_irq_handler);
 
     /* Read MAC from EEPROM */
     mac[0] = inb((uint16_t) (pcnet_io_base + 0));

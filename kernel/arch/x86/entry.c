@@ -11,6 +11,7 @@
 
 #include "cmdline.h"
 #include "gdt.h"
+#include "keyboard.h"
 #include "idt.h"
 #include "debug.h"
 #include "irq.h"
@@ -81,6 +82,7 @@ void post_subsystem_init(void) {
     vga_pty->write = vga_pty_write;
     vga_pty->flags.allow_debug_console = true;
     vga_pty->flags.write_kernel_log = true;
+    keyboard_init();
     tty_register(vga_pty);
 
     tty_serial_t* serial_port_a = tty_create_serial("serial-a", 0);

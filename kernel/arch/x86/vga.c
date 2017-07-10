@@ -18,7 +18,7 @@ void vga_init(void) {
     vga_column = 0;
     vga_color = vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
     vga_buffer = (uint16_t*) 0xB8000;
-    
+
     // Previous code may have left the terminal dirty.
     vga_clear();
 }
@@ -72,6 +72,12 @@ void vga_nextrow(void) {
 void vga_putchar(char c) {
     if (c == '\n') {
         vga_nextrow();
+    } else if (c == '\b') {
+        if (vga_column != 0) {
+            vga_column--;
+            vga_putentryat(' ', vga_color, vga_column, vga_row);
+            vga_cursor(vga_column, vga_row);
+        }
     } else {
         vga_putentryat(c, vga_color, vga_column, vga_row);
         if (++vga_column == VGA_WIDTH) {
