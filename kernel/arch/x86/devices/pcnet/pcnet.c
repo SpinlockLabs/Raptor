@@ -11,6 +11,7 @@
 #include <kernel/arch/x86/irq.h>
 
 #include <kernel/arch/x86/devices/pci/pci.h>
+#include <kernel/network/iface.h>
 
 static list_t* net_queue = NULL;
 static spin_lock_t net_queue_lock = {0};
@@ -52,28 +53,14 @@ static void write_rap32(uint32_t value) {
     outl((uint16_t) (pcnet_io_base + 0x14), value);
 }
 
-static void write_rap16(uint16_t value) {
-    outs((uint16_t) (pcnet_io_base + 0x12), value);
-}
-
 static uint32_t read_csr32(uint32_t csr_no) {
     write_rap32(csr_no);
     return inl((uint16_t) (pcnet_io_base + 0x10));
 }
 
-static uint16_t read_csr16(uint16_t csr_no) {
-    write_rap32(csr_no);
-    return ins((uint16_t) (pcnet_io_base + 0x10));
-}
-
 static void write_csr32(uint32_t csr_no, uint32_t value) {
     write_rap32(csr_no);
     outl((uint16_t) (pcnet_io_base + 0x10), value);
-}
-
-static void write_csr16(uint32_t csr_no, uint16_t value) {
-    write_rap16((uint16_t) csr_no);
-    outs((uint16_t) (pcnet_io_base + 0x10), value);
 }
 
 static uint32_t read_bcr32(uint32_t bcr_no) {
@@ -134,7 +121,7 @@ static void enqueue_packet(void* buffer) {
     spin_unlock(net_queue_lock);
 }
 
-static struct ethernet_packet* dequeue_packet(void) {
+static uint8_t* dequeue_packet(void) {
     while (net_queue->size == 0) {
         cpu_task_queue_flush();
     }
@@ -178,6 +165,8 @@ static void pcnet_send_packet(uint8_t* payload, size_t payload_size) {
     pcnet_tx_buffer_id = next_tx_index(pcnet_tx_buffer_id);
 }
 
+static network_iface_t* pcnet_iface = NULL;
+
 static int pcnet_irq_handler(struct regs* r) {
     unused(r);
 
@@ -200,6 +189,18 @@ static int pcnet_irq_handler(struct regs* r) {
     return 1;
 }
 
+static uint8_t* pcnet_get_iface_mac(network_iface_t* iface) {
+    unused(iface);
+
+    return mac;
+}
+
+static void pcnet_iface_send_packet(network_iface_t* iface, uint8_t* buff, size_t size) {
+    unused(iface);
+
+    pcnet_send_packet(buff, size);
+}
+
 static void pcnet_init(void* data) {
     unused(data);
 
@@ -218,9 +219,6 @@ static void pcnet_init(void* data) {
     pcnet_irq = pci_read_field(pcnet_device_pci, PCI_INTERRUPT_LINE, 1);
     irq_add_handler((size_t) pcnet_irq, pcnet_irq_handler);
 
-    printf(INFO "irq line: %d\n", pcnet_irq);
-    printf(INFO "io base: 0x%x\n", pcnet_io_base);
-
     /* Read MAC from EEPROM */
     mac[0] = inb((uint16_t) (pcnet_io_base + 0));
     mac[1] = inb((uint16_t) (pcnet_io_base + 1));
@@ -234,8 +232,6 @@ static void pcnet_init(void* data) {
     ins((uint16_t) (pcnet_io_base + 0x14));
 
     sleep(10);
-
-    printf(INFO "pcnet return from sleep\n");
 
     /* set 32-bit mode */
     outl((uint16_t) (pcnet_io_base + 0x10), 0);
@@ -251,14 +247,9 @@ static void pcnet_init(void* data) {
     bcr2 |= 0x2;
     write_bcr32(2, bcr2);
 
-    printf(INFO "device mac %2x:%2x:%2x:%2x:%2x:%2x\n", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-
     if (!pcnet_buffer_virt) {
-        printf(ERROR "Failed.\n");
         return;
     }
-
-    printf(WARN "phys: 0x%x, virt: 0x%x\n", pcnet_buffer_phys, pcnet_buffer_virt);
 
     pcnet_rx_de_start = pcnet_buffer_virt + 28;
     pcnet_tx_de_start = pcnet_rx_de_start + PCNET_RX_COUNT * PCNET_DE_SIZE;
@@ -349,13 +340,20 @@ static void pcnet_init(void* data) {
     csr0 |= (1 << 1);
     write_csr32(0, csr0);
     pcnet_get_mac();
+
+    pcnet_iface = zalloc(sizeof(network_iface_t));
+    pcnet_iface->name = "pcnet";
+
+    pcnet_iface->get_mac = pcnet_get_iface_mac;
+    pcnet_iface->send = pcnet_iface_send_packet;
+
+    network_iface_register(pcnet_iface);
 }
 
 void pcnet_setup(void) {
     pci_scan(&find_pcnet, -1, &pcnet_device_pci);
 
     if (!pcnet_device_pci) {
-        printf(WARN "No PCNET device found.\n");
         return;
     }
 

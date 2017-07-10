@@ -1,16 +1,16 @@
 #include <liblox/io.h>
 
-#include <kernel/debug/console.h>
 #include <kernel/cpu/idle.h>
-#include <kernel/modload.h>
 #include <kernel/tty.h>
+#include <kernel/modload.h>
+#include <kernel/debug/console.h>
 
 #include <liblox/lox-internal.h>
+#include <kernel/network/iface.h>
 
 #include "paging.h"
 #include "heap.h"
 #include "version.h"
-#include "cmdline.h"
 
 /* Architecture hooks for initialization. */
 extern void post_subsystem_init(void);
@@ -28,6 +28,7 @@ void kernel_init(void) {
     puts(DEBUG "Heap initialized.\n");
 
     tty_subsystem_init();
+    network_iface_subsystem_init();
     debug_console_init();
     post_subsystem_init();
 
