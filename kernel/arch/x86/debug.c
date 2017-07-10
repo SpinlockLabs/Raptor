@@ -1,9 +1,15 @@
 #include "debug.h"
 #include "heap.h"
 
+#include <liblox/net.h>
+
 #include <kernel/tty.h>
 
 #include <kernel/network/iface.h>
+#include <kernel/network/ip.h>
+#include <kernel/network/udp.h>
+#include <kernel/network/ethernet.h>
+
 #include <kernel/dispatch/events.h>
 
 #include <kernel/debug/console.h>
@@ -35,6 +41,75 @@ static void debug_crash(tty_t* tty, const char* input) {
     unused(tty);
 
     memcpy(NULL, NULL, 1);
+}
+
+static void debug_pcnet_fake_packet(tty_t* tty, const char* input) {
+    size_t len = strlen(input);
+
+    if (len == 0) {
+        input = "Hello World";
+        len = strlen(input);
+    }
+
+    uint8_t mac[6];
+    network_iface_t* iface = network_iface_get("pcnet");
+    network_iface_get_mac(iface, mac);
+
+    struct ethernet_packet eth = {
+        .source = {mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]},
+        .destination = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
+        .type = htons(0x0800)
+    };
+
+    uint8_t anon[] = {0, 0, 0, 0};
+    uint8_t broadcast[] = {255, 255, 255, 255};
+
+    size_t ip_len = sizeof(struct ipv4_packet) + len;
+
+    struct ipv4_packet ip = {
+        .version_ihl = ((0x4 << 4) | (0x5 << 0)),
+        .dscp_ecn = 0,
+        .length = ip_len,
+        .ident = htons(1),
+        .ttl = 0x40,
+        .protocol = IPV4_PROTOCOL_UDP,
+        .checksum = 0,
+        .source = htonl((uint32_t) anon),
+        .destination = htonl((uint32_t) broadcast)
+    };
+
+    ip.checksum = htons(ipv4_calculate_checksum(&ip));
+
+    struct udp_packet udp = {
+        .source_port = htons(602),
+        .destination_port = htons(6000),
+        .length = htons(sizeof(struct udp_packet) + len),
+        .checksum = 0
+    };
+
+    size_t complete_size = sizeof(ethernet_packet_t)
+        + sizeof(struct ipv4_packet)
+        + sizeof(struct udp_packet)
+        + len;
+
+    uint8_t* buff = zalloc(complete_size);
+    uint32_t offset = 0;
+
+    memcpy(&buff[offset], &eth, sizeof(ethernet_packet_t));
+    offset += sizeof(ethernet_packet_t);
+    memcpy(&buff[offset], &ip, sizeof(struct ipv4_packet));
+    offset += sizeof(struct ipv4_packet);
+    memcpy(&buff[offset], &udp, sizeof(struct udp_packet));
+    offset += sizeof(struct udp_packet);
+    memcpy(&buff[offset], input, len);
+
+    network_iface_error_t error = network_iface_send(iface, buff, offset);
+    if (error != IFACE_ERR_OK) {
+        tty_printf(tty, "Failed to send packet.\n");
+    } else {
+        tty_printf(tty, "Sent %d total bytes.\n", complete_size);
+    }
+    free(buff);
 }
 
 static void debug_pcnet_mac(tty_t* tty, const char* input) {
@@ -102,4 +177,5 @@ void debug_x86_init(void) {
     debug_console_register_command("pcnet-mac", debug_pcnet_mac);
     debug_console_register_command("crash", debug_crash);
     debug_console_register_command("fake-event", debug_fake_event);
+    debug_console_register_command("pcnet-packet", debug_pcnet_fake_packet);
 }
