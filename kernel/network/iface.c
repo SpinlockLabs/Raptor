@@ -6,6 +6,8 @@
 #include <kernel/panic.h>
 #include <kernel/spin.h>
 
+#include <kernel/dispatch/events.h>
+
 static spin_lock_t network_subsystem_lock = {0};
 
 static hashmap_t* network_iface_subsystem_registry = NULL;
@@ -21,6 +23,8 @@ void network_iface_register(network_iface_t* iface) {
     spin_lock(network_subsystem_lock);
     hashmap_set(network_iface_subsystem_registry, iface->name, iface);
     spin_unlock(network_subsystem_lock);
+
+    event_dispatch("network:iface:registered", iface->name);
 }
 
 list_t* network_iface_get_all(void) {
@@ -35,15 +39,20 @@ network_iface_error_t network_iface_destroy(network_iface_t* iface) {
     spin_lock(network_subsystem_lock);
 
     network_iface_error_t error = IFACE_ERR_OK;
+
+    char* name = strdup(iface->name);
     if (iface->destroy != NULL) {
         error = iface->destroy(iface);
     }
 
     if (error == IFACE_ERR_OK) {
-        hashmap_set(network_iface_subsystem_registry, iface->name, NULL);
+        hashmap_set(network_iface_subsystem_registry, name, NULL);
     }
 
     spin_unlock(network_subsystem_lock);
+
+    event_dispatch("network:iface:destroyed", name);
+    free(name);
 
     return error;
 }
@@ -128,4 +137,5 @@ int network_iface_ioctl(network_iface_t* iface, ulong request, void* data) {
 void network_iface_subsystem_init(void) {
     network_iface_subsystem_registry = hashmap_create(10);
     spin_init(network_subsystem_lock);
+    event_dispatch("network:iface:subsystem-init", NULL);
 }

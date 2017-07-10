@@ -2,7 +2,9 @@
 #include "heap.h"
 
 #include <kernel/tty.h>
+
 #include <kernel/network/iface.h>
+#include <kernel/dispatch/events.h>
 
 #include <kernel/debug/console.h>
 
@@ -10,7 +12,7 @@
 
 #include <kernel/rkmalloc/rkmalloc.h>
 
-void debug_kpused(tty_t* tty, const char* input) {
+static void debug_kpused(tty_t* tty, const char* input) {
     unused(input);
 
     size_t size = kpused();
@@ -21,21 +23,21 @@ void debug_kpused(tty_t* tty, const char* input) {
 
 extern rkmalloc_heap* kheap;
 
-void debug_kheap_used(tty_t* tty, const char* input) {
+static void debug_kheap_used(tty_t* tty, const char* input) {
     unused(input);
 
     tty_printf(tty, "Object Allocation: %d bytes\n", kheap->total_allocated_used_size);
     tty_printf(tty, "Block Allocation: %d bytes\n", kheap->total_allocated_blocks_size);
 }
 
-void debug_crash(tty_t* tty, const char* input) {
+static void debug_crash(tty_t* tty, const char* input) {
     unused(input);
     unused(tty);
 
     memcpy(NULL, NULL, 1);
 }
 
-void debug_pcnet_mac(tty_t* tty, const char* input) {
+static void debug_pcnet_mac(tty_t* tty, const char* input) {
     unused(input);
 
     network_iface_t* iface = network_iface_get("pcnet");
@@ -81,10 +83,16 @@ static void pci_show_simple(uint32_t loc, uint16_t vid, uint16_t did, void* extr
                loc, dev, did, vendor, vid);
 }
 
-void debug_pci_list(tty_t* tty, const char* input) {
+static void debug_pci_list(tty_t* tty, const char* input) {
     unused(input);
 
     pci_scan(pci_show_simple, -1, tty);
+}
+
+static void debug_fake_event(tty_t* tty, const char* input) {
+    unused(tty);
+
+    event_dispatch((char*) input, NULL);
 }
 
 void debug_x86_init(void) {
@@ -93,4 +101,5 @@ void debug_x86_init(void) {
     debug_console_register_command("kheap-used", debug_kheap_used);
     debug_console_register_command("pcnet-mac", debug_pcnet_mac);
     debug_console_register_command("crash", debug_crash);
+    debug_console_register_command("fake-event", debug_fake_event);
 }

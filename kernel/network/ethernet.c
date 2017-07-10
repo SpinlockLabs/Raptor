@@ -9,8 +9,8 @@ ethernet_packet_t* ethernet_packet_create(
 ) {
     ethernet_packet_t* pkt = zalloc(sizeof(ethernet_packet_t) + size);
     pkt->type = type;
-    pkt->source = source_mac;
-    pkt->destination = dest_mac;
+    memcpy(pkt->source, source_mac, 6);
+    memcpy(pkt->destination, dest_mac, 6);
     memcpy(pkt->payload, buffer, size);
     return pkt;
 }

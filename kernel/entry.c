@@ -6,7 +6,9 @@
 #include <kernel/debug/console.h>
 
 #include <liblox/lox-internal.h>
+
 #include <kernel/network/iface.h>
+#include <kernel/dispatch/events.h>
 
 #include "paging.h"
 #include "heap.h"
@@ -27,6 +29,7 @@ void kernel_init(void) {
     heap_init();
     puts(DEBUG "Heap initialized.\n");
 
+    events_subsystem_init();
     tty_subsystem_init();
     network_iface_subsystem_init();
     debug_console_init();

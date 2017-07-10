@@ -96,10 +96,9 @@ tty_serial_t* tty_create_serial(char* name, uint index) {
 
     serial_enable(serial->port);
 
-    serial->poll_task = cpu_task_repeat(1, serial_poll, tty);
-
     tty->data = serial;
     tty->write = tty_serial_write;
     tty->destroy = tty_serial_destroy;
+    serial->poll_task = cpu_task_repeat(1, serial_poll, tty);
     return serial;
 }
