@@ -30,19 +30,19 @@ static uintptr_t _kpmalloc_int(size_t size, int align, uintptr_t* phys) {
     return addr;
 }
 
-uint32_t kpmalloc_a(uint32_t size) {
+uintptr_t kpmalloc_a(size_t size) {
     return _kpmalloc_int(size, 1, 0);
 }
 
-uint32_t kpmalloc_p(uint32_t size, uint32_t* phys) {
+uintptr_t kpmalloc_p(size_t size, uintptr_t* phys) {
     return _kpmalloc_int(size, 0, phys);
 }
 
-uint32_t kpmalloc_ap(uint32_t size, uint32_t* phys) {
+uintptr_t kpmalloc_ap(size_t size, uintptr_t* phys) {
     return _kpmalloc_int(size, 1, phys);
 }
 
-uint32_t kpmalloc(uint32_t size) {
+uintptr_t kpmalloc(size_t size) {
     return _kpmalloc_int(size, 0, 0);
 }
 

@@ -4,13 +4,6 @@
 
 #include "rkmalloc.h"
 
-typedef struct {
-    bool free;
-    size_t used_size;
-    size_t block_size;
-    void* ptr;
-} rkmalloc_entry;
-
 void rkmalloc_init_heap(rkmalloc_heap* heap) {
 #define CHKSIZE(size) \
     if ((size) == 0) { \

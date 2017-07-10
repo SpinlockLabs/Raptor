@@ -13,6 +13,13 @@
 typedef void* (*kmalloc_func_t)(size_t size);
 
 typedef struct {
+    bool free;
+    size_t used_size;
+    size_t block_size;
+    void* ptr;
+} rkmalloc_entry;
+
+typedef struct {
     size_t atomic;
     size_t molecular;
     size_t nano;

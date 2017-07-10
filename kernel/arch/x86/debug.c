@@ -112,6 +112,26 @@ static void debug_pcnet_fake_packet(tty_t* tty, const char* input) {
     free(buff);
 }
 
+static void debug_kheap_dump(tty_t* tty, const char* input) {
+    unused(input);
+
+    list_t* list = &kheap->index;
+
+    size_t index = 0;
+    list_for_each(node, list) {
+        rkmalloc_entry* entry = node->value;
+        tty_printf(tty,
+            "%d[block = %d bytes, used = %d bytes, location = 0x%x, status = %s]\n",
+            index,
+            entry->block_size,
+            entry->used_size,
+            entry->ptr,
+            entry->free ? "free" : "used"
+        );
+        index++;
+    }
+}
+
 static void debug_pcnet_mac(tty_t* tty, const char* input) {
     unused(input);
 
@@ -174,6 +194,7 @@ void debug_x86_init(void) {
     debug_console_register_command("kpused", debug_kpused);
     debug_console_register_command("pci-list", debug_pci_list);
     debug_console_register_command("kheap-used", debug_kheap_used);
+    debug_console_register_command("kheap-dump", debug_kheap_dump);
     debug_console_register_command("pcnet-mac", debug_pcnet_mac);
     debug_console_register_command("crash", debug_crash);
     debug_console_register_command("fake-event", debug_fake_event);
