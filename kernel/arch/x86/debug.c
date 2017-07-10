@@ -28,6 +28,13 @@ void debug_kheap_used(tty_t* tty, const char* input) {
     tty_printf(tty, "Block Allocation: %d bytes\n", kheap->total_allocated_blocks_size);
 }
 
+void debug_crash(tty_t* tty, const char* input) {
+    unused(input);
+    unused(tty);
+
+    memcpy(NULL, NULL, 1);
+}
+
 void debug_pcnet_mac(tty_t* tty, const char* input) {
     unused(input);
 
@@ -85,4 +92,5 @@ void debug_x86_init(void) {
     debug_console_register_command("pci-list", debug_pci_list);
     debug_console_register_command("kheap-used", debug_kheap_used);
     debug_console_register_command("pcnet-mac", debug_pcnet_mac);
+    debug_console_register_command("crash", debug_crash);
 }

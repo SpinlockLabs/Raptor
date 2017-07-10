@@ -99,6 +99,8 @@ void paging_init(void) {
         i += 0x1000;
     }
 
+    paging_get_page(0, 1, kernel_directory)->present = 0;
+
     uintptr_t tmp_heap_start = kheap_init_address;
 
     for (i = kheap_placement_address + 0x3000; i < tmp_heap_start; i += 0x1000) {
@@ -131,7 +133,7 @@ page_t* paging_get_page(uint32_t address, int make, page_directory_t* dir) {
     }
 
     if (make) {
-        uint32_t tmp;
+        uintptr_t tmp;
         dir->tables[table_idx] = (page_table_t*) kpmalloc_ap(sizeof(page_table_t), &tmp);
         memset(dir->tables[table_idx], 0, 0x1000);
         dir->tablesPhysical[table_idx] = tmp | 0x7;
@@ -146,7 +148,7 @@ void page_fault(regs_t regs) {
     uint32_t faulting_address;
     asm volatile("mov %%cr2, %0" : "=r" (faulting_address));
 
-    int present = !(regs.err_code & 0x1);
+    int present = regs.err_code & 0x1;
     int rw = regs.err_code & 0x2;
     int us = regs.err_code & 0x4;
     int reserved = regs.err_code & 0x8;
@@ -171,8 +173,12 @@ void page_fault(regs_t regs) {
 
     puts(" ) at ");
     puthex((int) faulting_address);
-    puts(" by ");
-    puthex((int) regs.eip);
+
+    if (regs.eip != 0) {
+        puts(" by ");
+        puthex((int) regs.eip);
+    }
+
     puts("\n");
 
     panic(NULL);
