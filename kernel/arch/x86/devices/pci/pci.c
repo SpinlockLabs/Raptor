@@ -68,6 +68,7 @@ void pci_scan_func(pci_func_t f, int type, int bus, int slot, int func,
     if (type == -1 || type == pci_find_type(dev)) {
         pci_scan_hit(f, dev, extra);
     }
+
     if (pci_find_type(dev) == PCI_TYPE_BRIDGE) {
         pci_scan_bus(f, type, pci_read_field(dev, PCI_SECONDARY_BUS, 1), extra);
     }

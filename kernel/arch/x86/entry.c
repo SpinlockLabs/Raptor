@@ -3,6 +3,7 @@
 #include <liblox/io.h>
 
 #include <kernel/entry.h>
+#include <kernel/tty.h>
 #include <kernel/panic.h>
 #include <kernel/cmdline.h>
 #include <kernel/timer.h>
@@ -10,17 +11,20 @@
 #include "cmdline.h"
 #include "gdt.h"
 #include "idt.h"
+#include "debug.h"
 #include "irq.h"
 #include "pci_init.h"
 #include "userspace.h"
 #include "io.h"
 #include "vga.h"
 
+#include "devices/serial/serial.h"
+
 const uint32_t kProcessorIdIntel = 0x756e6547;
 const uint32_t kProcessorIdAMD = 0x68747541;
 
 void lox_output_char_ebl(char c) {
-    outb(0x3F8, c);
+    outb(0x3F8, (uint8_t) c);
 }
 
 void lox_output_string_ebl(char* msg) {
@@ -51,10 +55,10 @@ used void arch_panic_handler(nullable char *msg) {
     asm("cli;");
 
     if (msg != NULL) {
-        vga_putchar('\n');
-        vga_writestring("[PANIC] ");
-        vga_writestring(msg);
-        vga_putchar('\n');
+        lox_output_char_vga('\n');
+        lox_output_string_vga("[PANIC] ");
+        lox_output_string_vga(msg);
+        lox_output_char_vga('\n');
     }
 
     while (1) {
@@ -64,6 +68,28 @@ used void arch_panic_handler(nullable char *msg) {
 
 void (*lox_output_string_provider)(char*) = lox_output_string_ebl;
 void (*lox_output_char_provider)(char) = lox_output_char_ebl;
+
+void vga_pty_write(tty_t* tty, const uint8_t* bytes, size_t size) {
+    unused(tty);
+
+    vga_write((const char*) bytes, size);
+}
+
+void post_subsystem_init(void) {
+    vga_pty = tty_create("vga");
+    vga_pty->write = vga_pty_write;
+    vga_pty->flags.allow_debug_console = true;
+    vga_pty->flags.write_kernel_log = true;
+    tty_register(vga_pty);
+
+    tty_serial_t* serial_port_a = tty_create_serial("serial-a", 0);
+    serial_port_a->echo = true;
+    serial_port_a->tty->flags.allow_debug_console = true;
+    serial_port_a->tty->flags.write_kernel_log = true;
+    tty_register(serial_port_a->tty);
+
+    debug_x86_init();
+}
 
 used void kernel_main(multiboot_t *_mboot, uint32_t mboot_hdr) {
     if (mboot_hdr != MULTIBOOT_EAX_MAGIC) {

@@ -1,7 +1,11 @@
 #pragma once
 
+#include <kernel/tty.h>
+
 #include <stddef.h>
 #include <stdint.h>
+
+extern tty_t *vga_pty;
 
 enum vga_color {
     VGA_COLOR_BLACK,

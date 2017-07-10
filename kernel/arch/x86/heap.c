@@ -2,7 +2,7 @@
 
 #include <kernel/rkmalloc/rkmalloc.h>
 
-static rkmalloc_heap* kheap = NULL;
+rkmalloc_heap* kheap = NULL;
 
 extern char __link_mem_end;
 
@@ -58,9 +58,17 @@ void heap_init(void) {
     kheap = (rkmalloc_heap*) kpmalloc(sizeof(rkmalloc_heap));
     memset(kheap, 0, sizeof(rkmalloc_heap));
     kheap->kmalloc = rkpmalloc;
+
+    kheap->types.atomic = 8; // 8 bytes
+    kheap->types.molecular = 16; // 16 bytes
+    kheap->types.nano = 64; // 64 bytes
+    kheap->types.micro = 256; // 256 bytes
+    kheap->types.mini = 512; // 512 bytes
     kheap->types.tiny = 1 * 1024; // 1 kb
     kheap->types.small = 2 * 1024; // 2 kb
-    kheap->types.medium = 16 * 1024; // 16 kb
+    kheap->types.medium = 4 * 1024; // 4 kb
+    kheap->types.moderate = 16 * 1024; // 16 kb
+    kheap->types.fair = 64 * 1024; // 64 kb
     kheap->types.large = 1024 * 1024; // 1 mb
     kheap->types.huge = 5 * 1024 * 1024; // 5 mb
 

@@ -25,7 +25,10 @@ static int keyboard_callback(regs_t *regs) {
     switch (kt) {
         case N:
             if (!up) {
-                vga_putchar((shift ? kb_usu[idx] : kb_usl[idx]));
+                uint8_t cc = (uint8_t) (shift ? kb_usu[idx] : kb_usl[idx]);
+                if (vga_pty != NULL && vga_pty->handle_read != NULL) {
+                    vga_pty->handle_read(vga_pty, &cc, 1);
+                }
             }
             break;
         case S:

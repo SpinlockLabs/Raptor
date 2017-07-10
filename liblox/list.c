@@ -219,3 +219,30 @@ void list_merge(list_t* target, list_t* source) {
     target->size += source->size;
     free(source);
 }
+
+void list_free_entries(list_t* list) {
+    list_node_t* node = list->head;
+
+    while (node != NULL) {
+        list_node_t* next = node->next;
+
+        free(node);
+
+        node = next;
+    }
+}
+
+void list_free(list_t* list) {
+    list_node_t* node = list->head;
+
+    while (node != NULL) {
+        list_node_t* next = node->next;
+
+        if (node->value != NULL) {
+            free(node->value);
+        }
+        free(node);
+
+        node = next;
+    }
+}

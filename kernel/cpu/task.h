@@ -6,16 +6,16 @@
 #include <stdbool.h>
 
 /* Defines a CPU task function. */
-typedef void (*cpu_task_func_t)(void);
+typedef void (*cpu_task_func_t)(void*);
 
 /* A task identifier. */
 typedef ulong task_id;
 
 /* Repeats a function on the CPU queue at the given interval. */
-task_id cpu_task_repeat(ulong ticks, cpu_task_func_t func);
+task_id cpu_task_repeat(ulong ticks, cpu_task_func_t func, void* data);
 
 /* Adds a function to the CPU queue. */
-task_id cpu_task_queue(cpu_task_func_t func);
+task_id cpu_task_queue(cpu_task_func_t func, void* data);
 
 /* Runs through the CPU task queue. */
 void cpu_task_queue_flush(void);

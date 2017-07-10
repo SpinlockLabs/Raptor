@@ -13,9 +13,16 @@
 typedef void* (*kmalloc_func_t)(size_t size);
 
 typedef struct {
+    size_t atomic;
+    size_t molecular;
+    size_t nano;
+    size_t micro;
+    size_t mini;
     size_t tiny;
     size_t small;
     size_t medium;
+    size_t moderate;
+    size_t fair;
     size_t large;
     size_t huge;
 } rkmalloc_heap_types;

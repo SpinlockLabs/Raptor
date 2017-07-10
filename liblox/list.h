@@ -31,6 +31,7 @@ list_node_t* list_get_at(list_t* list, size_t index);
 void* list_get_value_at(list_t* list, size_t index);
 void list_remove(list_node_t* node);
 void list_free(list_t* list);
+void list_free_entries(list_t* list);
 list_node_t* list_find(list_t* list, void* value);
 void list_merge(list_t* target, list_t* source);
 

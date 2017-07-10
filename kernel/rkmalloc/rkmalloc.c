@@ -30,14 +30,41 @@ void rkmalloc_init_heap(rkmalloc_heap* heap) {
 
     list_init(&heap->index);
 
+    CHKSIZE(heap->types.atomic)
+    CHKSIZE(heap->types.molecular)
+    CHKSIZE(heap->types.nano)
+    CHKSIZE(heap->types.micro)
+    CHKSIZE(heap->types.mini)
     CHKSIZE(heap->types.tiny)
     CHKSIZE(heap->types.small)
     CHKSIZE(heap->types.medium)
+    CHKSIZE(heap->types.moderate)
+    CHKSIZE(heap->types.fair)
     CHKSIZE(heap->types.large)
     CHKSIZE(heap->types.huge)
 }
 
 static size_t get_block_size(rkmalloc_heap_types types, size_t size) {
+    if (size <= types.atomic) {
+        return types.atomic;
+    }
+
+    if (size <= types.molecular) {
+        return types.molecular;
+    }
+
+    if (size <= types.nano) {
+        return types.nano;
+    }
+
+    if (size <= types.micro) {
+        return types.micro;
+    }
+
+    if (size <= types.mini) {
+        return types.mini;
+    }
+
     if (size <= types.tiny) {
         return types.tiny;
     }
@@ -48,6 +75,14 @@ static size_t get_block_size(rkmalloc_heap_types types, size_t size) {
 
     if (size <= types.medium) {
         return types.medium;
+    }
+
+    if (size <= types.moderate) {
+        return types.moderate;
+    }
+
+    if (size <= types.fair) {
+        return types.fair;
     }
 
     if (size <= types.large) {
@@ -120,6 +155,8 @@ void* rkmalloc_allocate(rkmalloc_heap* heap, size_t size) {
     entry->block_size = block_size;
     entry->used_size = size;
     entry->ptr = (void*) (entry + sizeof(rkmalloc_entry));
+    heap->total_allocated_blocks_size += block_size;
+    heap->total_allocated_used_size += size;
 
     lnode->value = entry;
 

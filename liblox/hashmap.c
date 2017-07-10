@@ -103,7 +103,6 @@ void* hashmap_set(hashmap_t* map, void* key, void* value) {
 
     p->next = e;
     return NULL;
-
 }
 
 void* hashmap_get(hashmap_t* map, void* key) {
@@ -121,7 +120,6 @@ void* hashmap_get(hashmap_t* map, void* key) {
         x = x->next;
     } while (x);
     return NULL;
-
 }
 
 void* hashmap_remove(hashmap_t* map, void* key) {

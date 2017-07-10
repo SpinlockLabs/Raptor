@@ -10,6 +10,7 @@ typedef struct cpu_task_t {
     ulong last_tick;
     ulong tick;
     cpu_task_func_t func;
+    void* data;
 } cpu_task_t;
 
 static list_t *__cpu_task_queue = NULL;
@@ -22,7 +23,7 @@ static void cpu_task_queue_init_if_needed(void) {
     }
 }
 
-task_id cpu_task_repeat(ulong ticks, cpu_task_func_t func) {
+task_id cpu_task_repeat(ulong ticks, cpu_task_func_t func, void* data) {
     cpu_task_queue_init_if_needed();
 
     task_id id = ++cpu_task_counter;
@@ -33,12 +34,13 @@ task_id cpu_task_repeat(ulong ticks, cpu_task_func_t func) {
     task->tick = 0;
     task->last_tick = timer_get_ticks();
     task->func = func;
+    task->data = data;
 
     list_add(__cpu_task_queue, task);
     return id;
 }
 
-task_id cpu_task_queue(cpu_task_func_t func) {
+task_id cpu_task_queue(cpu_task_func_t func, void* data) {
     cpu_task_queue_init_if_needed();
 
     task_id id = ++cpu_task_counter;
@@ -49,6 +51,7 @@ task_id cpu_task_queue(cpu_task_func_t func) {
     task->tick = 0;
     task->last_tick = timer_get_ticks();
     task->func = func;
+    task->data = data;
 
     list_add(__cpu_task_queue, task);
     return id;
@@ -76,7 +79,7 @@ static void __cpu_task_queue_flush(void) {
 
         if (run) {
             task->tick = 0;
-            task->func();
+            task->func(task->data);
         }
 
         if (task->repeat == 0) {
