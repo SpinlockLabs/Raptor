@@ -69,7 +69,7 @@ static void debug_pcnet_fake_packet(tty_t* tty, const char* input) {
     struct ipv4_packet ip = {
         .version_ihl = ((0x4 << 4) | (0x5 << 0)),
         .dscp_ecn = 0,
-        .length = ip_len,
+        .length = (uint16_t) ip_len,
         .ident = htons(1),
         .ttl = 0x40,
         .protocol = IPV4_PROTOCOL_UDP,
@@ -119,7 +119,7 @@ static void debug_kheap_dump(tty_t* tty, const char* input) {
 
     size_t index = 0;
     list_for_each(node, list) {
-        rkmalloc_entry* entry = node->value;
+        rkmalloc_entry_t* entry = node->value;
         tty_printf(tty,
             "%d[block = %d bytes, used = %d bytes, location = 0x%x, status = %s]\n",
             index,

@@ -46,7 +46,7 @@ uintptr_t kpmalloc(size_t size) {
     return _kpmalloc_int(size, 0, 0);
 }
 
-void kpmalloc_startat(uintptr_t addr) {
+void kpmalloc_start_at(uintptr_t addr) {
     kheap_placement_address = addr;
 }
 
@@ -55,7 +55,7 @@ void* rkpmalloc(size_t size) {
 }
 
 void heap_init(void) {
-    kheap = (rkmalloc_heap*) kpmalloc(sizeof(rkmalloc_heap));
+    kheap = (rkmalloc_heap*) kpmalloc_a(sizeof(rkmalloc_heap));
     memset(kheap, 0, sizeof(rkmalloc_heap));
     kheap->kmalloc = rkpmalloc;
 

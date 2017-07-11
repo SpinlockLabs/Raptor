@@ -33,6 +33,7 @@ void kernel_init(void) {
     tty_subsystem_init();
     network_iface_subsystem_init();
     debug_console_init();
+
     post_subsystem_init();
 
     lox_output_char_provider = tty_write_kernel_log_char;

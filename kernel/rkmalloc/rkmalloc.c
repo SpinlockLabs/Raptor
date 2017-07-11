@@ -89,7 +89,7 @@ static size_t get_block_size(rkmalloc_heap_types types, size_t size) {
     return size;
 }
 
-static bool is_block_usable(rkmalloc_entry* entry, size_t block_size) {
+static bool is_block_usable(rkmalloc_entry_t* entry, size_t block_size) {
     if (!entry->free) {
         return false;
     }
@@ -102,6 +102,10 @@ static bool is_block_usable(rkmalloc_entry* entry, size_t block_size) {
 }
 
 void* rkmalloc_allocate(rkmalloc_heap* heap, size_t size) {
+    if (size == 0) {
+        return NULL;
+    }
+
     spin_lock(heap->lock);
 
     size_t block_size = get_block_size(heap->types, size);
@@ -115,7 +119,7 @@ void* rkmalloc_allocate(rkmalloc_heap* heap, size_t size) {
      * Our best case is that we find a node in the index that can fit the size.
      */
     if (node != NULL) {
-        rkmalloc_entry* entry = node->value;
+        rkmalloc_entry_t* entry = node->value;
         entry->free = false;
         entry->used_size = size;
         entry->block_size = block_size;
@@ -130,7 +134,7 @@ void* rkmalloc_allocate(rkmalloc_heap* heap, size_t size) {
     /* TODO(kaendfinger): Implement combining blocks. */
 
     size_t header_and_size =
-        sizeof(list_node_t) + sizeof(rkmalloc_entry) + block_size;
+        sizeof(list_node_t) + sizeof(rkmalloc_entry_t) + block_size;
 
     list_node_t* lnode = heap->kmalloc(header_and_size);
 
@@ -142,12 +146,12 @@ void* rkmalloc_allocate(rkmalloc_heap* heap, size_t size) {
     list_init_node(lnode);
     lnode->list = &heap->index;
 
-    rkmalloc_entry* entry = (rkmalloc_entry*) (lnode + sizeof(list_node_t));
+    rkmalloc_entry_t* entry = (rkmalloc_entry_t*) (lnode + sizeof(list_node_t));
 
     entry->free = false;
     entry->block_size = block_size;
     entry->used_size = size;
-    entry->ptr = (void*) (entry + sizeof(rkmalloc_entry));
+    entry->ptr = (void*) (entry + sizeof(rkmalloc_entry_t));
     heap->total_allocated_blocks_size += block_size;
     heap->total_allocated_used_size += size;
 
@@ -168,7 +172,7 @@ void rkmalloc_free(rkmalloc_heap* heap, void* ptr) {
     spin_lock(heap->lock);
 
     list_node_t* node = heap->index.head;
-    rkmalloc_entry* entry = NULL;
+    rkmalloc_entry_t* entry = NULL;
     while (node != NULL) {
         entry = node->value;
         if (entry->ptr == ptr) {
