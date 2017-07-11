@@ -62,28 +62,30 @@ static void debug_pcnet_fake_packet(tty_t* tty, const char* input) {
     };
 
     uint8_t anon[] = {0, 0, 0, 0};
-    uint8_t broadcast[] = {255, 255, 255, 255};
+    uint8_t broadcast[] = {255, 255, 255, 50};
 
-    size_t ip_len = sizeof(struct ipv4_packet) + len;
+    uint16_t ip_len = htons(sizeof(struct ipv4_packet) + sizeof(struct udp_packet) + len);
 
     struct ipv4_packet ip = {
         .version_ihl = ((0x4 << 4) | (0x5 << 0)),
         .dscp_ecn = 0,
-        .length = (uint16_t) ip_len,
+        .length = ip_len,
         .ident = htons(1),
         .ttl = 0x40,
         .protocol = IPV4_PROTOCOL_UDP,
         .checksum = 0,
-        .source = htonl((uint32_t) anon),
-        .destination = htonl((uint32_t) broadcast)
+        .source = ((uint32_t*) anon)[0],
+        .destination = ((uint32_t*) broadcast)[0]
     };
 
     ip.checksum = htons(ipv4_calculate_checksum(&ip));
 
+    uint16_t udp_len = htons(sizeof(struct udp_packet) + len);
+
     struct udp_packet udp = {
-        .source_port = htons(602),
-        .destination_port = htons(6000),
-        .length = htons(sizeof(struct udp_packet) + len),
+        .source_port = htons(5902),
+        .destination_port = htons(10),
+        .length = udp_len,
         .checksum = 0
     };
 

@@ -186,6 +186,7 @@ static int pcnet_irq_handler(struct regs* r) {
     unused(r);
 
     write_csr32(0, read_csr32(0) | 0x0400);
+    irq_ack(pcnet_irq);
 
     while (driver_owns(pcnet_rx_de_start, pcnet_rx_buffer_id)) {
         uint16_t plen = *(uint16_t*) &pcnet_rx_de_start[pcnet_rx_buffer_id * PCNET_DE_SIZE + 8];
@@ -222,7 +223,7 @@ static void pcnet_init(void* data) {
     uint16_t command_reg = (uint16_t) (
         pci_read_field(pcnet_device_pci, PCI_COMMAND, 4) & 0xFFFF0000);
     if (command_reg & (1 << 2)) {
-        printf(INFO "Bus mastering already enabled.\n");
+        printf(WARN "Bus mastering already enabled.\n");
     }
     command_reg |= (1 << 2);
     command_reg |= (1 << 0);
