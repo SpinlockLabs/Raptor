@@ -20,7 +20,7 @@ kernel_ldscript(${KERNEL_DIR}/arch/x86/linker.ld)
 set(QEMU_CMD_BASE
   qemu-system-i386
     -cpu core2duo
-    -m 1024
+    -m 256
     -net nic,model=pcnet
 )
 
