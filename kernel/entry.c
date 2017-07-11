@@ -8,6 +8,8 @@
 #include <liblox/lox-internal.h>
 
 #include <kernel/network/iface.h>
+#include <kernel/network/stack.h>
+
 #include <kernel/dispatch/events.h>
 
 #include "paging.h"
@@ -32,6 +34,7 @@ void kernel_init(void) {
     events_subsystem_init();
     tty_subsystem_init();
     network_iface_subsystem_init();
+    network_stack_init();
     debug_console_init();
 
     post_subsystem_init();
