@@ -102,6 +102,10 @@ static bool is_block_usable(rkmalloc_entry* entry, size_t block_size) {
 }
 
 void* rkmalloc_allocate(rkmalloc_heap* heap, size_t size) {
+    if (size == 0) {
+        return NULL;
+    }
+
     spin_lock(heap->lock);
 
     size_t block_size = get_block_size(heap->types, size);

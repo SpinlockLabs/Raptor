@@ -45,7 +45,7 @@ void lox_output_string_vga(char* msg) {
     if (msg == NULL) {
         return;
     }
-    vga_writestring(msg);
+    vga_write_string(msg);
     lox_output_string_ebl(msg);
 }
 

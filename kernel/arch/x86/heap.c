@@ -61,7 +61,7 @@ uintptr_t kpmalloc(size_t size) {
     return _kpmalloc_int(size, 0, 0);
 }
 
-void kpmalloc_startat(uintptr_t addr) {
+void kpmalloc_start_at(uintptr_t addr) {
     kp_placement_pointer = addr;
 }
 

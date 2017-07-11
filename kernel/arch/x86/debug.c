@@ -69,7 +69,7 @@ static void debug_pcnet_fake_packet(tty_t* tty, const char* input) {
     struct ipv4_packet ip = {
         .version_ihl = ((0x4 << 4) | (0x5 << 0)),
         .dscp_ecn = 0,
-        .length = ip_len,
+        .length = (uint16_t) ip_len,
         .ident = htons(1),
         .ttl = 0x40,
         .protocol = IPV4_PROTOCOL_UDP,

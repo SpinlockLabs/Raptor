@@ -4,7 +4,7 @@
 #include <liblox/va_list.h>
 #include <liblox/printf.h>
 
-static hashmap_t* tty_subsystem_registry = NULL;
+static hashmap_t* tty_registry = NULL;
 
 void tty_init(tty_t* tty, char* name) {
     memset(tty, 0, sizeof(tty_t));
@@ -13,18 +13,17 @@ void tty_init(tty_t* tty, char* name) {
 }
 
 tty_t* tty_create(char* name) {
-    tty_t* tty = malloc(sizeof(tty_t));
-    memset(tty, 0, sizeof(tty_t));
+    tty_t* tty = zalloc(sizeof(tty_t));
     tty_init(tty, name);
     return tty;
 }
 
 void tty_register(tty_t* tty) {
-    if (tty_subsystem_registry == NULL) {
+    if (tty_registry == NULL) {
         return;
     }
 
-    hashmap_set(tty_subsystem_registry, tty->name, tty);
+    hashmap_set(tty_registry, tty->name, tty);
 }
 
 void tty_write(tty_t* tty, uint8_t* buf, size_t size) {
@@ -60,28 +59,28 @@ void tty_destroy(tty_t* tty) {
 }
 
 tty_t* tty_get(char* name) {
-    return hashmap_get(tty_subsystem_registry, name);
+    return hashmap_get(tty_registry, name);
 }
 
 list_t* tty_get_names(void) {
-    return hashmap_keys(tty_subsystem_registry);
+    return hashmap_keys(tty_registry);
 }
 
 list_t* tty_get_all(void) {
-    return hashmap_values(tty_subsystem_registry);
+    return hashmap_values(tty_registry);
 }
 
 void tty_subsystem_init(void) {
-    if (tty_subsystem_registry != NULL) {
+    if (tty_registry != NULL) {
         return;
     }
 
-    tty_subsystem_registry = hashmap_create(10);
+    tty_registry = hashmap_create(10);
 }
 
 void tty_write_kernel_log_char(char c) {
-    for (uint i = 0; i < tty_subsystem_registry->size; ++i) {
-        hashmap_entry_t* x = tty_subsystem_registry->entries[i];
+    for (uint i = 0; i < tty_registry->size; ++i) {
+        hashmap_entry_t* x = tty_registry->entries[i];
         while (x) {
             tty_t* tty = x->value;
             if (tty != NULL && tty->flags.write_kernel_log) {
@@ -95,8 +94,8 @@ void tty_write_kernel_log_char(char c) {
 
 void tty_write_kernel_log_string(char* msg) {
     size_t len = strlen(msg);
-    for (uint i = 0; i < tty_subsystem_registry->size; ++i) {
-        hashmap_entry_t* x = tty_subsystem_registry->entries[i];
+    for (uint i = 0; i < tty_registry->size; ++i) {
+        hashmap_entry_t* x = tty_registry->entries[i];
         while (x) {
             tty_t* tty = x->value;
             if (tty != NULL && tty->flags.write_kernel_log) {

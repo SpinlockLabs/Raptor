@@ -26,7 +26,7 @@ void vga_init(void) {
 void vga_clear(void) {
     for (size_t y = 0; y < VGA_HEIGHT; y++) {
         for (size_t x = 0; x < VGA_WIDTH; x++) {
-            vga_putentryat(' ', vga_color, x, y);
+            vga_set_at(' ', vga_color, x, y);
         }
     }
 }
@@ -42,16 +42,16 @@ void vga_scroll(void) {
     }
 }
 
-void vga_setcolor(uint8_t color) {
+void vga_set_color(uint8_t color) {
     vga_color = color;
 }
 
-void vga_putentryat(char c, uint8_t color, size_t x, size_t y) {
-    const size_t index = y * VGA_WIDTH + x;
+void vga_set_at(char c, uint8_t color, size_t x, size_t y) {
+    size_t index = y * VGA_WIDTH + x;
     vga_buffer[index] = vga_entry((unsigned char) c, color);
 }
 
-void vga_cursor(uint8_t col, uint8_t row) {
+void vga_cursor(size_t col, size_t row) {
     uint16_t pos = (uint16_t) ((row * VGA_WIDTH) + col);
 
     outb(0x3D4, 0x0F);
@@ -75,17 +75,17 @@ void vga_putchar(char c) {
     } else if (c == '\b') {
         if (vga_column != 0) {
             vga_column--;
-            vga_putentryat(' ', vga_color, vga_column, vga_row);
+            vga_set_at(' ', vga_color, vga_column, vga_row);
             vga_cursor(vga_column, vga_row);
         }
     } else {
-        vga_putentryat(c, vga_color, vga_column, vga_row);
+        vga_set_at(c, vga_color, vga_column, vga_row);
         if (++vga_column == VGA_WIDTH) {
             vga_column = 0;
             vga_nextrow();
         }
     }
-    vga_cursor((uint8_t) vga_column, (uint8_t) vga_row);
+    vga_cursor(vga_column, vga_row);
 }
 
 void vga_write(const char* data, size_t size) {
@@ -94,23 +94,9 @@ void vga_write(const char* data, size_t size) {
     }
 }
 
-void vga_writestring(const char* data) {
+void vga_write_string(const char* data) {
     if (data == NULL) {
         return;
     }
     vga_write(data, strlen(data));
-}
-
-void vga_writebyte(uint8_t b) {
-    char *s = NULL;
-    itoa(b, s, 16);
-    vga_writestring(s);
-    vga_writestring("\n");
-}
-
-void vga_writeptr(uintptr_t p) {
-    char *s = NULL;
-    itoa(p, s, 16);
-    vga_writestring(s);
-    vga_writestring("\n");
 }
