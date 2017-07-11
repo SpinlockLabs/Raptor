@@ -6,7 +6,7 @@ cflags(
 )
 
 if(CLANG)
-    cflags(-target i686-pc-elf)
+  cflags(-target i686-pc-elf)
 endif()
 
 if(OPTIMIZE_NATIVE)
@@ -14,6 +14,12 @@ if(OPTIMIZE_NATIVE)
 else()
     cflags(-mtune=generic)
 endif()
+
+kernel_cflags(
+  -no-pie
+  -fno-stack-protector
+  -fno-pic
+)
 
 kernel_ldscript(${KERNEL_DIR}/arch/x86/linker.ld)
 

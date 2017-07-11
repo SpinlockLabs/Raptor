@@ -6,7 +6,7 @@ SECTIONS
 {
     /* Begin putting sections at 1 MiB, a conventional place for kernels to be loaded by the bootloader. */
     . = 1M;
-    __link_mem_phys = .;
+    __link_mem_begin = .;
 
     /* First put the multiboot header, as it is required to be put very early in the image or the bootloader won't recognize the file format. Next we'll put the .text section. */
     .text BLOCK(4K) : ALIGN(4K)
@@ -38,12 +38,21 @@ SECTIONS
     }
 
     /* Extras */
-    .extra BLOCK(4k) : ALIGN(4k)
+    .extra BLOCK(4K) : ALIGN(4K)
     {
         __link_mem_extra = .;
         *(.note.gnu.build-id)
     }
 
+    /DISCARD/ :
+    {
+        *(.interp)
+        *(.eh_frame)
+        *(.eh_frame_hdr)
+        *(.comment)
+    }
+
     /* The compiler might produce some other sections. By default it will put them in a segment with the same name. Simply add stuff here as needed. */
     __link_mem_end = .;
 }
+

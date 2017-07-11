@@ -45,6 +45,8 @@ kernel_cflags(
   -nostdlib
   -nostartfiles
   -ffreestanding
+  -fno-lto
+  -fno-use-linker-plugin
 )
 
 if(UBSAN)

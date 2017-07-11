@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
 project(raptor C)
-option(OPTIMIZE_LTO "Enable Link-Time Optimization" OFF)
 option(TESTS "Enable Tests" OFF)
 
 enable_language(ASM)
@@ -21,13 +20,7 @@ endif()
 
 if(CLANG)
   cflags(-Wno-unused-command-line-argument -O0)
-  if(NOT OPTIMIZE_LTO)
-    cflags(-fno-integrated-as)
-  endif()
-endif()
-
-if(OPTIMIZE_LTO)
-  cflags(-flto)
+  cflags(-fno-integrated-as)
 endif()
 
 set(RAPTOR_DIR ${CMAKE_CURRENT_SOURCE_DIR})

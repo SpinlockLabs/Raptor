@@ -149,5 +149,13 @@ used void kernel_main(multiboot_t *_mboot, uint32_t mboot_hdr) {
         userspace_jump(NULL, 0xB0000000);
     }
 
+    extern char __link_mem_begin;
+    extern char __link_mem_end;
+    extern char __link_mem_code;
+
+    printf(DEBUG "Executable begins at 0x%x\n", &__link_mem_begin);
+    printf(DEBUG "Code starts at 0x%x\n", &__link_mem_code);
+    printf(DEBUG "Executable ends at 0x%x\n", &__link_mem_end);
+
     kernel_init();
 }

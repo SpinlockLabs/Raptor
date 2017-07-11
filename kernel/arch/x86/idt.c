@@ -1,5 +1,6 @@
 #include <stddef.h>
-#include <string.h>
+
+#include <liblox/string.h>
 
 #include "idt.h"
 #include "isr.h"
