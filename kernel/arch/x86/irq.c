@@ -29,6 +29,8 @@
 #define sti() asm volatile("sti");
 #define cli() asm volatile("cli");
 
+static irq_handler_chain_t irq_routines[IRQ_CHAIN_SIZE * IRQ_CHAIN_DEPTH] = { NULL };
+
 static volatile int sync_depth = 0;
 
 void int_disable(void) {
@@ -85,12 +87,6 @@ void irq_rem_handler(size_t irq) {
 }
 
 static void irq_remap() {
-    // @TODO: doesn't look like toaruos does this, check if necessary
-    // https://github.com/klange/toaruos/blob/f17cf012ca01b416ff12b3520f6a8fca6e5a05ef/kernel/cpu/irq.c
-    uint8_t a1, a2;
-    a1 = inb(PIC1_DATA);
-    a2 = inb(PIC2_DATA);
-
     // Cascade init.
     outb(PIC1_CMD, ICW1_INIT + ICW1_ICW4);
     io_wait();
@@ -104,9 +100,9 @@ static void irq_remap() {
     io_wait();
 
     // Cascade identity with slave PIC at IRQ2.
-    outb(PIC1_DATA, 4);
+    outb(PIC1_DATA, 0x04);
     io_wait();
-    outb(PIC2_DATA, 2);
+    outb(PIC2_DATA, 0x02);
     io_wait();
 
     // Request 8086 mode on both PICs.
@@ -114,9 +110,6 @@ static void irq_remap() {
     io_wait();
     outb(PIC2_DATA, ICW4_8086);
     io_wait();
-
-    outb(PIC1_DATA, a1);
-    outb(PIC2_DATA, a2);
 }
 
 static void irq_setup_gates(void) {
@@ -135,6 +128,7 @@ static void irq_setup_gates(void) {
     irq(12);
     irq(13);
     irq(14);
+    irq(15);
 }
 
 void irq_init(void) {

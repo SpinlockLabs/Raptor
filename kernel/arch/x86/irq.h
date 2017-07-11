@@ -19,8 +19,6 @@
 #define IRQ14 46
 #define IRQ15 47
 
-used static irq_handler_chain_t irq_routines[IRQ_CHAIN_SIZE * IRQ_CHAIN_DEPTH] = { NULL  };
-
 void int_disable(void);
 void int_resume(void);
 void int_enable(void);
@@ -45,3 +43,4 @@ extern void _irq11();
 extern void _irq12();
 extern void _irq13();
 extern void _irq14();
+extern void _irq15();
