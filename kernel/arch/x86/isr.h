@@ -6,43 +6,6 @@
 #include <stdint.h>
 #include "x86.h"
 
-used static irq_handler_t isr_routines[256] = { 0 };
-
-used static char* exceptions[32] = {
-    "Division by zero",
-    "Debug",
-    "NMI Interrupt",
-    "Breakpoint",
-    "Overflow",
-    "Range Exceeded",
-    "Invalid Opcode",
-    "No Math Coprocessor",
-    "Double Fault",
-    "Coprocessor Overrun",
-    "Invalid TSS",
-    "Segment Not Present",
-    "Stack Segment Fault",
-    "General Protection",
-    "Page Fault",
-    "Reserved",
-    "Floating-Point Error",
-    "Alignment Check",
-    "Machine Check",
-    "SIMD Floating-Point Exception",
-    "Virtualization Exception",
-    "Reserved",
-    "Reserved",
-    "Reserved",
-    "Reserved",
-    "Reserved",
-    "Reserved",
-    "Reserved",
-    "Reserved",
-    "Reserved",
-    "Reserved",
-    "Reserved"
-};
-
 void isr_add_handler(size_t, irq_handler_t);
 void isr_rem_handler(size_t);
 void isr_init(void);
