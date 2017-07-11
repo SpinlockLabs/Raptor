@@ -10,10 +10,11 @@ void list_init_node(list_node_t* node) {
 
 void list_init(list_t* list) {
     memset(list, 0, sizeof(list_t));
+    list->free_values = true;
 }
 
 list_node_t* list_create_node(void) {
-    list_node_t* node = (list_node_t*) malloc(sizeof(list_node_t));
+    list_node_t* node = (list_node_t*) zalloc(sizeof(list_node_t));
 
     ensure_allocated(node);
 
@@ -22,7 +23,7 @@ list_node_t* list_create_node(void) {
 }
 
 list_t* list_create(void) {
-    list_t* val = (list_t*) malloc(sizeof(list_t));
+    list_t* val = (list_t*) zalloc(sizeof(list_t));
 
     ensure_allocated(val);
 
@@ -220,6 +221,26 @@ void list_merge(list_t* target, list_t* source) {
     free(source);
 }
 
+bool list_contains(list_t* list, void* value) {
+    return list_find(list, value) != NULL;
+}
+
+list_t* list_diff(list_t* left, list_t* right) {
+    if (left == NULL || right == NULL) {
+        return NULL;
+    }
+
+    list_t* output = list_create();
+    list_for_each(node, left) {
+        bool exists = list_contains(right, node->value);
+
+        if (!exists) {
+            list_add(output, node->value);
+        }
+    }
+    return output;
+}
+
 void list_free_entries(list_t* list) {
     list_node_t* node = list->head;
 
@@ -238,13 +259,15 @@ void list_free(list_t* list) {
     while (node != NULL) {
         list_node_t* next = node->next;
 
-        if (node->value != NULL) {
+        if (list->free_values && node->value != NULL) {
             free(node->value);
         }
         free(node);
 
         node = next;
     }
+
+    free(list);
 }
 
 list_node_t* list_dequeue(list_t* list) {

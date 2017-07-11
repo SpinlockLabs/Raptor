@@ -2,6 +2,9 @@
 
 #include <liblox/string.h>
 
+#include <kernel/rkmalloc/rkmalloc.h>
+#include <kernel/heap.h>
+
 #define CONSOLE_BUFFER_SIZE 1024
 #define CONSOLE_CMD_MAX_SIZE 64
 
@@ -11,7 +14,7 @@ typedef struct debug_console {
     hashmap_t* commands;
 } debug_console_t;
 
-static debug_console_t *console = NULL;
+static debug_console_t* console = NULL;
 
 static void debug_console_trigger(tty_t* tty) {
     char cmd[CONSOLE_CMD_MAX_SIZE];
@@ -113,7 +116,60 @@ void debug_console_init(void) {
     console->commands = hashmap_create(10);
 }
 
+static void debug_help(tty_t* tty, const char* input) {
+    unused(input);
+
+    list_t* keys = hashmap_keys(console->commands);
+    list_for_each(node, keys) {
+        tty_printf(tty, "- %s\n", node->value);
+    }
+    list_free(keys);
+}
+
+static void debug_kheap_used(tty_t* tty, const char* input) {
+    unused(input);
+
+    rkmalloc_heap* heap = heap_get();
+    tty_printf(tty, "Object Allocation: %d bytes\n", heap->total_allocated_used_size);
+    tty_printf(tty, "Block Allocation: %d bytes\n", heap->total_allocated_blocks_size);
+}
+
+static void debug_crash(tty_t* tty, const char* input) {
+    unused(input);
+    unused(tty);
+
+    memcpy(NULL, NULL, 1);
+}
+
+static void debug_kheap_dump(tty_t* tty, const char* input) {
+    unused(input);
+
+    rkmalloc_heap* kheap = heap_get();
+    list_t* list = &kheap->index;
+
+    size_t index = 0;
+    list_for_each(node, list) {
+        rkmalloc_entry* entry = node->value;
+        tty_printf(tty,
+                   "%d[block = %d bytes, used = %d bytes, location = 0x%x, status = %s]\n",
+                   index,
+                   entry->block_size,
+                   entry->used_size,
+                   entry->ptr,
+                   entry->free ? "free" : "used"
+        );
+        index++;
+    }
+}
+
 void debug_console_start(void) {
+    {
+        debug_console_register_command("kheap-used", debug_kheap_used);
+        debug_console_register_command("kheap-dump", debug_kheap_dump);
+        debug_console_register_command("help", debug_help);
+        debug_console_register_command("crash", debug_crash);
+    }
+
     list_t* ttys = tty_get_all();
     list_for_each(node, ttys) {
         tty_t* tty = node->value;
@@ -123,7 +179,7 @@ void debug_console_start(void) {
             tty_write_string(tty, "[[Raptor Debug Console Started]]\n> ");
         }
     }
-    list_free_entries(ttys);
+    list_free(ttys);
 }
 
 void debug_console_register_command(char* name, debug_console_command_t cmd) {

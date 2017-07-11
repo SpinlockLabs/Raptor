@@ -13,6 +13,9 @@
 typedef void* (*rkmalloc_expand_func_t)(size_t);
 
 typedef struct rkmalloc_entry {
+#ifndef RKMALLOC_DISABLE_MAGIC
+    uint32_t magic;
+#endif
     bool free;
     size_t used_size;
     size_t block_size;

@@ -3,7 +3,7 @@
 
 #include <kernel/rkmalloc/rkmalloc.h>
 
-rkmalloc_heap* kheap = NULL;
+static rkmalloc_heap* kheap = NULL;
 
 extern char __link_mem_end;
 
@@ -24,10 +24,10 @@ static uintptr_t _kpmalloc_int(size_t size, int align, uintptr_t* phys) {
             kheap_end = addr + size;
             spin_unlock(kheap_lock);
             return paging_allocate_aligned_large(addr, addr, phys);
-        } else {
-            printf(WARN "kpmalloc called after heap was initialized!\n");
-            return (uintptr_t) NULL;
         }
+
+        printf(WARN "kpmalloc called after heap was initialized!\n");
+        return (uintptr_t) NULL;
     }
 
     if (align && (kp_placement_pointer & 0xFFFFF000)) {
@@ -109,6 +109,10 @@ void heap_init(void) {
     kheap->types.huge = 5 * 1024 * 1024; // 5 mb
 
     rkmalloc_init_heap(kheap);
+}
+
+rkmalloc_heap* heap_get(void) {
+    return kheap;
 }
 
 void* kheap_allocate(size_t size) {

@@ -83,6 +83,16 @@ void paging_heap_expand_into(uint32_t);
 uintptr_t paging_allocate_aligned_large(uintptr_t, size_t, uintptr_t*);
 
 /**
+ * Gets the total amount of memory.
+ */
+uintptr_t paging_memory_total(void);
+
+/**
+ * Gets the amount of the used memory.
+ */
+uintptr_t paging_memory_used(void);
+
+/**
  * Page fault handler.
  */
 void page_fault(regs_t regs);

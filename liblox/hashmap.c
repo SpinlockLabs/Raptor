@@ -194,6 +194,7 @@ list_t* hashmap_keys(hashmap_t* map) {
     }
 
     list_t* l = list_create();
+    l->free_values = false;
 
     for (uint i = 0; i < map->size; ++i) {
         hashmap_entry_t* x = map->entries[i];
@@ -212,6 +213,7 @@ list_t* hashmap_values(hashmap_t* map) {
     }
 
     list_t* l = list_create();
+    l->free_values = false;
 
     for (uint i = 0; i < map->size; ++i) {
         hashmap_entry_t* x = map->entries[i];

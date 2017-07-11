@@ -1,20 +1,22 @@
 #pragma once
 
 #include <stddef.h>
+#include <stdbool.h>
 
 #include "memory.h"
 
-typedef struct list_node_t {
-    struct list_node_t* prev;
-    struct list_node_t* next;
-    struct list_t* list;
+typedef struct list_node {
+    struct list_node* prev;
+    struct list_node* next;
+    struct list* list;
     void* value;
 } list_node_t;
 
-typedef struct list_t {
+typedef struct list {
     list_node_t* head;
     list_node_t* tail;
     size_t size;
+    bool free_values;
 } list_t;
 
 void list_init(list_t* list);
@@ -34,6 +36,8 @@ list_node_t* list_dequeue(list_t* list);
 void list_free(list_t* list);
 void list_free_entries(list_t* list);
 list_node_t* list_find(list_t* list, void* value);
+list_t* list_diff(list_t* left, list_t* right);
+bool list_contains(list_t* list, void* value);
 void list_merge(list_t* target, list_t* source);
 
 #define list_for_each(i, list) for (list_node_t* (i) = (list)->head; (i) != NULL; (i) = (i)->next)

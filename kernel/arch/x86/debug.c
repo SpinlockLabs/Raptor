@@ -1,5 +1,6 @@
 #include "debug.h"
 #include "heap.h"
+#include "paging.h"
 
 #include <liblox/net.h>
 
@@ -25,22 +26,6 @@ static void debug_kpused(tty_t* tty, const char* input) {
     int kb = size / 1024;
 
     tty_printf(tty, "Used: %d bytes, %d kb\n", size, kb);
-}
-
-extern rkmalloc_heap* kheap;
-
-static void debug_kheap_used(tty_t* tty, const char* input) {
-    unused(input);
-
-    tty_printf(tty, "Object Allocation: %d bytes\n", kheap->total_allocated_used_size);
-    tty_printf(tty, "Block Allocation: %d bytes\n", kheap->total_allocated_blocks_size);
-}
-
-static void debug_crash(tty_t* tty, const char* input) {
-    unused(input);
-    unused(tty);
-
-    memcpy(NULL, NULL, 1);
 }
 
 static void debug_pcnet_fake_packet(tty_t* tty, const char* input) {
@@ -90,9 +75,9 @@ static void debug_pcnet_fake_packet(tty_t* tty, const char* input) {
     };
 
     size_t complete_size = sizeof(ethernet_packet_t)
-        + sizeof(struct ipv4_packet)
-        + sizeof(struct udp_packet)
-        + len;
+                           + sizeof(struct ipv4_packet)
+                           + sizeof(struct udp_packet)
+                           + len;
 
     uint8_t* buff = zalloc(complete_size);
     uint32_t offset = 0;
@@ -114,24 +99,23 @@ static void debug_pcnet_fake_packet(tty_t* tty, const char* input) {
     free(buff);
 }
 
-static void debug_kheap_dump(tty_t* tty, const char* input) {
+static void debug_page_stats(tty_t* tty, const char* input) {
     unused(input);
 
-    list_t* list = &kheap->index;
+    uintptr_t memory_total = paging_memory_total();
+    uintptr_t memory_used = paging_memory_used();
 
-    size_t index = 0;
-    list_for_each(node, list) {
-        rkmalloc_entry* entry = node->value;
-        tty_printf(tty,
-            "%d[block = %d bytes, used = %d bytes, location = 0x%x, status = %s]\n",
-            index,
-            entry->block_size,
-            entry->used_size,
-            entry->ptr,
-            entry->free ? "free" : "used"
-        );
-        index++;
-    }
+    tty_printf(tty,
+               "Total Memory: %d bytes, %d kb\n",
+               memory_total,
+               (uintptr_t) (memory_total / 1024)
+    );
+
+    tty_printf(tty,
+               "Used Memory: %d bytes, %d kb\n",
+               memory_used,
+               (uintptr_t) (memory_used / 1024)
+    );
 }
 
 static void debug_pcnet_mac(tty_t* tty, const char* input) {
@@ -195,10 +179,8 @@ static void debug_fake_event(tty_t* tty, const char* input) {
 void debug_x86_init(void) {
     debug_console_register_command("kpused", debug_kpused);
     debug_console_register_command("pci-list", debug_pci_list);
-    debug_console_register_command("kheap-used", debug_kheap_used);
-    debug_console_register_command("kheap-dump", debug_kheap_dump);
+    debug_console_register_command("page-stats", debug_page_stats);
     debug_console_register_command("pcnet-mac", debug_pcnet_mac);
-    debug_console_register_command("crash", debug_crash);
     debug_console_register_command("fake-event", debug_fake_event);
     debug_console_register_command("pcnet-packet", debug_pcnet_fake_packet);
 }

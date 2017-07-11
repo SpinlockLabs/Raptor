@@ -7,15 +7,18 @@
 #include "irq.h"
 #include "paging.h"
 
+#define INDEX_FROM_BIT(a) ((a) / (8 * 4))
+#define OFFSET_FROM_BIT(a) ((a) % (8 * 4))
+
 static spin_lock_t frame_alloc_lock = {0};
 
-uint32_t* frames;
-uint32_t frame_count;
+static uint32_t* frames;
+static uint32_t frame_count;
 
 page_directory_t* kernel_directory;
 page_directory_t* current_directory;
 
-void debug_print_paging_directory(page_directory_t* dir) {
+used static void debug_print_directory(page_directory_t* dir) {
     page_directory_t* current = dir;
     printf(
         DEBUG "Kernel Directory: 0x%x, Current Directory: 0x%x\n",
@@ -41,9 +44,6 @@ void debug_print_paging_directory(page_directory_t* dir) {
     }
 }
 
-#define INDEX_FROM_BIT(a) ((a) / (8 * 4))
-#define OFFSET_FROM_BIT(a) ((a) % (8 * 4))
-
 static void set_frame(uint32_t frameAddr) {
     uint32_t frame = frameAddr / 0x1000;
     uint32_t idx = INDEX_FROM_BIT(frame);
@@ -55,10 +55,10 @@ static void clear_frame(uint32_t frameAddr) {
     uint32_t frame = frameAddr / 0x1000;
     uint32_t idx = INDEX_FROM_BIT(frame);
     uint32_t off = OFFSET_FROM_BIT(frame);
-    frames[idx] &= ~(0x1 << off);
+    frames[idx] &= ~((uint32_t) 0x1 << off);
 }
 
-used static uint32_t test_frame(uint32_t frameAddr) {
+static uint32_t test_frame(uint32_t frameAddr) {
     uint32_t frame = frameAddr / 0x1000;
     uint32_t idx = INDEX_FROM_BIT(frame);
     uint32_t off = OFFSET_FROM_BIT(frame);
@@ -88,7 +88,7 @@ static bool first_frame(uint32_t* val) {
     return false;
 }
 
-void alloc_frame(page_t* page, int is_kernel, int is_writable) {
+static void alloc_frame(page_t* page, int is_kernel, int is_writable) {
     if (page->frame == 0) {
         spin_lock(frame_alloc_lock);
         uint32_t index = 0;
@@ -105,7 +105,8 @@ void alloc_frame(page_t* page, int is_kernel, int is_writable) {
     page->user = (is_kernel == 1) ? 0 : 1;
 }
 
-void dma_frame(page_t* page, int is_kernel, int is_writable, uintptr_t address) {
+static void dma_frame(page_t* page, int is_kernel,
+                      int is_writable, uintptr_t address) {
     page->present = 1;
     page->rw = is_writable ? 1 : 0;
     page->user = is_kernel ? 0 : 1;
@@ -113,11 +114,14 @@ void dma_frame(page_t* page, int is_kernel, int is_writable, uintptr_t address) 
     set_frame(address);
 }
 
-void free_frame(page_t* page) {
-    if (page->frame == 0) {
+used static void free_frame(page_t* page) {
+    uint32_t frame;
+
+    if (!(frame = page->frame)) {
         return;
     }
-    clear_frame(page->frame);
+
+    clear_frame(frame * 0x1000);
     page->frame = 0;
 }
 
@@ -127,7 +131,9 @@ void paging_install(uint32_t memsize) {
     memset(frames, 0, INDEX_FROM_BIT(frame_count * 8));
 
     uintptr_t phys = 0;
-    kernel_directory = (page_directory_t*) kpmalloc_ap(sizeof(page_directory_t), &phys);
+    kernel_directory = (page_directory_t*) kpmalloc_ap(
+        sizeof(page_directory_t), &phys
+    );
     memset(kernel_directory, 0, sizeof(page_directory_t));
 }
 
@@ -139,7 +145,27 @@ void paging_invalidate_tables(void) {
     );
 }
 
-uintptr_t map_to_physical(uintptr_t virtual) {
+uintptr_t paging_memory_total(void) {
+    return frame_count * 4;
+}
+
+uintptr_t paging_memory_used(void) {
+    uintptr_t ret = 0;
+    uint32_t i, j;
+
+    for (i = 0; i < INDEX_FROM_BIT(frame_count); i++) {
+        for (j = 0; j < 32; j++) {
+            uint32_t testFrame = (uint32_t) (0x1 << j);
+            if (frames[i] & testFrame) {
+                ret++;
+            }
+        }
+    }
+
+    return ret * 4;
+}
+
+static uintptr_t map_to_physical(uintptr_t virtual) {
     uintptr_t remaining = virtual % 0x1000;
     uintptr_t frame = virtual / 0x1000;
     uintptr_t table = frame / 1024;
@@ -149,12 +175,12 @@ uintptr_t map_to_physical(uintptr_t virtual) {
         page_t* p = &current_directory->tables[table]->pages[subframe];
 
         return p->frame * 0x1000 + remaining;
-    } else {
-        return 0;
     }
+
+    return 0;
 }
 
-uint32_t first_n_frames(int n) {
+static uint32_t first_n_frames(int n) {
     for (uint32_t i = 0; i < frame_count * 0x1000; i += 0x1000) {
         int bad = 0;
 
@@ -202,7 +228,7 @@ uintptr_t paging_allocate_aligned_large(uintptr_t address, size_t size, uintptr_
     }
 
     spin_unlock(frame_alloc_lock);
-    *phys = map_to_physical((uintptr_t) address);
+    *phys = map_to_physical(address);
     return address;
 }
 

@@ -7,7 +7,7 @@
 #include "x86.h"
 
 void isr_add_handler(size_t, irq_handler_t);
-void isr_rem_handler(size_t);
+void isr_remove_handler(size_t);
 void isr_init(void);
 void fault_handler(regs_t *r);
 

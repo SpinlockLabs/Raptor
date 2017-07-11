@@ -14,16 +14,11 @@
 #define PIC2_OFFSET 0x28
 
 #define ICW1_ICW4 0x01
-#define ICW1_SINGLE 0x02
 #define ICW1_INTERVAL4 0x04
-#define ICW1_LEVEL 0x08
 #define ICW1_INIT 0x10
 
 #define ICW4_8086 0x01
 #define ICW4_AUTO 0x02
-#define ICW4_BUF_SLAVE 0x08
-#define ICW4_BUF_MASTER 0x0C
-#define ICW4_SFNM 0x10
 
 #define irq(i) idt_set_gate((i) + 32, (uint32_t)_irq##i, 0x08, 0x8E)
 #define sti() asm volatile("sti");
@@ -78,7 +73,7 @@ void irq_add_handler(size_t irq, irq_handler_chain_t handler) {
     sti();
 }
 
-void irq_rem_handler(size_t irq) {
+void irq_remove_handler(size_t irq) {
     cli();
     for (size_t i = 0; i < IRQ_CHAIN_DEPTH; i++) {
         irq_routines[i * IRQ_CHAIN_SIZE + irq] = NULL;
@@ -100,9 +95,9 @@ static void irq_remap() {
     io_wait();
 
     // Cascade identity with slave PIC at IRQ2.
-    outb(PIC1_DATA, 0x04);
+    outb(PIC1_DATA, ICW1_INTERVAL4);
     io_wait();
-    outb(PIC2_DATA, 0x02);
+    outb(PIC2_DATA, ICW4_AUTO);
     io_wait();
 
     // Request 8086 mode on both PICs.
@@ -151,7 +146,8 @@ used void irq_handler(regs_t *r) {
 
     if (r->int_no <= 47 && r->int_no >= 32) {
         for (size_t i = 0; i < IRQ_CHAIN_DEPTH; i++) {
-            irq_handler_chain_t handler = irq_routines[i * IRQ_CHAIN_SIZE + (r->int_no - 32)];
+            int index = i * IRQ_CHAIN_SIZE + (r->int_no - 32);
+            irq_handler_chain_t handler = irq_routines[index];
             if (handler && handler(r)) {
                 goto done;
             }
