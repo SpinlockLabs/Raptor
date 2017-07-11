@@ -8,7 +8,7 @@
 #define dbg(msg, ...) printf(DEBUG "[Network Stack] " msg, ##__VA_ARGS__)
 #define info(msg, ...) printf(INFO "[Network Stack] " msg, ##__VA_ARGS__)
 
-void network_stack_handle_interface_receive(
+static void network_stack_handle_interface_receive(
     network_iface_t* iface, uint8_t* buffer) {
     unused(buffer);
 
@@ -27,7 +27,7 @@ void network_stack_handle_interface_receive(
     }
 }
 
-void network_stack_on_interface_registered(void* event, void* extra) {
+static void network_stack_on_interface_registered(void* event, void* extra) {
     unused(extra);
 
     char* name = event;
