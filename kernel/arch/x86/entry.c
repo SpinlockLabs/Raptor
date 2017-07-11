@@ -11,6 +11,7 @@
 
 #include "cmdline.h"
 #include "gdt.h"
+#include "paging.h"
 #include "keyboard.h"
 #include "idt.h"
 #include "debug.h"
@@ -75,6 +76,29 @@ void vga_pty_write(tty_t* tty, const uint8_t* bytes, size_t size) {
     unused(tty);
 
     vga_write((const char*) bytes, size);
+}
+
+void paging_init(void) {
+    paging_install(mboot->mem_upper + mboot->mem_lower);
+
+    if (mboot->flags & (1 << 6)) {
+        mboot_memmap_t* mmap = (void*) mboot->mmap_addr;
+        while ((uintptr_t) mmap < mboot->mmap_addr + mboot->mmap_length) {
+            if (mmap->type == 2) {
+                /* I don't know why we should use this type, but references use it. */
+                for (unsigned long long int i = 0; i < mmap->length; i += 0x1000) {
+                    if (mmap->base_addr + i > 0xFFFFFFFF) break;
+                    uint32_t addr = (mmap->base_addr + i);
+                    paging_mark_system(addr & 0xFFFFF000);
+                }
+            }
+
+            mmap = (mboot_memmap_t*) (
+                (uintptr_t) mmap + mmap->size + sizeof(uintptr_t));
+        }
+    }
+
+    paging_finalize();
 }
 
 void post_subsystem_init(void) {
@@ -148,14 +172,6 @@ used void kernel_main(multiboot_t *_mboot, uint32_t mboot_hdr) {
         puts(DEBUG "Jumping to userspace...\n");
         userspace_jump(NULL, 0xB0000000);
     }
-
-    extern char __link_mem_begin;
-    extern char __link_mem_end;
-    extern char __link_mem_code;
-
-    printf(DEBUG "Executable begins at 0x%x\n", &__link_mem_begin);
-    printf(DEBUG "Code starts at 0x%x\n", &__link_mem_code);
-    printf(DEBUG "Executable ends at 0x%x\n", &__link_mem_end);
 
     kernel_init();
 }

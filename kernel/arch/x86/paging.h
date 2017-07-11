@@ -41,9 +41,24 @@ typedef struct {
 } page_directory_t;
 
 /**
- * Initializes the page table and enables it.
+ * Allocates the page table.
  */
-void paging_init(void);
+void paging_install(uint32_t);
+
+/**
+ * Enables the page table.
+ */
+void paging_finalize(void);
+
+/**
+ * Marks a page as a system page.
+ */
+void paging_mark_system(uint64_t);
+
+/**
+ * Invalidate the page tables.
+ */
+void paging_invalidate_tables(void);
 
 /**
  * Loads a specific page into the CR3 register.
@@ -51,9 +66,21 @@ void paging_init(void);
 void paging_switch_directory(page_directory_t*);
 
 /**
- * Retrieves a pointer to the page
+ * Retrieves a pointer to the given page.
  */
 page_t* paging_get_page(uint32_t, int, page_directory_t*);
+
+/**
+ * Expand the kernel heap into the given address.
+ * The page tables must be manually invalidated.
+ */
+void paging_heap_expand_into(uint32_t);
+
+/**
+ * Allocates a large aligned page for use with some devices.
+ * Stores the physical address in the given pointer.
+ */
+uintptr_t paging_allocate_aligned_large(uintptr_t, size_t, uintptr_t*);
 
 /**
  * Page fault handler.

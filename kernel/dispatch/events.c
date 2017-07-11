@@ -2,7 +2,9 @@
 
 #include <liblox/common.h>
 #include <liblox/hashmap.h>
+#include <liblox/io.h>
 
+#include <kernel/panic.h>
 #include <kernel/spin.h>
 
 typedef struct event_dispatch_info {
@@ -15,6 +17,11 @@ static spin_lock_t lock = {0};
 
 void events_subsystem_init(void) {
     registry = hashmap_create(10);
+
+    if (registry == NULL) {
+        panic("Failed to create the events subsystem registry.");
+    }
+
     spin_init(lock);
 }
 
@@ -64,6 +71,12 @@ void event_unregister_handler(char* type, event_handler_t handler) {
 
 void event_dispatch(char* type, void* event) {
     spin_lock(lock);
+
+    if (!hashmap_has(registry, type)) {
+        spin_unlock(lock);
+        return;
+    }
+
     list_t* list = hashmap_get(registry, type);
 
     if (list == NULL) {
@@ -71,10 +84,8 @@ void event_dispatch(char* type, void* event) {
         return;
     }
 
-    spin_lock(lock);
     list_for_each(node, list) {
         event_dispatch_info_t* info = node->value;
-
         info->handler(event, info->extra);
     }
     spin_unlock(lock);

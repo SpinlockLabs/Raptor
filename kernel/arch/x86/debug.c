@@ -105,7 +105,7 @@ static void debug_pcnet_fake_packet(tty_t* tty, const char* input) {
 
     network_iface_error_t error = network_iface_send(iface, buff, offset);
     if (error != IFACE_ERR_OK) {
-        tty_printf(tty, "Failed to send packet.\n");
+        tty_printf(tty, "Failed to send packet: %d\n", error);
     } else {
         tty_printf(tty, "Sent %d total bytes.\n", complete_size);
     }

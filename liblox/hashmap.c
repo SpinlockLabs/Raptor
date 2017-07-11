@@ -40,7 +40,7 @@ static void hashmap_int_free(void* ptr) {
 }
 
 hashmap_t* hashmap_create(size_t size) {
-    hashmap_t* map = malloc(sizeof(hashmap_t));
+    hashmap_t* map = zalloc(sizeof(hashmap_t));
 
     map->hash = &hashmap_string_hash;
     map->compare = &hashmap_string_comp;
@@ -49,14 +49,13 @@ hashmap_t* hashmap_create(size_t size) {
     map->value_free = &free;
 
     map->size = size;
-    map->entries = malloc(sizeof(hashmap_entry_t*) * size);
-    memset(map->entries, 0x00, sizeof(hashmap_entry_t*) * size);
+    map->entries = zalloc(sizeof(hashmap_entry_t*) * size);
 
     return map;
 }
 
 hashmap_t* hashmap_create_int(size_t size) {
-    hashmap_t* map = malloc(sizeof(hashmap_t));
+    hashmap_t* map = zalloc(sizeof(hashmap_t));
 
     map->hash = &hashmap_int_hash;
     map->compare = &hashmap_int_comp;
@@ -65,18 +64,21 @@ hashmap_t* hashmap_create_int(size_t size) {
     map->value_free = &free;
 
     map->size = size;
-    map->entries = malloc(sizeof(hashmap_entry_t*) * size);
-    memset(map->entries, 0x00, sizeof(hashmap_entry_t*) * size);
+    map->entries = zalloc(sizeof(hashmap_entry_t*) * size);
 
     return map;
 }
 
 void* hashmap_set(hashmap_t* map, void* key, void* value) {
+    if (map == NULL) {
+        return NULL;
+    }
+
     uint hash = map->hash(key) % map->size;
 
     hashmap_entry_t* x = map->entries[hash];
     if (!x) {
-        hashmap_entry_t* e = malloc(sizeof(hashmap_entry_t));
+        hashmap_entry_t* e = zalloc(sizeof(hashmap_entry_t));
         e->key = map->key_duplicate(key);
         e->value = value;
         e->next = NULL;
@@ -96,7 +98,7 @@ void* hashmap_set(hashmap_t* map, void* key, void* value) {
         x = x->next;
 
     } while (x);
-    hashmap_entry_t* e = malloc(sizeof(hashmap_entry_t));
+    hashmap_entry_t* e = zalloc(sizeof(hashmap_entry_t));
     e->key = map->key_duplicate(key);
     e->value = value;
     e->next = NULL;
@@ -106,6 +108,10 @@ void* hashmap_set(hashmap_t* map, void* key, void* value) {
 }
 
 void* hashmap_get(hashmap_t* map, void* key) {
+    if (map == NULL) {
+        return NULL;
+    }
+
     uint hash = map->hash(key) % map->size;
 
     hashmap_entry_t* x = map->entries[hash];
@@ -123,6 +129,10 @@ void* hashmap_get(hashmap_t* map, void* key) {
 }
 
 void* hashmap_remove(hashmap_t* map, void* key) {
+    if (map == NULL) {
+        return NULL;
+    }
+
     uint hash = map->hash(key) % map->size;
 
     hashmap_entry_t* x = map->entries[hash];
@@ -153,10 +163,13 @@ void* hashmap_remove(hashmap_t* map, void* key) {
     } while (x);
 
     return NULL;
-
 }
 
 bool hashmap_has(hashmap_t* map, void* key) {
+    if (map == NULL) {
+        return false;
+    }
+
     uint hash = map->hash(key) % map->size;
 
     hashmap_entry_t* x = map->entries[hash];
@@ -176,6 +189,10 @@ bool hashmap_has(hashmap_t* map, void* key) {
 }
 
 list_t* hashmap_keys(hashmap_t* map) {
+    if (map == NULL) {
+        return NULL;
+    }
+
     list_t* l = list_create();
 
     for (uint i = 0; i < map->size; ++i) {
@@ -190,6 +207,10 @@ list_t* hashmap_keys(hashmap_t* map) {
 }
 
 list_t* hashmap_values(hashmap_t* map) {
+    if (map == NULL) {
+        return NULL;
+    }
+
     list_t* l = list_create();
 
     for (uint i = 0; i < map->size; ++i) {
@@ -204,6 +225,10 @@ list_t* hashmap_values(hashmap_t* map) {
 }
 
 void hashmap_free(hashmap_t* map) {
+    if (map == NULL) {
+        return;
+    }
+
     for (uint i = 0; i < map->size; ++i) {
         hashmap_entry_t* x = map->entries[i], * p;
         while (x) {

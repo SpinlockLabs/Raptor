@@ -263,6 +263,7 @@ static void pcnet_init(void* data) {
     write_bcr32(2, bcr2);
 
     if (!pcnet_buffer_virt) {
+        printf(ERROR "PCNET buffer was not allocated.\n");
         return;
     }
 

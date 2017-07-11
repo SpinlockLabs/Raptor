@@ -11,7 +11,7 @@ void rkmalloc_init_heap(rkmalloc_heap* heap) {
         return; \
     }
 
-    if (heap->kmalloc == NULL) {
+    if (heap->expand == NULL) {
         heap->error_code = RKMALLOC_ERROR_INVALID_POINTER;
         return;
     }
@@ -132,7 +132,7 @@ void* rkmalloc_allocate(rkmalloc_heap* heap, size_t size) {
     size_t header_and_size =
         sizeof(list_node_t) + sizeof(rkmalloc_entry) + block_size;
 
-    list_node_t* lnode = heap->kmalloc(header_and_size);
+    list_node_t* lnode = heap->expand(header_and_size);
 
     if (lnode == NULL) {
         spin_unlock(heap->lock);
@@ -142,12 +142,12 @@ void* rkmalloc_allocate(rkmalloc_heap* heap, size_t size) {
     list_init_node(lnode);
     lnode->list = &heap->index;
 
-    rkmalloc_entry* entry = (rkmalloc_entry*) (lnode + sizeof(list_node_t));
+    rkmalloc_entry* entry = (rkmalloc_entry*) ((void*) lnode + sizeof(list_node_t));
 
     entry->free = false;
     entry->block_size = block_size;
     entry->used_size = size;
-    entry->ptr = (void*) (entry + sizeof(rkmalloc_entry));
+    entry->ptr = (void*) ((void*) entry + sizeof(rkmalloc_entry));
     heap->total_allocated_blocks_size += block_size;
     heap->total_allocated_used_size += size;
 
@@ -167,16 +167,8 @@ void rkmalloc_free(rkmalloc_heap* heap, void* ptr) {
 
     spin_lock(heap->lock);
 
-    list_node_t* node = heap->index.head;
-    rkmalloc_entry* entry = NULL;
-    while (node != NULL) {
-        entry = node->value;
-        if (entry->ptr == ptr) {
-            break;
-        }
-
-        node = node->next;
-    }
+    rkmalloc_entry* entry = (rkmalloc_entry*) (ptr - sizeof(rkmalloc_entry));
+    list_node_t* node = (list_node_t*) (entry - sizeof(list_node_t));
 
     if (node == NULL) {
         puts(WARN "Attempted to free an invalid pointer (");

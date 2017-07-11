@@ -10,9 +10,9 @@
 #include <kernel/spin.h>
 #include <kernel/panic.h>
 
-typedef void* (*kmalloc_func_t)(size_t size);
+typedef void* (*rkmalloc_expand_func_t)(size_t);
 
-typedef struct {
+typedef struct rkmalloc_entry {
     bool free;
     size_t used_size;
     size_t block_size;
@@ -42,7 +42,7 @@ typedef enum {
 } rkmalloc_error;
 
 typedef struct rkmalloc_heap {
-    kmalloc_func_t kmalloc;
+    rkmalloc_expand_func_t expand;
     rkmalloc_error error_code;
     size_t total_allocated_blocks_size;
     size_t total_allocated_used_size;
