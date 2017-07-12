@@ -32,8 +32,13 @@ list_t* network_iface_get_all(void) {
 }
 
 network_iface_error_t network_iface_destroy(network_iface_t* iface) {
-    if (network_iface_subsystem_registry == NULL) return IFACE_ERR_NO_SUBSYS;
-    if (iface == NULL) return IFACE_ERR_BAD_IFACE;
+    if (network_iface_subsystem_registry == NULL) {
+        return IFACE_ERR_NO_SUBSYS;
+    }
+
+    if (iface == NULL) {
+        return IFACE_ERR_BAD_IFACE;
+    }
 
     spin_lock(network_subsystem_lock);
 
@@ -57,11 +62,18 @@ network_iface_error_t network_iface_destroy(network_iface_t* iface) {
 }
 
 network_iface_error_t network_iface_get_mac(network_iface_t* iface, uint8_t mac[6]) {
-    if (iface == NULL) return IFACE_ERR_BAD_IFACE;
-    if (iface->get_mac == NULL) return IFACE_ERR_NO_HANDLER;
+    if (iface == NULL) {
+        return IFACE_ERR_BAD_IFACE;
+    }
+
+    if (iface->get_mac == NULL) {
+        return IFACE_ERR_NO_HANDLER;
+    }
 
     uint8_t* m = iface->get_mac(iface);
-    if (m == NULL) return IFACE_ERR_UNKNOWN;
+    if (m == NULL) {
+        return IFACE_ERR_UNKNOWN;
+    }
 
     memcpy(mac, m, 6);
     return IFACE_ERR_OK;
@@ -72,7 +84,6 @@ network_iface_t* network_iface_create(char* name) {
 
     network_iface_t* iface = zalloc(sizeof(network_iface_t));
     ensure_allocated(iface);
-
     iface->name = name;
     return iface;
 }
@@ -113,7 +124,9 @@ void network_iface_each(network_iface_handle_iter_t handle, void* data) {
 
 network_iface_error_t network_iface_send(network_iface_t* iface,
                                          uint8_t* buffer, size_t size) {
-    if (iface == NULL) return IFACE_ERR_BAD_IFACE;
+    if (iface == NULL) {
+        return IFACE_ERR_BAD_IFACE;
+    }
 
     if (iface->send != NULL) {
         return iface->send(iface, buffer, size);

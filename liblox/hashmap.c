@@ -232,7 +232,7 @@ void hashmap_free(hashmap_t* map) {
     }
 
     for (uint i = 0; i < map->size; ++i) {
-        hashmap_entry_t* x = map->entries[i], * p;
+        hashmap_entry_t* x = map->entries[i], *p;
         while (x) {
             p = x;
             x = x->next;
@@ -241,4 +241,19 @@ void hashmap_free(hashmap_t* map) {
         }
     }
     free(map->entries);
+}
+
+size_t hashmap_count(hashmap_t* map) {
+    size_t count = 0;
+
+    for (uint i = 0; i < map->size; ++i) {
+        hashmap_entry_t* x = map->entries[i];
+        while (x) {
+            x = x->next;
+
+            count++;
+        }
+    }
+
+    return count;
 }

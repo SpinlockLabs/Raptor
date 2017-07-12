@@ -41,3 +41,4 @@ void hashmap_free(hashmap_t* map);
 uint hashmap_string_hash(void* key);
 int hashmap_string_compare(void* a, void* b);
 void* hashmap_string_duplicate(void* key);
+size_t hashmap_count(hashmap_t* map);

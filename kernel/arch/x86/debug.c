@@ -37,7 +37,7 @@ static void debug_pcnet_fake_packet(tty_t* tty, const char* input) {
     }
 
     uint8_t mac[6];
-    network_iface_t* iface = network_iface_get("pcnet");
+    network_iface_t* iface = network_iface_get("pcnet0");
     network_iface_get_mac(iface, mac);
 
     struct ethernet_packet eth = {
@@ -121,7 +121,7 @@ static void debug_page_stats(tty_t* tty, const char* input) {
 static void debug_pcnet_mac(tty_t* tty, const char* input) {
     unused(input);
 
-    network_iface_t* iface = network_iface_get("pcnet");
+    network_iface_t* iface = network_iface_get("pcnet0");
 
     if (iface == NULL) {
         tty_printf(tty, "PCNET is not configured.\n");
