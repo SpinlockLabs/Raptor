@@ -17,17 +17,10 @@ typedef struct {
 typedef struct {
     uint16_t limit;       // Upper 16 bits of all selector limits.
     uint32_t base;        // Address of the first gdt_entry_t struct.
-} packed gdt_ptr_t;
-
-struct {
-    gdt_entry_t entries[6];
-    gdt_ptr_t pointer;
-    tss_entry_t tss;
-} packed gdt;
+} packed gdt_pointer_t;
 
 void gdt_init(void);
 void gdt_set_gate(int32_t, uint32_t, uint32_t, uint8_t, uint8_t);
-void write_tss(int32_t num, uint16_t ss0, uint32_t esp0);
 
 // Reloads new segment registers.
 extern void gdt_flush(int);

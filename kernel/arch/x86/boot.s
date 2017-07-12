@@ -36,6 +36,7 @@ _start:
 
     and $-16, %esp
 
+    pushl %esp
     pushl %eax /* Multiboot header magic */
     pushl %ebx /* Multiboot header pointer */
 
@@ -52,6 +53,7 @@ _start:
 
 # Apply the new global descriptor table.
 .global gdt_flush
+.type gdt_flush, @function
 gdt_flush:
     mov 4(%esp), %eax
     lgdt (%eax)

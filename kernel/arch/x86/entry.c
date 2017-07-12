@@ -122,7 +122,12 @@ void post_subsystem_init(void) {
     debug_x86_init();
 }
 
-used void kernel_main(multiboot_t *_mboot, uint32_t mboot_hdr) {
+/* Initial kernel stack pointer. */
+used uintptr_t initial_esp = 0;
+
+used void kernel_main(multiboot_t *_mboot, uint32_t mboot_hdr, uintptr_t esp) {
+    initial_esp = esp;
+
     if (mboot_hdr != MULTIBOOT_EAX_MAGIC) {
         return;
     }
