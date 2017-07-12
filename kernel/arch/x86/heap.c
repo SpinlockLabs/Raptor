@@ -13,21 +13,41 @@ uintptr_t kp_placement_pointer = (uintptr_t) &__link_mem_end;
 volatile uintptr_t kheap_end = (uintptr_t) NULL;
 uintptr_t kheap_alloc_point = KERNEL_HEAP_START;
 
+rkmalloc_heap* heap_get(void) {
+    return kheap;
+}
+
+void* kheap_allocate(size_t size) {
+    return rkmalloc_allocate(kheap, size);
+}
+
+void kheap_free(void* ptr) {
+    rkmalloc_free(kheap, ptr);
+}
+
 static uintptr_t _kpmalloc_int(size_t size, int align, uintptr_t* phys) {
     if (kheap_end != 0) {
-        if (phys && align && size >= 0x3000) {
-            printf(WARN "Allocating a large aligned buffer. This may take a second.\n");
+        uintptr_t address = 0;
+
+        if (align) {
             spin_lock(kheap_lock);
-            uintptr_t addr = kheap_end;
-            addr &= 0xFFFFF000;
-            addr += 0x1000;
-            kheap_end = addr + size;
+            address = kheap_end;
+            address &= 0xFFFFF000;
+            address += 0x1000;
+            kheap_end = address + size;
             spin_unlock(kheap_lock);
-            return paging_allocate_aligned_large(addr, addr, phys);
+        } else {
+            address = (uintptr_t) kheap_allocate(size);
         }
 
-        printf(WARN "kpmalloc called after heap was initialized!\n");
-        return (uintptr_t) NULL;
+        if (phys) {
+            if (align && size >= 0x3000) {
+                address = paging_allocate_aligned_large(address, address, phys);
+            }
+            *phys = paging_get_physical_address(address);
+        }
+
+        return address;
     }
 
     if (align && (kp_placement_pointer & 0xFFFFF000)) {
@@ -109,18 +129,6 @@ void heap_init(void) {
     kheap->types.huge = 5 * 1024 * 1024; // 5 mb
 
     rkmalloc_init_heap(kheap);
-}
-
-rkmalloc_heap* heap_get(void) {
-    return kheap;
-}
-
-void* kheap_allocate(size_t size) {
-    return rkmalloc_allocate(kheap, size);
-}
-
-void kheap_free(void* ptr) {
-    rkmalloc_free(kheap, ptr);
 }
 
 size_t kpused(void) {

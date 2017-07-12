@@ -88,6 +88,17 @@ uintptr_t paging_allocate_aligned_large(uintptr_t, size_t, uintptr_t*);
 uintptr_t paging_memory_total(void);
 
 /**
+ * Directly maps a memory page to physical memory.
+ */
+void paging_map_dma(uintptr_t virt, uintptr_t phys);
+
+
+/**
+ * Retrieves the physical address for the given virtual address.
+ */
+uintptr_t paging_get_physical_address(uintptr_t virt);
+
+/**
  * Gets the amount of the used memory.
  */
 uintptr_t paging_memory_used(void);

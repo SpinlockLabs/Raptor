@@ -6,6 +6,8 @@
 #include <kernel/heap.h>
 #include <kernel/time.h>
 
+#include "commands.h"
+
 #define CONSOLE_BUFFER_SIZE 1024
 #define CONSOLE_CMD_MAX_SIZE 64
 
@@ -127,14 +129,6 @@ static void debug_help(tty_t* tty, const char* input) {
     list_free(keys);
 }
 
-static void debug_kheap_used(tty_t* tty, const char* input) {
-    unused(input);
-
-    rkmalloc_heap* heap = heap_get();
-    tty_printf(tty, "Object Allocation: %d bytes\n", heap->total_allocated_used_size);
-    tty_printf(tty, "Block Allocation: %d bytes\n", heap->total_allocated_blocks_size);
-}
-
 static void debug_crash(tty_t* tty, const char* input) {
     unused(input);
     unused(tty);
@@ -142,49 +136,12 @@ static void debug_crash(tty_t* tty, const char* input) {
     memcpy(NULL, NULL, 1);
 }
 
-static void debug_time(tty_t* tty, const char* input) {
-    unused(input);
-
-    time_t* time = malloc(sizeof(time_t));
-    time_get(time);
-
-    tty_printf(tty, "%d-%d-%d %d:%d:%d\n",
-               time->month,
-               time->day,
-               time->year,
-               time->hour,
-               time->minute,
-               time->second);
-}
-
-static void debug_kheap_dump(tty_t* tty, const char* input) {
-    unused(input);
-
-    rkmalloc_heap* kheap = heap_get();
-    list_t* list = &kheap->index;
-
-    size_t index = 0;
-    list_for_each(node, list) {
-        rkmalloc_entry* entry = node->value;
-        tty_printf(tty,
-                   "%d[block = %d bytes, used = %d bytes, location = 0x%x, status = %s]\n",
-                   index,
-                   entry->block_size,
-                   entry->used_size,
-                   entry->ptr,
-                   entry->free ? "free" : "used"
-        );
-        index++;
-    }
-}
-
 void debug_console_start(void) {
     {
-        debug_console_register_command("kheap-used", debug_kheap_used);
-        debug_console_register_command("kheap-dump", debug_kheap_dump);
         debug_console_register_command("help", debug_help);
         debug_console_register_command("crash", debug_crash);
-        debug_console_register_command("time", debug_time);
+
+        debug_init_commands();
     }
 
     list_t* ttys = tty_get_all();

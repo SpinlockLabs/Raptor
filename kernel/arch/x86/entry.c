@@ -7,7 +7,6 @@
 #include <kernel/panic.h>
 #include <kernel/cmdline.h>
 #include <kernel/timer.h>
-#include <kernel/arch/x86/devices/pcnet/pcnet.h>
 
 #include "cmdline.h"
 #include "gdt.h"
@@ -22,6 +21,8 @@
 #include "vga.h"
 
 #include "devices/serial/serial.h"
+#include "devices/pcnet/pcnet.h"
+#include "devices/e1000/e1000.h"
 
 const uint32_t kProcessorIdIntel = 0x756e6547;
 const uint32_t kProcessorIdAMD = 0x68747541;
@@ -116,6 +117,8 @@ void post_subsystem_init(void) {
     tty_register(serial_port_a->tty);
 
     pcnet_setup();
+    e1000_setup();
+
     debug_x86_init();
 }
 

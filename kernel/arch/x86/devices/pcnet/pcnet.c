@@ -181,8 +181,6 @@ static network_iface_t* pcnet_iface = NULL;
 static hashmap_t* pcnet_irqs = NULL;
 
 static int pcnet_irq_handler(struct regs* r) {
-    unused(r);
-
     uint32_t irq_id = r->int_no - 32;
     pcnet_network_iface_t* iface = hashmap_get(pcnet_irqs, (void*) irq_id);
 
@@ -224,6 +222,7 @@ static network_iface_error_t pcnet_iface_destroy(network_iface_t* iface) {
     pcnet_network_iface_t* net = iface->data;
     cpu_task_cancel(net->poll_task);
 
+    hashmap_remove(pcnet_irqs, (void*) net->state->irq);
     free(net->state);
     free(net);
     free(iface->name);
@@ -375,7 +374,7 @@ static void pcnet_init(uint32_t device_pci) {
 
     size_t idx = hashmap_count(pcnet_irqs);
     char* name = zalloc(16);
-    sprintf(name, "pcnet%d", idx);
+    sprintf(name, "pcnet%d", (int) idx);
     pcnet_iface = network_iface_create(name);
 
     pcnet_network_iface_t* dat = zalloc(sizeof(pcnet_network_iface_t));

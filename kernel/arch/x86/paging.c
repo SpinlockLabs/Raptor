@@ -338,6 +338,19 @@ page_t* paging_get_page(uint32_t address, int make, page_directory_t* dir) {
     return NULL;
 }
 
+void paging_map_dma(uintptr_t virt, uintptr_t phys) {
+    page_t* page = paging_get_page(virt, 1, kernel_directory);
+    if (page == NULL) {
+        return;
+    }
+
+    dma_frame(page, 1, 1, phys);
+}
+
+uintptr_t paging_get_physical_address(uintptr_t virt) {
+    return map_to_physical(virt);
+}
+
 void page_fault(regs_t regs) {
     int_disable();
     uint32_t faulting_address;

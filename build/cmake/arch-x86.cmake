@@ -27,7 +27,7 @@ set(QEMU_CMD_BASE
   qemu-system-i386
     -cpu core2duo
     -m 256
-    -net nic,model=pcnet
+    -net nic,model=e1000
 )
 
 set(QEMU_CMD
