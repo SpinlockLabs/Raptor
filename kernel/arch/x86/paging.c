@@ -347,6 +347,15 @@ void paging_map_dma(uintptr_t virt, uintptr_t phys) {
     dma_frame(page, 1, 1, phys);
 }
 
+void paging_unmap_dma(uintptr_t virt) {
+    page_t* page = paging_get_page(virt, 0, kernel_directory);
+    if (page == NULL) {
+        return;
+    }
+
+    alloc_frame(page, 1, 1);
+}
+
 uintptr_t paging_get_physical_address(uintptr_t virt) {
     return map_to_physical(virt);
 }

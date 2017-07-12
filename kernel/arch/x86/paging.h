@@ -92,6 +92,10 @@ uintptr_t paging_memory_total(void);
  */
 void paging_map_dma(uintptr_t virt, uintptr_t phys);
 
+/**
+ * Unmaps a memory page from physical memory.
+ */
+void paging_unmap_dma(uintptr_t);
 
 /**
  * Retrieves the physical address for the given virtual address.
