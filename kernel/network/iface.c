@@ -52,7 +52,7 @@ network_iface_error_t network_iface_destroy(network_iface_t* iface) {
     }
 
     if (error == IFACE_ERR_OK) {
-        hashmap_set(network_iface_subsystem_registry, name, NULL);
+        hashmap_remove(network_iface_subsystem_registry, name);
     }
 
     spin_unlock(network_subsystem_lock);

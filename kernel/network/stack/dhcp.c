@@ -59,6 +59,8 @@ static void dhcp_handle_interface_up(void* event, void* extra) {
 }
 
 static void dhcp_handle_interface_down(void* event, void* extra) {
+    unused(extra);
+
     network_iface_t* iface = event;
     dhcp_internal_state_t* state = get_state(iface);
     if (state != NULL) {

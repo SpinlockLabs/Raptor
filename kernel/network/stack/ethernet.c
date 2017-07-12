@@ -78,6 +78,8 @@ static void handle_ethernet_packet_received(void* event, void* extra) {
 }
 
 static void handle_ethernet_packet_send(void* event, void* extra) {
+    unused(extra);
+
     raw_packet_t* out = event;
 
     if (out->iface_class_type != IFACE_CLASS_ETHERNET) {

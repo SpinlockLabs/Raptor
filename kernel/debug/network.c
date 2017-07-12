@@ -30,6 +30,16 @@ static void debug_network_iface_list(tty_t* tty, const char* input) {
     }
 }
 
+static void debug_network_iface_destroy(tty_t* tty, const char* input) {
+    network_iface_t* iface = network_iface_get((char*) input);
+    if (iface == NULL) {
+        tty_printf(tty, "Network interface %s was not found.\n", input);
+        return;
+    }
+
+    network_iface_destroy(iface);
+}
+
 static void debug_network_dhcp_send_request(tty_t* tty, const char* input) {
     network_iface_t* iface = network_iface_get((char*) input);
     if (iface == NULL) {
@@ -43,4 +53,5 @@ static void debug_network_dhcp_send_request(tty_t* tty, const char* input) {
 void debug_network_init(void) {
     debug_console_register_command("net-iface-list", debug_network_iface_list);
     debug_console_register_command("dhcp-send-request", debug_network_dhcp_send_request);
+    debug_console_register_command("net-iface-destroy", debug_network_iface_destroy);
 }

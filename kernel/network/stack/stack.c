@@ -75,6 +75,8 @@ static void network_stack_on_interface_registered(void* event, void* extra) {
 }
 
 static void network_stack_on_interface_destroying(void* event, void* extra) {
+    unused(extra);
+
     network_iface_t* iface = event;
 
     event_dispatch("network:stack:iface-down", iface);
@@ -83,6 +85,8 @@ static void network_stack_on_interface_destroying(void* event, void* extra) {
         hashmap_free((hashmap_t*) iface->_stack);
         iface->_stack = NULL;
     }
+
+    info("Interface %s destroyed.\n", iface->name);
 }
 
 void network_stack_send_packet(
