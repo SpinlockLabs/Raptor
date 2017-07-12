@@ -10,6 +10,6 @@ typedef struct time {
     uint16_t day;
     uint16_t month;
     uint16_t year;
-} time_t packed;
+} packed time_t;
 
 extern void time_get(time_t*);
