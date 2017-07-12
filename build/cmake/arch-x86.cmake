@@ -55,6 +55,12 @@ add_custom_target(qemu-cli-gdb
   DEPENDS kernel
 )
 
+add_custom_target(qemu-cli-network
+  COMMAND sudo ${QEMU_CMD} -append debug -monitor none -nographic
+    -net tap,ifname=tap0,script=no,downscript=no
+  DEPENDS kernel
+)
+
 add_custom_command(
   OUTPUT raptor.iso
   DEPENDS kernel

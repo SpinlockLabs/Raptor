@@ -97,7 +97,6 @@ typedef enum network_iface_class_type {
 struct network_iface {
     /*
       Network interface name. This should be unique.
-      TODO(kaendfinger): Implement auto-naming based on generic information.
     */
     char* name;
 

@@ -83,7 +83,7 @@ void* hashmap_set(hashmap_t* map, void* key, void* value) {
         e->value = value;
         e->next = NULL;
         map->entries[hash] = e;
-        return NULL;
+        return e;
     }
 
     hashmap_entry_t* p = NULL;
@@ -96,15 +96,14 @@ void* hashmap_set(hashmap_t* map, void* key, void* value) {
 
         p = x;
         x = x->next;
-
     } while (x);
     hashmap_entry_t* e = zalloc(sizeof(hashmap_entry_t));
     e->key = map->key_duplicate(key);
     e->value = value;
     e->next = NULL;
-
     p->next = e;
-    return NULL;
+
+    return e;
 }
 
 void* hashmap_get(hashmap_t* map, void* key) {

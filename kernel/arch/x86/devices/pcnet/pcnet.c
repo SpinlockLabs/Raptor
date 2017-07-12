@@ -184,8 +184,12 @@ static int pcnet_irq_handler(struct regs* r) {
     unused(r);
 
     uint32_t irq_id = r->int_no - 32;
-    printf("Got IRQ %d\n", irq_id);
-    pcnet_network_iface_t* iface = hashmap_get(pcnet_irqs, &irq_id);
+    pcnet_network_iface_t* iface = hashmap_get(pcnet_irqs, (void*) irq_id);
+
+    if (iface == NULL) {
+        return 0;
+    }
+
     pcnet_state_t* state = iface->state;
     write_csr32(state, 0, read_csr32(state, 0) | 0x0400);
     irq_ack(state->irq);
@@ -378,7 +382,7 @@ static void pcnet_init(uint32_t device_pci) {
     dat->state = state;
     dat->iface = pcnet_iface;
 
-    hashmap_set(pcnet_irqs, &state->irq, dat);
+    hashmap_set(pcnet_irqs, (void*) state->irq, dat);
     irq_add_handler(state->irq, &pcnet_irq_handler);
 
     pcnet_iface->class_type = IFACE_CLASS_ETHERNET;

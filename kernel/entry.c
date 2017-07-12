@@ -8,7 +8,7 @@
 #include <liblox/lox-internal.h>
 
 #include <kernel/network/iface.h>
-#include <kernel/network/stack.h>
+#include <kernel/network/stack/stack.h>
 
 #include <kernel/dispatch/events.h>
 

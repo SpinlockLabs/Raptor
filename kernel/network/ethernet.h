@@ -4,6 +4,8 @@
 
 #include <stdint.h>
 
+#define ETH_TYPE_IPV4 0x0800
+
 typedef struct ethernet_packet {
     /* Destination MAC address. */
     uint8_t destination[6];
