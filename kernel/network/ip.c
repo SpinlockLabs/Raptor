@@ -22,10 +22,12 @@ udp_ipv4_packet_t* ipv4_create_udp_packet(size_t payload_size) {
     size_t total = sizeof(udp_ipv4_packet_t) + payload_size;
     udp_ipv4_packet_t* packet = zalloc(total);
     packet->ipv4.protocol = IPV4_PROTOCOL_UDP;
+    packet->ipv4.length = htons(total);
+    packet->udp.length = htons(sizeof(udp_packet_t) + payload_size);
     return packet;
 }
 
-void ipv4_finalize_packet(ipv4_packet_t* p, size_t payload_size) {
+size_t ipv4_finalize_packet(ipv4_packet_t* p, size_t payload_size) {
     if (p->length == 0) {
         if (p->protocol == IPV4_PROTOCOL_UDP) {
             p->length = htons(sizeof(udp_packet_t) + payload_size);
@@ -42,15 +44,13 @@ void ipv4_finalize_packet(ipv4_packet_t* p, size_t payload_size) {
         p->ttl = 0x40;
     }
 
-    if (p->version != 4) {
-        p->version = 0x04;
+    if (p->version_ihl == 0) {
+        p->version_ihl = (0x4 << 4) | (0x5 << 0);
     }
 
-    if (p->ihl == 0) {
-        p->ihl = 0x05;
-    }
+    p->checksum = htons(ipv4_calculate_checksum(p));
 
-    p->checksum = ipv4_calculate_checksum(p);
+    return p->length;
 }
 
 uint32_t ipv4_address(uint8_t a, uint8_t b, uint8_t c, uint8_t d) {

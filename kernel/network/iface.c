@@ -42,6 +42,8 @@ network_iface_error_t network_iface_destroy(network_iface_t* iface) {
 
     spin_lock(network_subsystem_lock);
 
+    event_dispatch("network:iface:destroying", iface);
+
     network_iface_error_t error = IFACE_ERR_OK;
 
     char* name = strdup(iface->name);

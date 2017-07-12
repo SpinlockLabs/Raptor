@@ -4,10 +4,23 @@
  */
 #include "ethernet.h"
 #include "stack.h"
+#include "log.h"
+
+#include <liblox/io.h>
+#include <liblox/net.h>
+#include <liblox/string.h>
 
 #include <kernel/network/ethernet.h>
 #include <kernel/dispatch/events.h>
-#include <liblox/io.h>
+
+static const uint8_t broadcast[6] = {
+    255,
+    255,
+    255,
+    255,
+    255,
+    255
+};
 
 static bool is_ours(network_iface_t* iface, ethernet_packet_t* packet) {
     uint8_t our_mac[6];
@@ -26,14 +39,14 @@ static bool is_ours(network_iface_t* iface, ethernet_packet_t* packet) {
         }
     }
 
-    if (packet->type == ETH_TYPE_IPV4) {
+    if (ntohs(packet->type) == ETH_TYPE_IPV4) {
         return true;
     }
 
     return false;
 }
 
-static void handle_ethernet_packet(void* event, void* extra) {
+static void handle_ethernet_packet_received(void* event, void* extra) {
     unused(extra);
 
     raw_packet_t* raw = event;
@@ -59,15 +72,56 @@ static void handle_ethernet_packet(void* event, void* extra) {
     };
 
     event_dispatch(
-      "network:stack:ipv4:packet",
+      "network:stack:ipv4:packet-receive",
       &real_pkt
     );
 }
 
+static void handle_ethernet_packet_send(void* event, void* extra) {
+    raw_packet_t* out = event;
+
+    if (out->iface_class_type != IFACE_CLASS_ETHERNET) {
+        return;
+    }
+
+    network_iface_t* iface = network_iface_get(out->iface);
+    if (iface == NULL) {
+        return;
+    }
+
+    uint16_t ether_type = 0;
+
+    if (out->packet_class == PACKET_CLASS_IPV4) {
+        ether_type = ETH_TYPE_IPV4;
+    } else if (out->packet_class == PACKET_CLASS_ARP) {
+        ether_type = ETH_TYPE_ARP;
+    } else {
+        return;
+    }
+
+    uint8_t mac[6];
+    network_iface_get_mac(iface, mac);
+    size_t payload_size = ntohs(out->length);
+    size_t total_size = sizeof(ethernet_packet_t) + payload_size;
+    ethernet_packet_t* ether = zalloc(total_size);
+    ether->type = htons(ether_type);
+    memcpy(&ether->source, mac, 6);
+    memcpy(&ether->destination, broadcast, 6);
+    memcpy(&ether->payload, out->buffer, payload_size);
+
+    network_iface_send(iface, (uint8_t*) ether, total_size);
+}
+
 void network_stack_ethernet_init(void) {
     event_register_handler(
-        "network:stack:raw:packet",
-        handle_ethernet_packet,
+        "network:stack:raw:packet-receive",
+        handle_ethernet_packet_received,
+        NULL
+    );
+
+    event_register_handler(
+        "network:stack:raw:packet-send",
+        handle_ethernet_packet_send,
         NULL
     );
 }

@@ -1,6 +1,9 @@
 #include "console.h"
 
 #include <kernel/network/iface.h>
+#include <kernel/network/stack/dhcp.h>
+
+#include <kernel/dispatch/events.h>
 
 static void debug_network_iface_list(tty_t* tty, const char* input) {
     unused(input);
@@ -27,6 +30,17 @@ static void debug_network_iface_list(tty_t* tty, const char* input) {
     }
 }
 
+static void debug_network_dhcp_send_request(tty_t* tty, const char* input) {
+    network_iface_t* iface = network_iface_get((char*) input);
+    if (iface == NULL) {
+        tty_printf(tty, "Network interface %s was not found.\n", input);
+        return;
+    }
+
+    dhcp_send_request(iface);
+}
+
 void debug_network_init(void) {
     debug_console_register_command("net-iface-list", debug_network_iface_list);
+    debug_console_register_command("dhcp-send-request", debug_network_dhcp_send_request);
 }

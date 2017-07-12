@@ -130,6 +130,9 @@ struct network_iface {
 
     /* Interface-provided user data. */
     void* data;
+
+    /* Pointer to network stack private data. */
+    void* _stack;
 };
 
 /*
