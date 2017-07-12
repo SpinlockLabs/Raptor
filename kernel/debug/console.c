@@ -4,6 +4,7 @@
 
 #include <kernel/rkmalloc/rkmalloc.h>
 #include <kernel/heap.h>
+#include <kernel/time.h>
 
 #define CONSOLE_BUFFER_SIZE 1024
 #define CONSOLE_CMD_MAX_SIZE 64
@@ -141,6 +142,21 @@ static void debug_crash(tty_t* tty, const char* input) {
     memcpy(NULL, NULL, 1);
 }
 
+static void debug_time(tty_t* tty, const char* input) {
+    unused(input);
+
+    time_t* time = malloc(sizeof(time_t));
+    time_get(time);
+
+    tty_printf(tty, "%d-%d-%d %d:%d:%d\n",
+               time->month,
+               time->day,
+               time->year,
+               time->hour,
+               time->minute,
+               time->second);
+}
+
 static void debug_kheap_dump(tty_t* tty, const char* input) {
     unused(input);
 
@@ -168,6 +184,7 @@ void debug_console_start(void) {
         debug_console_register_command("kheap-dump", debug_kheap_dump);
         debug_console_register_command("help", debug_help);
         debug_console_register_command("crash", debug_crash);
+        debug_console_register_command("time", debug_time);
     }
 
     list_t* ttys = tty_get_all();
