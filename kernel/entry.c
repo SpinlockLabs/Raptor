@@ -1,3 +1,4 @@
+#include <liblox/version.h>
 #include <liblox/io.h>
 
 #include <kernel/cpu/idle.h>
@@ -14,7 +15,6 @@
 
 #include "paging.h"
 #include "heap.h"
-#include "version.h"
 
 /* Architecture hooks for initialization. */
 extern void post_subsystem_init(void);

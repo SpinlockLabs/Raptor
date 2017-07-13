@@ -5,7 +5,9 @@ option(TESTS "Enable Tests" OFF)
 enable_language(ASM)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+set(RAPTOR_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 include(build/cmake/common.cmake)
+include(build/cmake/filesystem.cmake)
 
 cflags(
   -Wall
@@ -22,8 +24,6 @@ if(CLANG)
   cflags(-Wno-unused-command-line-argument -O0)
   cflags(-fno-integrated-as)
 endif()
-
-set(RAPTOR_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
 include_directories(${RAPTOR_DIR})
 

@@ -12,6 +12,10 @@ function(program EXE SRCFILES)
   target_link_libraries(${EXE} lox crt0)
   target_include_directories(${EXE} PRIVATE ${RAPTOR_DIR})
   target_compile_options(${EXE} PRIVATE "-nostartfiles")
+  install(
+    TARGETS ${EXE}
+    RUNTIME DESTINATION bin
+  )
 endfunction()
 
 foreach(PROGRAM_LIST ${PROGRAM_LISTS})
