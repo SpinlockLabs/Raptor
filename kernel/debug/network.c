@@ -3,8 +3,6 @@
 #include <kernel/network/iface.h>
 #include <kernel/network/stack/dhcp.h>
 
-#include <kernel/dispatch/events.h>
-
 static void debug_network_iface_list(tty_t* tty, const char* input) {
     unused(input);
 
@@ -52,6 +50,6 @@ static void debug_network_dhcp_send_request(tty_t* tty, const char* input) {
 
 void debug_network_init(void) {
     debug_console_register_command("net-iface-list", debug_network_iface_list);
-    debug_console_register_command("dhcp-send-request", debug_network_dhcp_send_request);
     debug_console_register_command("net-iface-destroy", debug_network_iface_destroy);
+    debug_console_register_command("dhcp-send-request", debug_network_dhcp_send_request);
 }

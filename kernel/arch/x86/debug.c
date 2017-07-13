@@ -78,9 +78,36 @@ static void debug_fake_event(tty_t* tty, const char* input) {
     event_dispatch((char*) input, NULL);
 }
 
+static void debug_page_dump(tty_t* tty, const char* input) {
+    unused(input);
+
+    page_directory_t* current = paging_get_directory();
+
+    for (uintptr_t i = 0; i < 1024; i++) {
+        if (!current->tables[i] ||
+            (uintptr_t) current->tables[i] == (uintptr_t) 0xFFFFFFFF) {
+            continue;
+        }
+
+        for (uint16_t j = 0; j < 1024; j++) {
+            page_t* p = &current->tables[i]->pages[j];
+            if (p->frame) {
+                tty_printf(
+                    tty,
+                    "page 0x%x 0x%x %s\n",
+                    (i * 1024 + j) * 0x1000,
+                    p->frame * 0x1000,
+                    p->present ? "[present]" : ""
+                );
+            }
+        }
+    }
+}
+
 void debug_x86_init(void) {
     debug_console_register_command("kpused", debug_kpused);
     debug_console_register_command("pci-list", debug_pci_list);
     debug_console_register_command("page-stats", debug_page_stats);
+    debug_console_register_command("page-dump", debug_page_dump);
     debug_console_register_command("fake-event", debug_fake_event);
 }

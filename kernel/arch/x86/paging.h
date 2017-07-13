@@ -108,6 +108,11 @@ uintptr_t paging_get_physical_address(uintptr_t virt);
 uintptr_t paging_memory_used(void);
 
 /**
+ * Retrieves the current page directory.
+ */
+page_directory_t* paging_get_directory(void);
+
+/**
  * Page fault handler.
  */
 void page_fault(regs_t regs);

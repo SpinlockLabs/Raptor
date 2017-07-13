@@ -5,14 +5,12 @@
 #include "rkmalloc.h"
 
 #ifndef RKMALLOC_DISABLE_MAGIC
-static uint8_t _rkmagic[4] = {
-    'M',
-    'A',
-    'L',
-    'L'
-};
-
-#define rkmagic ((uint32_t*) _rkmagic)[0]
+static uintptr_t rkmagic(uintptr_t x) {
+    x = ((x >> 16) ^ x) * 0x45d9f3b;
+    x = ((x >> 16) ^ x) * 0x45d9f3b;
+    x = (x >> 16) ^ x;
+    return x;
+}
 #endif
 
 void rkmalloc_init_heap(rkmalloc_heap* heap) {
@@ -158,13 +156,15 @@ void* rkmalloc_allocate(rkmalloc_heap* heap, size_t size) {
 
     rkmalloc_entry* entry = (rkmalloc_entry*) ((void*) node + sizeof(list_node_t));
 
-#ifndef RKMALLOC_DISABLE_MAGIC
-    entry->magic = rkmagic;
-#endif
     entry->free = false;
     entry->block_size = block_size;
     entry->used_size = size;
     entry->ptr = ((void*) entry + sizeof(rkmalloc_entry));
+
+#ifndef RKMALLOC_DISABLE_MAGIC
+    entry->magic = rkmagic((uintptr_t) entry->ptr);
+#endif
+
     heap->total_allocated_blocks_size += block_size;
     heap->total_allocated_used_size += size;
 
@@ -188,7 +188,7 @@ void rkmalloc_free(rkmalloc_heap* heap, void* ptr) {
     rkmalloc_entry* entry = (rkmalloc_entry*) (ptr - sizeof(rkmalloc_entry));
     list_node_t* node = (list_node_t*) (entry - sizeof(list_node_t));
 
-    if (entry->magic != rkmagic) {
+    if (entry->magic != rkmagic((uintptr_t) ptr)) {
         puts(WARN "Attempted to free an invalid pointer (bad magic header) (");
         puthex((int) ptr);
         puts(")\n");

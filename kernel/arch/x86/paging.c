@@ -146,7 +146,7 @@ void paging_invalidate_tables(void) {
 }
 
 uintptr_t paging_memory_total(void) {
-    return frame_count * 4;
+    return 4 * frame_count * 0x1000;
 }
 
 uintptr_t paging_memory_used(void) {
@@ -162,7 +162,11 @@ uintptr_t paging_memory_used(void) {
         }
     }
 
-    return ret * 4;
+    return ret * 4 * 0x1000;
+}
+
+page_directory_t* paging_get_directory(void) {
+    return current_directory;
 }
 
 static uintptr_t map_to_physical(uintptr_t virtual) {

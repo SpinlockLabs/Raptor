@@ -88,8 +88,10 @@ void paging_init(void) {
             if (mmap->type == 2) {
                 /* I don't know why we should use this type, but references use it. */
                 for (unsigned long long int i = 0; i < mmap->length; i += 0x1000) {
-                    if (mmap->base_addr + i > 0xFFFFFFFF) break;
-                    uint32_t addr = (mmap->base_addr + i);
+                    if (mmap->base_addr + i > 0xFFFFFFFF) {
+                        break;
+                    }
+                    uint32_t addr = (uint32_t) (mmap->base_addr + i);
                     paging_mark_system(addr & 0xFFFFF000);
                 }
             }

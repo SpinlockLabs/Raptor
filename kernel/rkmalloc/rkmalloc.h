@@ -12,15 +12,19 @@
 
 typedef void* (*rkmalloc_expand_func_t)(size_t);
 
+/**
+ * An heap entry for rkmalloc.
+ * This structure is packed to reduce the size as much as possible.
+ */
 typedef struct rkmalloc_entry {
 #ifndef RKMALLOC_DISABLE_MAGIC
-    uint32_t magic;
+    uintptr_t magic;
 #endif
     bool free;
     size_t used_size;
     size_t block_size;
     void* ptr;
-} rkmalloc_entry;
+} packed rkmalloc_entry;
 
 typedef struct {
     size_t atomic;
@@ -53,8 +57,6 @@ typedef struct rkmalloc_heap {
     rkmalloc_heap_types types;
     spin_lock_t lock;
 } rkmalloc_heap;
-
-extern uint8_t rkmalloc_error_code;
 
 void rkmalloc_init_heap(rkmalloc_heap *heap);
 void* rkmalloc_allocate(rkmalloc_heap *heap, size_t size);

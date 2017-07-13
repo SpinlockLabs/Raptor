@@ -129,6 +129,10 @@ void heap_init(void) {
     kheap->types.huge = 5 * 1024 * 1024; // 5 mb
 
     rkmalloc_init_heap(kheap);
+
+    if (kheap->error_code != RKMALLOC_ERROR_NONE) {
+        panic("rkmalloc failed to initialize the kernel heap.");
+    }
 }
 
 size_t kpused(void) {

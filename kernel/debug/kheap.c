@@ -3,12 +3,37 @@
 #include <kernel/rkmalloc/rkmalloc.h>
 #include <kernel/heap.h>
 
-static void debug_kheap_used(tty_t* tty, const char* input) {
+static void debug_kheap_stats(tty_t* tty, const char* input) {
     unused(input);
 
     rkmalloc_heap* heap = heap_get();
-    tty_printf(tty, "Object Allocation: %d bytes\n", heap->total_allocated_used_size);
-    tty_printf(tty, "Block Allocation: %d bytes\n", heap->total_allocated_blocks_size);
+    spin_lock(heap->lock);
+
+    tty_printf(tty, "Used Object Allocations: %d bytes\n", heap->total_allocated_used_size);
+    tty_printf(tty, "Used Block Allocations: %d bytes\n", heap->total_allocated_blocks_size);
+
+    size_t meta_total = 0;
+    size_t full_total = 0;
+    size_t reclaimable_entries = 0;
+    size_t reclaimable_block_total = 0;
+
+    list_for_each(node, &heap->index) {
+        rkmalloc_entry* entry = node->value;
+        meta_total += sizeof(rkmalloc_entry);
+        full_total += sizeof(rkmalloc_entry) + entry->block_size;
+
+        if (entry->free) {
+            reclaimable_entries++;
+            reclaimable_block_total += entry->block_size;
+        }
+    }
+
+    spin_unlock(heap->lock);
+
+    tty_printf(tty, "Reclaimable Entries: %d\n", reclaimable_entries);
+    tty_printf(tty, "Reclaimable Block Allocations: %d bytes\n", reclaimable_block_total);
+    tty_printf(tty, "Metadata Usage: %d bytes\n", meta_total);
+    tty_printf(tty, "Total Usage: %d bytes\n", full_total);
 }
 
 static void debug_kheap_dump(tty_t* tty, const char* input) {
@@ -34,5 +59,5 @@ static void debug_kheap_dump(tty_t* tty, const char* input) {
 
 void debug_kheap_init(void) {
     debug_console_register_command("kheap-dump", debug_kheap_dump);
-    debug_console_register_command("kheap-used", debug_kheap_used);
+    debug_console_register_command("kheap-stats", debug_kheap_stats);
 }
