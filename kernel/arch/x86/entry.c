@@ -23,7 +23,7 @@
 #include "devices/serial/serial.h"
 #include "devices/pcnet/pcnet.h"
 #include "devices/e1000/e1000.h"
-#include "devices/ide/ide.h"
+#include "kernel/arch/x86/devices/ata/ata.h"
 
 const uint32_t kProcessorIdIntel = 0x756e6547;
 const uint32_t kProcessorIdAMD = 0x68747541;
@@ -122,7 +122,7 @@ void post_subsystem_init(void) {
     pcnet_setup();
     e1000_setup();
 
-    ide_setup();
+    ata_setup();
 
     debug_x86_init();
 }

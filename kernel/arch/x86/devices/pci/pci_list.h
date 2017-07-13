@@ -5079,7 +5079,7 @@ PCI_DEVTABLE PciDevTable[] =
         {0x10A9, 0x8002,  "G-net NT",                                           ""},
         {0x10AB, 0x1005,  "USBVID_0000&PID_00005&5657949&0&8",                  "USB Bluetooth"},
         {0x10AD, 0x0001,  "W83769F",                                            "EIDE Ctrlr"},
-        {0x10AD, 0x0103,  "sl82c103",                                           "PCI-ide mode 4.5 Cntrlr"},
+        {0x10AD, 0x0103,  "sl82c103",                                           "PCI-ata mode 4.5 Cntrlr"},
         {0x10AD, 0x0105,  "W83789F",                                            "Sonata bus master PCI-IDE controller"},
         {0x10AD, 0x0565,  "W83C553F",                                           "PCI/ISA bridge"},
         {0x10B5, 0x0324,  "",                                                   ""},
