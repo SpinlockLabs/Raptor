@@ -145,12 +145,6 @@ used void kernel_main(multiboot_t *_mboot, uint32_t mboot_hdr, uintptr_t esp) {
         lox_output_char_provider = lox_output_char_vga;
     }
 
-    if (cmdline_bool_flag("debug")) {
-        puts(DEBUG "cmdline: ");
-        puts(get_cmdline());
-        putc('\n');
-    }
-
     uint32_t ebx = 0;
     get_cpuid(0, 0, &ebx, 0, 0);
     if (ebx == kProcessorIdIntel) {

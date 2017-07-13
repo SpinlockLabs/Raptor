@@ -48,7 +48,7 @@ add_custom_target(qemu-gdb
 )
 
 add_custom_target(qemu-cli
-  COMMAND ${QEMU_CMD} -monitor none -nographic
+  COMMAND ${QEMU_CMD} -monitor none -nographic -net user
   DEPENDS kernel
 )
 

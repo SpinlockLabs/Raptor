@@ -17,7 +17,7 @@
 
 static uint8_t cmos_is_updating(void) {
     outb(CMOS_ADDRESS, CMOS_STATUS);
-    return (uint8_t)(inb(CMOS_DATA) & 0x80);
+    return (uint8_t) (inb(CMOS_DATA) & 0x80);
 }
 
 static void cmos_dump(uint16_t* values) {

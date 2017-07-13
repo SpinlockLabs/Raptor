@@ -20,12 +20,15 @@ static dhcp_internal_state_t* get_state(network_iface_t* iface) {
     return hashmap_get(iface->_stack, "dhcp");
 }
 
+static ipv4_address_t dhcp_request_src = {{0, 0, 0, 0}};
+static ipv4_address_t dhcp_request_dest = {{255, 255, 255, 255}};
+
 static void dhcp_send(network_iface_t* iface, uint8_t* opts, size_t optsize) {
     size_t payload_size = sizeof(dhcp_packet_t) + optsize;
     udp_ipv4_packet_t *pkt = ipv4_create_udp_packet(payload_size);
 
-    pkt->ipv4.source = htonl(ipv4_address(0, 0, 0, 0));
-    pkt->ipv4.destination = htonl(ipv4_address(255, 255, 255, 255));
+    pkt->ipv4.source = htonl(dhcp_request_src.address);
+    pkt->ipv4.destination = htonl(dhcp_request_dest.address);
     pkt->udp.source_port = htons(68);
     pkt->udp.destination_port = htons(67);
 
@@ -107,7 +110,7 @@ static void handle_potential_dhcp_reply(void* event, void* extra) {
     }
 
     ipv4_packet_t* ipv4 = pkt->ipv4;
-    if (ipv4->destination != ipv4_address(255, 255, 255, 255)) {
+    if (ipv4->destination != dhcp_request_dest.address) {
         return;
     }
 

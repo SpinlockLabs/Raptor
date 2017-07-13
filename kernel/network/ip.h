@@ -9,6 +9,21 @@
 
 #define IPV4_PROTOCOL_UDP 17
 
+typedef union ipv4_address {
+    struct {
+        uint8_t a;
+        uint8_t b;
+        uint8_t c;
+        uint8_t d;
+    } packed;
+    uint32_t address;
+} ipv4_address_t;
+
+typedef struct ipv4_address_cidr {
+    ipv4_address_t address;
+    uint8_t mask;
+} ipv4_address_cidr_t;
+
 typedef struct ipv4_packet {
     uint8_t version_ihl;
     uint8_t dscp_ecn;
@@ -33,5 +48,3 @@ uint16_t ipv4_calculate_checksum(ipv4_packet_t* p);
 
 udp_ipv4_packet_t* ipv4_create_udp_packet(size_t payload_size);
 size_t ipv4_finalize_packet(ipv4_packet_t* p, size_t payload_size);
-
-uint32_t ipv4_address(uint8_t a, uint8_t b, uint8_t c, uint8_t d);

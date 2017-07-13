@@ -7,7 +7,7 @@ static const uint kMaxArgLength = 256;
 
 extern char* (*arch_get_cmdline)(void);
 
-char* get_cmdline(void) {
+char* cmdline_get(void) {
     if (arch_get_cmdline != NULL) {
         return arch_get_cmdline();
     }
@@ -16,7 +16,7 @@ char* get_cmdline(void) {
 }
 
 bool cmdline_bool_flag(char *name) {
-    char *ptr = get_cmdline();
+    char *ptr = cmdline_get();
 
     if (ptr == NULL) {
         return false;
