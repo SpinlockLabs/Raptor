@@ -66,7 +66,7 @@ add_custom_target(qemu-cli-network
 
 add_custom_command(
   OUTPUT raptor.iso
-  DEPENDS kernel
+  DEPENDS kernel filesystem
   COMMAND bash
             ${CMAKE_SOURCE_DIR}/build/scripts/mkgrubiso.sh
             "${CMAKE_BINARY_DIR}/kernel.elf"
@@ -90,6 +90,7 @@ add_custom_target(bochs
 )
 
 add_custom_target(diskimg
-  COMMAND bash "${CMAKE_SOURCE_DIR}/build/scripts/gendiskimg.sh"
+  COMMAND "${CMAKE_SOURCE_DIR}/build/scripts/gendiskimg.sh"
   WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+  DEPENDS filesystem
 )
