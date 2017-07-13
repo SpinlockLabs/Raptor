@@ -98,6 +98,16 @@ void paging_map_dma(uintptr_t virt, uintptr_t phys);
 void paging_unmap_dma(uintptr_t);
 
 /**
+ * Adds a page mapping.
+ */
+uintptr_t paging_add_map(uintptr_t physical, size_t size);
+
+/**
+ * Removes a page mapping.
+ */
+void paging_remove_map(uintptr_t logical, size_t size);
+
+/**
  * Retrieves the physical address for the given virtual address.
  */
 uintptr_t paging_get_physical_address(uintptr_t virt);

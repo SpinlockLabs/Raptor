@@ -8,6 +8,8 @@ cflags(
   -fpic
   -mfloat-abi=hard
   --specs=nosys.specs
+  -DARCH_ARM
+  -DARCH_ARM_RPI
 )
 
 kernel_ldscript("${KERNEL_DIR}/arch/arm/rpi/linker.ld")

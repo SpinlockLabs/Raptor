@@ -364,6 +364,20 @@ uintptr_t paging_get_physical_address(uintptr_t virt) {
     return map_to_physical(virt);
 }
 
+uintptr_t paging_add_map(uintptr_t physical, size_t size) {
+    size = ((size_t) (size / 0x1000) + 0.5) * 0x1000;
+    uintptr_t ptr = kpmalloc_a(size);
+    for (uintptr_t addr = ptr; addr < ptr + size; addr += 0x1000) {
+        paging_map_dma(addr, physical + (addr - ptr));
+    }
+    return ptr;
+}
+
+void paging_remove_map(uintptr_t logical, size_t size) {
+    unused(logical);
+    unused(size);
+}
+
 void page_fault(regs_t regs) {
     int_disable();
     uint32_t faulting_address;

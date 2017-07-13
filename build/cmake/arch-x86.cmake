@@ -3,6 +3,7 @@ option(OPTIMIZE_NATIVE "Optimize for the native machine." OFF)
 
 cflags(
   -m32
+  -DARCH_X86
 )
 
 if(CLANG)
@@ -19,6 +20,7 @@ kernel_cflags(
   -no-pie
   -fno-stack-protector
   -fno-pic
+  -I${RAPTOR_DIR}/kernel/arch/x86/acpi/include
 )
 
 kernel_ldscript(${KERNEL_DIR}/arch/x86/linker.ld)

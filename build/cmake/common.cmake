@@ -18,3 +18,5 @@ endfunction()
 if(CMAKE_C_COMPILER_ID MATCHES "Clang")
   set(CLANG ON)
 endif()
+
+cflags(-DRAPTOR)
