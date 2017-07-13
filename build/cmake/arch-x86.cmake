@@ -30,6 +30,7 @@ set(QEMU_CMD_BASE
     -cpu core2duo
     -m 256
     -net nic,model=e1000
+    "${CMAKE_BINARY_DIR}/raptor.img"
 )
 
 set(QEMU_CMD
@@ -39,28 +40,28 @@ set(QEMU_CMD
 
 add_custom_target(qemu
   COMMAND ${QEMU_CMD}
-  DEPENDS kernel
+  DEPENDS kernel diskimg
 )
 
 add_custom_target(qemu-gdb
   COMMAND ${QEMU_CMD} -S -s -append debug
-  DEPENDS kernel
+  DEPENDS kernel diskimg
 )
 
 add_custom_target(qemu-cli
   COMMAND ${QEMU_CMD} -monitor none -nographic -net user
-  DEPENDS kernel
+  DEPENDS kernel diskimg
 )
 
 add_custom_target(qemu-cli-gdb
   COMMAND ${QEMU_CMD} -S -s -append debug -monitor none -nographic
-  DEPENDS kernel
+  DEPENDS kernel diskimg
 )
 
 add_custom_target(qemu-cli-network
   COMMAND sudo ${QEMU_CMD} -append debug -monitor none -nographic
     -net tap,ifname=tap0,script=no,downscript=no
-  DEPENDS kernel
+  DEPENDS kernel diskimg
 )
 
 add_custom_command(
@@ -79,11 +80,16 @@ add_custom_target(iso
 add_custom_target(qemu-iso
   COMMAND ${QEMU_CMD_BASE}
             -cdrom "${CMAKE_BINARY_DIR}/raptor.iso"
-  DEPENDS iso
+  DEPENDS iso diskimg
 )
 
 add_custom_target(bochs
   COMMAND bochs -q -f "${CMAKE_SOURCE_DIR}/build/bochs/raptor.bcfg"
   DEPENDS iso
+  WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+)
+
+add_custom_target(diskimg
+  COMMAND bash "${CMAKE_SOURCE_DIR}/build/scripts/gendiskimg.sh"
   WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
 )
