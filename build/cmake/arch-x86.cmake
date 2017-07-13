@@ -30,6 +30,7 @@ set(QEMU_CMD_BASE
     -cpu core2duo
     -m 256
     -net nic,model=e1000
+    "${CMAKE_BINARY_DIR}/raptor.img"
 )
 
 set(QEMU_CMD
