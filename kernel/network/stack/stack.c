@@ -99,7 +99,7 @@ void network_stack_send_packet(
         .direction = PACKET_DIRECTION_OUT,
         .iface = iface->name,
         .buffer = buffer,
-        .length = size,
+        .length = (uint16_t) size,
         .free = true,
         .iface_class_type = iface->class_type,
         .packet_class = packet_class,
@@ -121,13 +121,13 @@ void network_stack_init(void) {
     network_stack_ethernet_init();
     network_stack_dhcp_init();
 
-    event_register_handler(
+    event_add_handler(
         "network:iface:registered",
         network_stack_on_interface_registered,
         NULL
     );
 
-    event_register_handler(
+    event_add_handler(
         "network:iface:destroying",
         network_stack_on_interface_destroying,
         NULL

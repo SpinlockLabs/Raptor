@@ -145,19 +145,19 @@ static void handle_potential_dhcp_reply(void* event, void* extra) {
 }
 
 void network_stack_dhcp_init(void) {
-    event_register_handler(
+    event_add_handler(
         "network:stack:ipv4:packet-receive",
         handle_potential_dhcp_reply,
         NULL
     );
 
-    event_register_handler(
+    event_add_handler(
         "network:stack:iface-up",
         dhcp_handle_interface_up,
         NULL
     );
 
-    event_register_handler(
+    event_add_handler(
         "network:stack:iface-down",
         dhcp_handle_interface_down,
         NULL

@@ -193,14 +193,14 @@ static void read_mac(e1000_state_t* state) {
     if (state->has_eeprom) {
         uint32_t t;
         t = eeprom_read(state, 0);
-        state->mac[0] = t & 0xFF;
-        state->mac[1] = t >> 8;
+        state->mac[0] = (uint8_t) (t & 0xFF);
+        state->mac[1] = (uint8_t) (t >> 8);
         t = eeprom_read(state, 1);
-        state->mac[2] = t & 0xFF;
-        state->mac[3] = t >> 8;
+        state->mac[2] = (uint8_t) (t & 0xFF);
+        state->mac[3] = (uint8_t) (t >> 8);
         t = eeprom_read(state, 2);
-        state->mac[4] = t & 0xFF;
-        state->mac[5] = t >> 8;
+        state->mac[4] = (uint8_t) (t & 0xFF);
+        state->mac[5] = (uint8_t) (t >> 8);
     } else {
         uint8_t *mac_addr = (uint8_t*) (state->mem_base + 0x5400);
         for (int i = 0; i < 6; ++i) {
@@ -241,7 +241,7 @@ static int e1000_irq_handler(struct regs* r) {
             }
             state->rx_index = (state->rx_index + 1) % E1000_NUM_RX_DESC;
             if (state->rx[state->rx_index].status & 0x01) {
-                uint8_t *pbuf = (uint8_t*) state->rx_virt[state->rx_index];
+                uint8_t *pbuf = state->rx_virt[state->rx_index];
                 uint16_t plen = state->rx[state->rx_index].length;
 
                 void *packet = malloc(plen);
@@ -251,7 +251,7 @@ static int e1000_irq_handler(struct regs* r) {
 
                 enqueue_packet(state, packet);
 
-                write_command(state, E1000_REG_RXDESCTAIL, state->rx_index);
+                write_command(state, E1000_REG_RXDESCTAIL, (uint32_t) state->rx_index);
             } else {
                 break;
             }
@@ -267,12 +267,12 @@ static network_iface_error_t send_packet(network_iface_t* iface, uint8_t* payloa
     state->tx_index = read_command(state, E1000_REG_TXDESCTAIL);
 
     memcpy(state->tx_virt[state->tx_index], payload, payload_size);
-    state->tx[state->tx_index].length = payload_size;
+    state->tx[state->tx_index].length = (uint16_t) payload_size;
     state->tx[state->tx_index].cmd = CMD_EOP | CMD_IFCS | CMD_RS;
     state->tx[state->tx_index].status = 0;
 
     state->tx_index = (state->tx_index + 1) % E1000_NUM_TX_DESC;
-    write_command(state, E1000_REG_TXDESCTAIL, state->tx_index);
+    write_command(state, E1000_REG_TXDESCTAIL, (uint32_t) state->tx_index);
 
     return IFACE_ERR_OK;
 }
@@ -372,7 +372,7 @@ static void e1000_device_init(uint32_t device_pci) {
         state->tx[i].cmd = (1 << 0);
     }
 
-    uint16_t command_reg = pci_read_field(state->device_pci, PCI_COMMAND, 2);
+    uint16_t command_reg = (uint16_t) pci_read_field(state->device_pci, PCI_COMMAND, 2);
     command_reg |= (1 << 2);
     command_reg |= (1 << 0);
     pci_write_field(state->device_pci, PCI_COMMAND, 2, command_reg);
@@ -413,11 +413,11 @@ static void e1000_device_init(uint32_t device_pci) {
     irq_add_handler(state->irq, &e1000_irq_handler);
 
     for (int i = 0; i < 128; ++i) {
-        write_command(state, 0x5200 + i * 4, 0);
+        write_command(state, (uint16_t) (0x5200 + i * 4), 0);
     }
 
     for (int i = 0; i < 64; ++i) {
-        write_command(state, 0x4000 + i * 4, 0);
+        write_command(state, (uint16_t) (0x4000 + i * 4), 0);
     }
 
     write_command(state, E1000_REG_RCTRL, (1 << 4));

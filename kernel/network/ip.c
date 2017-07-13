@@ -22,7 +22,7 @@ udp_ipv4_packet_t* ipv4_create_udp_packet(size_t payload_size) {
     size_t total = sizeof(udp_ipv4_packet_t) + payload_size;
     udp_ipv4_packet_t* packet = zalloc(total);
     packet->ipv4.protocol = IPV4_PROTOCOL_UDP;
-    packet->ipv4.length = htons(total);
+    packet->ipv4.length = htons((uint16_t) total);
     packet->udp.length = htons(sizeof(udp_packet_t) + payload_size);
     return packet;
 }

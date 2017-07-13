@@ -4,9 +4,7 @@
  */
 #include "ethernet.h"
 #include "stack.h"
-#include "log.h"
 
-#include <liblox/io.h>
 #include <liblox/net.h>
 #include <liblox/string.h>
 
@@ -115,13 +113,13 @@ static void handle_ethernet_packet_send(void* event, void* extra) {
 }
 
 void network_stack_ethernet_init(void) {
-    event_register_handler(
+    event_add_handler(
         "network:stack:raw:packet-receive",
         handle_ethernet_packet_received,
         NULL
     );
 
-    event_register_handler(
+    event_add_handler(
         "network:stack:raw:packet-send",
         handle_ethernet_packet_send,
         NULL

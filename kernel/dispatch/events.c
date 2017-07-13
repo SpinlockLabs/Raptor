@@ -2,7 +2,6 @@
 
 #include <liblox/common.h>
 #include <liblox/hashmap.h>
-#include <liblox/io.h>
 
 #include <kernel/panic.h>
 #include <kernel/spin.h>
@@ -25,7 +24,7 @@ void events_subsystem_init(void) {
     spin_init(registry_lock);
 }
 
-void event_register_handler(char* type, event_handler_t handler, void* extra) {
+void event_add_handler(char* type, event_handler_t handler, void* extra) {
     spin_lock(registry_lock);
     list_t* list = NULL;
     if (!hashmap_has(registry, type)) {
@@ -44,7 +43,7 @@ void event_register_handler(char* type, event_handler_t handler, void* extra) {
     spin_unlock(registry_lock);
 }
 
-void event_unregister_handler(char* type, event_handler_t handler) {
+void event_remove_handler(char* type, event_handler_t handler) {
     spin_lock(registry_lock);
     if (!hashmap_has(registry, type)) {
         spin_unlock(registry_lock);
