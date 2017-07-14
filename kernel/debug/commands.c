@@ -14,4 +14,5 @@ void debug_init_commands(void) {
     GROUP(kheap);
     GROUP(time);
     GROUP(cmdline);
+    GROUP(disk);
 }
