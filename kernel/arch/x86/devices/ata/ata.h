@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <liblox/common.h>
 
 #define ATA_SR_BSY     0x80
 #define ATA_SR_DRDY    0x40
@@ -81,11 +82,73 @@
 #define ATA_READ      0x00
 #define ATA_WRITE 0x01
 
-struct ata_device {
+typedef struct {
+    uint16_t base;
+    uint16_t ctrl;
+    uint16_t bmide;
+    uint16_t nien;
+} ide_channel_regs_t;
+
+typedef struct {
+    uint8_t reserved;
+    uint8_t channel;
+    uint8_t drive;
+    uint16_t type;
+    uint16_t signature;
+    uint16_t capabilities;
+    uint32_t command_sets;
+    uint32_t size;
+    uint8_t model[41];
+} ide_device_t;
+
+typedef struct {
+    uint8_t status;
+    uint8_t chs_first_sector[3];
+    uint8_t type;
+    uint8_t chs_last_sector[3];
+    uint32_t lba_first_sector;
+    uint32_t sector_count;
+} partition_t;
+
+typedef struct {
+    uint16_t flags;
+    uint16_t unused1[9];
+    char serial[20];
+    uint16_t unused2[3];
+    char firmware[8];
+    char model[40];
+    uint16_t sectors_per_int;
+    uint16_t unused3;
+    uint16_t capabilities[2];
+    uint16_t unused4[2];
+    uint16_t valid_ext_data;
+    uint16_t unused5[5];
+    uint16_t size_of_rw_mult;
+    uint32_t sectors_28;
+    uint16_t unused6[38];
+    uint64_t sectors_48;
+    uint16_t unused7[152];
+} ata_identify_t packed;
+
+typedef struct {
+    uintptr_t offset;
+    uint16_t bytes;
+    uint16_t last;
+} prdt_t;
+
+typedef struct ata_device {
     uint16_t io_base;
     uint16_t control;
     uint16_t slave;
     uint16_t is_atapi;
-};
+    ata_identify_t identity;
+    prdt_t* dma_prdt;
+    uintptr_t dma_prdt_phys;
+    uint8_t* dma_start;
+    uintptr_t dma_start_phys;
+    uint32_t bar4;
+    uint32_t atapi_lba;
+    uint32_t atapi_sector_size;
+} ata_device_t;
 
 void ata_setup(void);
