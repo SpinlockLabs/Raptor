@@ -211,7 +211,7 @@ static void read_mac(e1000_state_t* state) {
 
 static hashmap_t* e1000_irqs = NULL;
 
-static int e1000_irq_handler(struct regs* r) {
+static int e1000_irq_handler(cpu_registers_t* r) {
     uint32_t irq_id = r->int_no - 32;
     e1000_iface_t* iface = hashmap_get(e1000_irqs, (void*) irq_id);
 

@@ -25,7 +25,7 @@ void int_enable(void);
 void irq_add_handler(size_t, irq_handler_chain_t);
 void irq_remove_handler(size_t);
 void irq_ack(size_t);
-void irq_handler(regs_t*);
+void irq_handler(cpu_registers_t*);
 void irq_init(void);
 
 extern void _irq0();

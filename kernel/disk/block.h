@@ -65,7 +65,7 @@ typedef struct block_device_private {
 struct block_device {
     char name[64];
     block_device_ops_t ops;
-    block_device_private_t private;
+    block_device_private_t internal;
 };
 
 block_device_t* block_device_create(char* name);

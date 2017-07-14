@@ -8,7 +8,7 @@
 
 static ulong timer_ticks = 0;
 
-static int timer_callback(regs_t *regs) {
+static int timer_callback(cpu_registers_t* regs) {
     unused(regs);
 
     timer_ticks++;

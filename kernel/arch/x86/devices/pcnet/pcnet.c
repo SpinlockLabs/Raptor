@@ -180,7 +180,7 @@ static network_iface_error_t pcnet_send_packet(network_iface_t* iface, uint8_t* 
 static network_iface_t* pcnet_iface = NULL;
 static hashmap_t* pcnet_irqs = NULL;
 
-static int pcnet_irq_handler(struct regs* r) {
+static int pcnet_irq_handler(cpu_registers_t* r) {
     uint32_t irq_id = r->int_no - 32;
     pcnet_network_iface_t* iface = hashmap_get(pcnet_irqs, (void*) irq_id);
 

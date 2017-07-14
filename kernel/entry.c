@@ -8,7 +8,7 @@
 
 #include <liblox/lox-internal.h>
 
-#include <kernel/disk/disk.h>
+#include <kernel/disk/block.h>
 
 #include <kernel/network/iface.h>
 #include <kernel/network/stack/stack.h>

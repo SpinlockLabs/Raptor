@@ -30,7 +30,7 @@ set(QEMU_CMD_BASE
     -cpu core2duo
     -m 256
     -net nic,model=e1000
-    "${CMAKE_BINARY_DIR}/raptor.img"
+    -drive "file=${CMAKE_BINARY_DIR}/raptor.img,format=raw,if=ide,media=disk"
 )
 
 set(QEMU_CMD
@@ -39,12 +39,12 @@ set(QEMU_CMD
 )
 
 add_custom_target(qemu
-  COMMAND ${QEMU_CMD}
+  COMMAND ${QEMU_CMD} -net user
   DEPENDS kernel diskimg
 )
 
 add_custom_target(qemu-gdb
-  COMMAND ${QEMU_CMD} -S -s -append debug
+  COMMAND ${QEMU_CMD} -S -s -append debug -net user
   DEPENDS kernel diskimg
 )
 

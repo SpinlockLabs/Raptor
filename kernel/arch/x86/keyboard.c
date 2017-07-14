@@ -71,7 +71,7 @@ static char kb_usu[128] = {
 /**
  * Callback for keyboard interrupt(IRQ 1).
  */
-static int keyboard_callback(regs_t *regs) {
+static int keyboard_callback(cpu_registers_t* regs) {
     unused(regs);
 
     char c = 0;

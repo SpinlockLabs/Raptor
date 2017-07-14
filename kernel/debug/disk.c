@@ -1,8 +1,8 @@
 #include "console.h"
 
-#include <kernel/disk/disk.h>
+#include <kernel/disk/block.h>
 
-static void disk_list(tty_t* tty, const char* input) {
+static void block_list(tty_t* tty, const char* input) {
     unused(input);
 
     list_t* disks = block_device_get_all();
@@ -24,5 +24,5 @@ static void disk_list(tty_t* tty, const char* input) {
 }
 
 void debug_disk_init(void) {
-    debug_console_register_command("disk-list", disk_list);
+    debug_console_register_command("block-list", block_list);
 }

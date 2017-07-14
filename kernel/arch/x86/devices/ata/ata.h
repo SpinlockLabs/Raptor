@@ -1,7 +1,10 @@
 #pragma once
 
-#include <stdint.h>
 #include <liblox/common.h>
+
+#include <stdint.h>
+
+#define ATA_SECTOR_SIZE 512
 
 #define ATA_SR_BSY     0x80
 #define ATA_SR_DRDY    0x40
@@ -128,7 +131,7 @@ typedef struct {
     uint16_t unused6[38];
     uint64_t sectors_48;
     uint16_t unused7[152];
-} ata_identify_t packed;
+} packed ata_identify_t;
 
 typedef struct {
     uintptr_t offset;

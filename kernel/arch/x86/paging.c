@@ -378,7 +378,7 @@ void paging_remove_map(uintptr_t logical, size_t size) {
     unused(size);
 }
 
-void page_fault(regs_t regs) {
+void page_fault(cpu_registers_t regs) {
     int_disable();
     uint32_t faulting_address;
     asm volatile("mov %%cr2, %0" : "=r" (faulting_address));

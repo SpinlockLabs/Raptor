@@ -1,17 +1,22 @@
-#include "disk.h"
+#include "block.h"
 
 #include <liblox/hashmap.h>
 #include <liblox/string.h>
 
 #include <kernel/spin.h>
 #include <kernel/panic.h>
+
 #include <kernel/dispatch/events.h>
+
+#include "mbr.h"
 
 static hashmap_t* registry = NULL;
 static spin_lock_t lock = {0};
 
 void block_device_subsystem_init(void) {
     registry = hashmap_create(5);
+
+    block_device_mbr_subsystem_init();
 }
 
 block_device_t* block_device_create(char* name) {

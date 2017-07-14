@@ -52,7 +52,7 @@ void isr_remove_handler(size_t isr) {
 void isr_init(void) {
 }
 
-used void fault_handler(regs_t *r) {
+used void fault_handler(cpu_registers_t* r) {
     int i = r->int_no;
     irq_handler_t handler = isr_routines[i];
 

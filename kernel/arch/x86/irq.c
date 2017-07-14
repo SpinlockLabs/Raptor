@@ -8,8 +8,8 @@
 #define PIC2 0xA0
 #define PIC1_CMD PIC1
 #define PIC2_CMD PIC2
-#define PIC1_DATA (PIC1+1)
-#define PIC2_DATA (PIC2+1)
+#define PIC1_DATA (PIC1 + 1)
+#define PIC2_DATA (PIC2 + 1)
 #define PIC1_OFFSET 0x20
 #define PIC2_OFFSET 0x28
 
@@ -141,7 +141,7 @@ void irq_ack(size_t irq) {
     outb(PIC1_CMD, 0x20);
 }
 
-used void irq_handler(regs_t *r) {
+used void irq_handler(cpu_registers_t *r) {
     int_disable();
 
     if (r->int_no <= 47 && r->int_no >= 32) {

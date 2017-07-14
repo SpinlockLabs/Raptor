@@ -4,12 +4,13 @@
 
 #include <stddef.h>
 #include <stdint.h>
+
 #include "x86.h"
 
 void isr_add_handler(size_t, irq_handler_t);
 void isr_remove_handler(size_t);
 void isr_init(void);
-void fault_handler(regs_t *r);
+void fault_handler(cpu_registers_t *r);
 
 extern void _isr0();
 extern void _isr1();

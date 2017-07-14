@@ -4,6 +4,9 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <stdbool.h>
+
+#include <kernel/disk/block.h>
 
 typedef struct mbr_partition {
     uint8_t status;
@@ -19,3 +22,8 @@ typedef struct mbr {
     mbr_partition_t partitions[4];
     uint8_t signature[2];
 } packed mbr_t;
+
+/* Checks a buffer to determine if it contains an MBR. */
+bool mbr_check_signature(uint8_t*, size_t);
+
+void block_device_mbr_subsystem_init(void);
