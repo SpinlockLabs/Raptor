@@ -15,10 +15,56 @@ ACPI_STATUS AcpiOsTerminate(void) {
     return AE_OK;
 }
 
+ACPI_STATUS AcpiOsEnterSleep(
+        UINT8 SleepState,
+        UINT32 RegaValue,
+        UINT32 RegbValue) {
+    return AE_OK;
+}
+
+ACPI_STATUS AcpiOsReadPort(
+        ACPI_IO_ADDRESS Address,
+        UINT32 *Value,
+        UINT32 Width) {
+    return AE_OK;
+}
+
+ACPI_STATUS AcpiOsWritePort(
+        ACPI_IO_ADDRESS Address,
+        UINT32 Value,
+        UINT32 Width) {
+    return AE_OK;
+}
+
+ACPI_STATUS AcpiOsSignal(UINT32 Function, void *Info) {
+    return AE_OK;
+}
+
+ACPI_THREAD_ID AcpiOsGetThreadId(void) {
+    return 0;
+}
+
+void AcpiOsWaitEventsComplete(void) {
+}
+
 ACPI_PHYSICAL_ADDRESS AcpiGetRootPointer(void) {
     ACPI_PHYSICAL_ADDRESS ret = 0;
     AcpiFindRootPointer(&ret);
     return ret;
+}
+
+ACPI_PHYSICAL_ADDRESS AcpiOsGetRootPointer(void) {
+    ACPI_PHYSICAL_ADDRESS ret = 0;
+    AcpiFindRootPointer(&ret);
+    return ret;
+}
+
+void* AcpiOsAcquireObject(ACPI_CACHE_T *Cache) {
+    return 0;
+}
+
+ACPI_STATUS AcpiOsReleaseObject(ACPI_CACHE_T *Cache, void *Object) {
+    return AE_OK;
 }
 
 ACPI_STATUS AcpiOsPredefinedOverride(
@@ -36,8 +82,29 @@ ACPI_STATUS AcpiOsTableOverride(
     return AE_OK;
 }
 
+ACPI_STATUS AcpiOsPhysicalTableOverride(
+        ACPI_TABLE_HEADER *ExistingTable,
+        ACPI_PHYSICAL_ADDRESS *NewAddress,
+        UINT32 *NewTableLength) {
+    return AE_OK;
+}
+
 ACPI_STATUS AcpiOsGetPhysicalAddress(void* Logical, ACPI_PHYSICAL_ADDRESS* Physical) {
     *Physical = paging_get_physical_address((uintptr_t) Logical);
+    return AE_OK;
+}
+
+ACPI_STATUS AcpiOsReadMemory(
+        ACPI_PHYSICAL_ADDRESS Address,
+        UINT64 *Value,
+        UINT32 Width) {
+    return AE_OK;
+}
+
+ACPI_STATUS AcpiOsWriteMemory(
+        ACPI_PHYSICAL_ADDRESS Address,
+        UINT64 Value,
+        UINT32 Width) {
     return AE_OK;
 }
 
@@ -47,6 +114,22 @@ void* AcpiOsAllocate(ACPI_SIZE Size) {
 
 void AcpiOsFree(void* Memory) {
     free(Memory);
+}
+
+ACPI_STATUS AcpiOsReadPciConfiguration(
+        ACPI_PCI_ID *PciId,
+        UINT32 Reg,
+        UINT64 *Value,
+        UINT32 Width) {
+    return AE_OK;
+}
+
+ACPI_STATUS AcpiOsWritePciConfiguration(
+        ACPI_PCI_ID *PciId,
+        UINT32 Reg,
+        UINT64 Value,
+        UINT32 Width) {
+    return AE_OK;
 }
 
 BOOLEAN AcpiOsReadable(void* Memory, ACPI_SIZE Length) {
@@ -80,6 +163,15 @@ void AcpiOsPrintf(const char* fmt, ...) {
 void AcpiOsVprintf(const char* fmt, va_list vargs) {
 }
 
+ACPI_STATUS AcpiOsCreateCache(char *CacheName, UINT16 ObjectSize,
+                              UINT16 MaxDepth, ACPI_CACHE_T **ReturnCache) {
+    return AE_OK;
+}
+
+ACPI_STATUS AcpiOsDeleteCache(ACPI_CACHE_T *Cache) {
+    return AE_OK;
+}
+
 ACPI_STATUS AcpiOsPurgeCache(void** Cache) {
     return AE_OK;
 }
@@ -97,6 +189,10 @@ void AcpiOsSleep(UINT64 ms) {
 void AcpiOsStall(UINT32 us) {
     // TODO(kaendfinger): Make this accurate.
     sleep(1);
+}
+
+UINT64 AcpiOsGetTimer(void) {
+    return 0;
 }
 
 ACPI_STATUS AcpiOsCreateSemaphore(UINT32 Max, UINT32 Initial, ACPI_SEMAPHORE* OutHandle) {

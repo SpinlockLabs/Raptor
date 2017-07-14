@@ -15,4 +15,5 @@ void debug_init_commands(void) {
     GROUP(time);
     GROUP(cmdline);
     GROUP(disk);
+    GROUP(power);
 }

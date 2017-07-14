@@ -865,7 +865,8 @@ snprintf (
  *
  ******************************************************************************/
 
-int
+// TODO: uh... uncomment this?
+/*int
 sprintf (
     char                    *String,
     const char              *Format,
@@ -880,7 +881,7 @@ sprintf (
     va_end (Args);
 
     return (Length);
-}
+}*/
 
 
 #ifdef ACPI_APPLICATION
