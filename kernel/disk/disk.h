@@ -12,6 +12,10 @@ typedef enum block_device_error {
     BLOCK_DEVICE_ERROR_OK
 } block_device_error_t;
 
+typedef struct block_device_stat {
+    size_t size;
+} block_device_stat_t;
+
 typedef block_device_error_t (*block_device_read_op_t)(
     struct block_device* device,
     size_t offset,
@@ -26,16 +30,27 @@ typedef block_device_error_t (*block_device_write_op_t)(
     size_t size
 );
 
-typedef block_device_error_t (*block_device_ioctl_t)(
+typedef block_device_error_t (*block_device_ioctl_op_t)(
     struct block_device* device,
     ulong request,
     void* ptr
 );
 
+typedef block_device_error_t (*block_device_stat_op_t)(
+    struct block_device* device,
+    block_device_stat_t*
+);
+
+typedef block_device_error_t (*block_device_destroy_op_t)(
+    struct block_device* device
+);
+
 typedef struct block_device_ops {
     block_device_read_op_t read;
     block_device_write_op_t write;
-    block_device_ioctl_t ioctl;
+    block_device_stat_op_t stat;
+    block_device_ioctl_op_t ioctl;
+    block_device_destroy_op_t destroy;
 } block_device_ops_t;
 
 typedef struct block_device_private {
@@ -47,3 +62,29 @@ typedef struct block_device {
     block_device_ops_t ops;
     block_device_private_t private;
 } block_device_t;
+
+block_device_t* block_device_create(char* name);
+
+block_device_error_t block_device_register(block_device_t* device);
+block_device_error_t block_device_destroy(block_device_t* device);
+
+block_device_error_t block_device_stat(
+    block_device_t* device,
+    block_device_stat_t* stat
+);
+
+block_device_error_t block_device_read(
+    block_device_t* device,
+    size_t offset,
+    uint8_t* buffer,
+    size_t size
+);
+
+block_device_error_t block_device_write(
+    block_device_t* device,
+    size_t offset,
+    uint8_t* buffer,
+    size_t size
+);
+
+void block_device_subsystem_init(void);
