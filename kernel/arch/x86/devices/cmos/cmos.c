@@ -13,7 +13,7 @@
 #define CMOS_CENTURY  0x32
 #define CMOS_STATUS   0x0A
 
-#define from_bcd(val) (uint16_t)(((val / 16) * 10) + (val & 0x0f))
+#define from_bcd(val) (uint16_t)((((val) / 16) * 10) + ((val) & 0x0f))
 
 static uint8_t cmos_is_updating(void) {
     outb(CMOS_ADDRESS, CMOS_STATUS);
@@ -21,7 +21,7 @@ static uint8_t cmos_is_updating(void) {
 }
 
 static void cmos_dump(uint16_t* values) {
-    while (cmos_is_updating());
+    while (cmos_is_updating()) {}
 
     for (uint8_t idx = 0; idx < 128; ++idx) {
         outb(CMOS_ADDRESS, idx);

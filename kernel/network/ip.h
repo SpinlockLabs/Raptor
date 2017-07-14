@@ -45,6 +45,5 @@ typedef struct udp_ipv4_packet {
 } packed udp_ipv4_packet_t;
 
 uint16_t ipv4_calculate_checksum(ipv4_packet_t* p);
-
 udp_ipv4_packet_t* ipv4_create_udp_packet(size_t payload_size);
 size_t ipv4_finalize_packet(ipv4_packet_t* p, size_t payload_size);

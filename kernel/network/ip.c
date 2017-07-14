@@ -52,9 +52,3 @@ size_t ipv4_finalize_packet(ipv4_packet_t* p, size_t payload_size) {
 
     return p->length;
 }
-
-uint32_t ipv4_address(uint8_t a, uint8_t b, uint8_t c, uint8_t d) {
-    uint8_t buf[4] = {a, b, c, d};
-
-    return ((uint32_t*) buf)[0];
-}
