@@ -115,7 +115,7 @@ block_device_error_t block_device_write(
     size_t size
 ) {
     if (device->ops.write != NULL) {
-        return device->ops.read(
+        return device->ops.write(
             device,
             offset,
             buffer,
@@ -130,7 +130,7 @@ block_device_error_t block_device_ioctl(
     ulong request,
     void* ptr
 ) {
-    if (device->ops.read != NULL) {
+    if (device->ops.ioctl != NULL) {
         return device->ops.ioctl(
             device,
             request,
