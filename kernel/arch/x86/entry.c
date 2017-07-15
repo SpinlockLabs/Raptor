@@ -105,7 +105,7 @@ void paging_init(void) {
     paging_finalize();
 }
 
-void post_subsystem_init(void) {
+void kernel_setup_devices(void) {
     vga_pty = tty_create("vga");
     vga_pty->write = vga_pty_write;
     vga_pty->flags.allow_debug_console = true;
@@ -122,9 +122,7 @@ void post_subsystem_init(void) {
     ata_setup();
     pcnet_setup();
     e1000_setup();
-
     debug_x86_init();
-    int_enable();
 }
 
 /* Initial kernel stack pointer. */

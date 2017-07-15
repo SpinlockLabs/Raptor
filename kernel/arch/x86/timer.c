@@ -1,7 +1,9 @@
 #include <liblox/common.h>
 
 #include <kernel/timer.h>
+
 #include <kernel/cpu/task.h>
+#include <kernel/entry.h>
 
 #include "io.h"
 #include "irq.h"
@@ -12,7 +14,9 @@ static int timer_callback(cpu_registers_t* regs) {
     unused(regs);
 
     timer_ticks++;
-    cpu_task_queue_flush();
+    if (kernel_initialized) {
+        cpu_task_queue_flush();
+    }
 
     return 1;
 }
