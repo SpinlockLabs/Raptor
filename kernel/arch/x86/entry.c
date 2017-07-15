@@ -23,6 +23,7 @@
 #include "devices/serial/serial.h"
 #include "devices/pcnet/pcnet.h"
 #include "devices/e1000/e1000.h"
+#include "devices/rtl/rtl8139.h"
 #include "kernel/arch/x86/devices/ata/ata.h"
 
 const uint32_t kProcessorIdIntel = 0x756e6547;
@@ -121,6 +122,7 @@ void post_subsystem_init(void) {
 
     pcnet_setup();
     e1000_setup();
+    rtl8139_setup();
 
     ata_setup();
 

@@ -29,7 +29,7 @@ set(QEMU_CMD_BASE
   qemu-system-i386
     -cpu core2duo
     -m 256
-    -net nic,model=e1000
+    -net nic,model=rtl8139
     -drive "file=${CMAKE_BINARY_DIR}/raptor.img,format=raw,if=ide,media=disk"
 )
 
