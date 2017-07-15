@@ -1,10 +1,11 @@
 #include "mbr.h"
 
-#include <liblox/io.h>
 #include <liblox/string.h>
 #include <liblox/printf.h>
 
 #include <kernel/dispatch/events.h>
+#include <liblox/io.h>
+#include <liblox/sleep.h>
 
 bool mbr_check_signature(uint8_t* buffer, size_t size) {
     if (size < sizeof(mbr_t)) {
@@ -90,7 +91,8 @@ static void mbr_create_block_partition(
     block_device_register(pblock);
 }
 
-static void mbr_load_partitions(block_device_t* block, mbr_t* mbr) {
+static bool mbr_load_partitions(block_device_t* block, mbr_t* mbr) {
+    bool created = false;
     for (uint i = 0; i < 4; i++) {
         mbr_partition_t* part = &mbr->partitions[i];
 
@@ -99,30 +101,51 @@ static void mbr_load_partitions(block_device_t* block, mbr_t* mbr) {
         }
 
         mbr_create_block_partition(block, i, part);
+        created = true;
     }
+
+    return created;
 }
 
-static void mbr_partition_probe(void* event, void* extra) {
+static bool mbr_partition_probe(block_device_t* block) {
+    uint8_t mbr[512] = {0};
+    if (block_device_read(block, 0, mbr, 512) != BLOCK_DEVICE_ERROR_OK) {
+        if (block_device_read(block, 0, mbr, 512) != BLOCK_DEVICE_ERROR_OK) {
+            return false;
+        }
+    }
+
+    bool is_signature_valid = mbr_check_signature(mbr, 512);
+
+    if (!is_signature_valid) {
+        return false;
+    }
+
+    return mbr_load_partitions(block, (mbr_t*) mbr);
+}
+
+static void mbr_partition_probe_handler(void* event, void* extra) {
     unused(extra);
 
     block_device_t* block = event;
 
-    uint8_t mbr[512] = {0};
-    if (block_device_read(block, 0, mbr, 512) != BLOCK_DEVICE_ERROR_OK) {
-        return;
+    for (uint i = 1; i <= 3; i++) {
+        if (mbr_partition_probe(block)) {
+            break;
+        }
     }
-
-    if (!mbr_check_signature(mbr, 512)) {
-        return;
-    }
-
-    mbr_load_partitions(block, (mbr_t*) mbr);
 }
 
 void block_device_mbr_subsystem_init(void) {
     event_add_handler(
         "block-device:initialized",
-        mbr_partition_probe,
+        mbr_partition_probe_handler,
+        NULL
+    );
+
+    event_add_handler(
+        "block-device:partition-probe",
+        mbr_partition_probe_handler,
         NULL
     );
 

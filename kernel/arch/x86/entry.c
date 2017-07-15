@@ -119,12 +119,12 @@ void post_subsystem_init(void) {
     serial_port_a->tty->flags.write_kernel_log = true;
     tty_register(serial_port_a->tty);
 
+    ata_setup();
     pcnet_setup();
     e1000_setup();
 
-    ata_setup();
-
     debug_x86_init();
+    int_enable();
 }
 
 /* Initial kernel stack pointer. */
@@ -180,5 +180,6 @@ used void kernel_main(multiboot_t *_mboot, uint32_t mboot_hdr, uintptr_t esp) {
         userspace_jump(NULL, 0xB0000000);
     }
 
+    int_disable();
     kernel_init();
 }

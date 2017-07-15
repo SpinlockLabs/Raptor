@@ -2,7 +2,7 @@
 
 #include <liblox/string.h>
 #include <liblox/printf.h>
-#include <liblox/string.h>
+#include <liblox/sleep.h>
 
 #include <kernel/arch/x86/devices/pci/pci.h>
 
@@ -86,13 +86,21 @@ static int ata_status_wait(ata_device_t* dev, int timeout) {
 static int ata_wait(ata_device_t* dev, int advanced) {
     uint8_t status = 0;
     ata_io_wait(dev);
-    status = ata_status_wait(dev, -1);
+    ata_status_wait(dev, -1);
 
     if (advanced) {
         status = ata_inb(dev->io_base, ATA_REG_STATUS);
-        if (status & ATA_SR_ERR) return 1;
-        if (status & ATA_SR_DF) return 1;
-        if (!(status & ATA_SR_DRQ)) return 1;
+        if (status & ATA_SR_ERR) {
+            return 1;
+        }
+
+        if (status & ATA_SR_DF) {
+            return 1;
+        }
+
+        if (!(status & ATA_SR_DRQ)) {
+            return 1;
+        }
     }
 
     return 0;
@@ -121,7 +129,7 @@ static size_t ata_max_offset(ata_device_t* dev) {
     if (!sectors) {
         sectors = dev->identity.sectors_28;
     }
-    return sectors * ATA_SECTOR_SIZE;
+    return (size_t) (sectors * ATA_SECTOR_SIZE);
 }
 
 static block_device_error_t ata_block_read_sector(
@@ -131,31 +139,33 @@ static block_device_error_t ata_block_read_sector(
     ata_device_t* ata = blk->internal.owner;
 
     uint16_t bus = ata->io_base;
-    uint8_t slave = ata->slave;
+    uint8_t slave = (uint8_t) ata->slave;
 
     spin_lock(ata_lock);
 
     ata_wait(ata, 0);
-    outb(ata->bar4, 0x00);
-    outl(ata->bar4 + 0x04, ata->dma_prdt_phys);
-    outb(ata->bar4 + 0x2, inb(ata->bar4 + 0x02) | 0x04 | 0x02);
-    outb(ata->bar4, 0x08);
+    outb((uint16_t) ata->bar4, 0x00);
+    outl((uint16_t) (ata->bar4 + 0x04), ata->dma_prdt_phys);
+    outb((uint16_t) (ata->bar4 + 0x2), (uint8_t) (inb((uint16_t) (ata->bar4 + 0x02)) | 0x04 | 0x02));
+    outb((uint16_t) ata->bar4, 0x08);
 
     int_enable();
     while (1) {
         uint8_t status = ata_inb(bus, ATA_REG_STATUS);
-        if (!(status & ATA_SR_BSY)) break;
+        if (!(status & ATA_SR_BSY)) {
+            break;
+        }
     }
     ata_outb(bus, ATA_REG_CONTROL, 0x00);
     ata_outb(bus, ATA_REG_HDDEVSEL,
-        0xe0 | slave << 4 | (sector & 0x0f000000) >> 24);
+             (uint8_t) (0xe0 | slave << 4 | (sector & 0x0f000000) >> 24));
     ata_io_wait(ata);
 
     ata_outb(bus, ATA_REG_FEATURES, 0x00);
     ata_outb(bus, ATA_REG_SECCOUNT0, 1);
-    ata_outb(bus, ATA_REG_LBA0, (sector & 0x000000ff) >>  0);
-    ata_outb(bus, ATA_REG_LBA1, (sector & 0x0000ff00) >>  8);
-    ata_outb(bus, ATA_REG_LBA2, (sector & 0x00ff0000) >> 16);
+    ata_outb(bus, ATA_REG_LBA0, (uint8_t) ((sector & 0x000000ff) >> 0));
+    ata_outb(bus, ATA_REG_LBA1, (uint8_t) ((sector & 0x0000ff00) >> 8));
+    ata_outb(bus, ATA_REG_LBA2, (uint8_t) ((sector & 0x00ff0000) >> 16));
 
     while (1) {
         uint8_t status = ata_inb(bus, ATA_REG_STATUS);
@@ -167,10 +177,10 @@ static block_device_error_t ata_block_read_sector(
     ata_outb(bus, ATA_REG_COMMAND, ATA_CMD_READ_DMA);
     ata_io_wait(ata);
 
-    ata_outb(ata->bar4, 0, 0x08 | 0x01);
+    ata_outb((uint16_t) ata->bar4, 0, 0x08 | 0x01);
 
     while (1) {
-        int status = ata_inb(ata->bar4, 0x02);
+        int status = ata_inb((uint16_t) ata->bar4, 0x02);
         int dstatus = ata_inb(bus, ATA_REG_STATUS);
 
         if (!(status & 0x04)) {
@@ -184,7 +194,7 @@ static block_device_error_t ata_block_read_sector(
     int_disable();
 
     memcpy(buffer, ata->dma_start, 512);
-    ata_outb(ata->bar4, 0x2, inb(ata->bar4 + 0x02) | 0x04 | 0x02);
+    ata_outb((uint16_t) ata->bar4, 0x2, (uint8_t) (inb((uint16_t) (ata->bar4 + 0x02)) | 0x04 | 0x02));
 
     spin_unlock(ata_lock);
 
@@ -279,7 +289,7 @@ static block_device_error_t ata_block_write(
     unused(offset);
     unused(buffer);
     unused(size);
-    return 0;
+    return BLOCK_DEVICE_ERROR_UNHANDLED;
 }
 
 static block_device_t* ata_device_create(ata_device_t* device) {
@@ -294,10 +304,12 @@ static block_device_t* ata_device_create(ata_device_t* device) {
 }
 
 static void ata_device_init(ata_device_t* dev) {
+    int_enable();
+
     ata_outb(dev->io_base, 1, 1);
     outb(dev->control, 0);
 
-    ata_outb(dev->io_base, ATA_REG_HDDEVSEL, 0xA0 | dev->slave << 4);
+    ata_outb(dev->io_base, ATA_REG_HDDEVSEL, (uint8_t) (0xA0 | dev->slave << 4));
     ata_io_wait(dev);
 
     ata_outb(dev->io_base, ATA_REG_COMMAND, ATA_CMD_IDENTIFY);
@@ -320,22 +332,27 @@ static void ata_device_init(ata_device_t* dev) {
         ptr[i] = tmp;
     }
 
+    ata_wait(dev, 1);
+
     dev->is_atapi = 0;
 
     dev->dma_prdt = (void*) kpmalloc_p(sizeof(prdt_t) * 1, &dev->dma_prdt_phys);
     dev->dma_start = (void*) kpmalloc_p(4096, &dev->dma_start_phys);
 
+    memset(dev->dma_prdt, 0, sizeof(prdt_t) * 1);
+    memset(dev->dma_start, 0, 4096);
+
     dev->dma_prdt[0].offset = dev->dma_start_phys;
     dev->dma_prdt[0].bytes = 512;
     dev->dma_prdt[0].last = 0x8000;
 
-    uint16_t command_reg = pci_read_field(ata_pci, PCI_COMMAND, 4);
+    uint16_t command_reg = (uint16_t) pci_read_field(ata_pci, PCI_COMMAND, 4);
     if (command_reg & (1 << 2)) {
         dbg("Bus mastering already enabled.\n");
     } else {
         command_reg |= (1 << 2);
         pci_write_field(ata_pci, PCI_COMMAND, 4, command_reg);
-        command_reg = pci_read_field(ata_pci, PCI_COMMAND, 4);
+        command_reg = (uint16_t) pci_read_field(ata_pci, PCI_COMMAND, 4);
     }
 
     dev->bar4 = pci_read_field(ata_pci, PCI_BAR4, 4);
@@ -351,7 +368,7 @@ static void ata_device_init(ata_device_t* dev) {
 static int ata_device_detect(ata_device_t* dev) {
     ata_soft_reset(dev);
     ata_io_wait(dev);
-    ata_outb(dev->io_base, ATA_REG_HDDEVSEL, 0xA0 | dev->slave << 4);
+    ata_outb(dev->io_base, ATA_REG_HDDEVSEL, (uint8_t) (0xA0 | dev->slave << 4));
     ata_io_wait(dev);
     ata_status_wait(dev, 10000);
 
@@ -370,7 +387,9 @@ static int ata_device_detect(ata_device_t* dev) {
         block_device_register(block);
 
         return 1;
-    } else if ((cl == 0x14 && ch == 0xEB) ||
+    }
+
+    if ((cl == 0x14 && ch == 0xEB) ||
                (cl == 0x69 && ch == 0x96)) {
         dbg("CD-ROM detected.\n");
         return 2;

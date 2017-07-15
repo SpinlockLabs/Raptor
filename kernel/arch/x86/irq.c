@@ -153,6 +153,7 @@ used void irq_handler(cpu_registers_t *r) {
             }
         }
     }
+
 done:
     irq_ack(r->int_no - 32);
     int_resume();

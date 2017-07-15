@@ -182,8 +182,6 @@ void rkmalloc_free(rkmalloc_heap* heap, void* ptr) {
         return;
     }
 
-    spin_lock(heap->lock);
-
 #ifndef RKMALLOC_DISABLE_MAGIC
     rkmalloc_entry* entry = (rkmalloc_entry*) (ptr - sizeof(rkmalloc_entry));
     list_node_t* node = (list_node_t*) (entry - sizeof(list_node_t));
@@ -219,6 +217,4 @@ void rkmalloc_free(rkmalloc_heap* heap, void* ptr) {
         heap->total_allocated_blocks_size -= entry->block_size;
         heap->total_allocated_used_size -= entry->used_size;
     }
-
-    spin_unlock(heap->lock);
 }
