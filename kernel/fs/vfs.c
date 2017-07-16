@@ -249,3 +249,17 @@ fs_node_t* vfs_resolve(char* _path) {
     free(path);
     return NULL;
 }
+
+fs_error_t vfs_read(fs_node_t* node, size_t offset, uint8_t* buffer, size_t size) {
+    if (node == NULL) {
+        return FS_ERROR_BAD_CALL;
+    }
+
+    if (node->read == NULL) {
+        return FS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    fs_error_t error = node->read(offset, buffer, size);
+
+    return error;
+}

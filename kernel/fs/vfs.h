@@ -47,9 +47,9 @@ typedef struct fs_list_entry {
 #define FS_OP(name, ret, ...) \
     typedef ret (*fs_## name ##_op_t)(__VA_ARGS__);
 
-FS_OP(read, fs_error_t, char*, uint8_t*, size_t)
-FS_OP(write, fs_error_t, char*, uint8_t*, size_t)
-FS_OP(stat, fs_error_t, char*, fs_stat_t*)
+FS_OP(read, fs_error_t, size_t, uint8_t*, size_t)
+FS_OP(write, fs_error_t, size_t, uint8_t*, size_t)
+FS_OP(stat, fs_error_t, fs_stat_t*)
 FS_OP(ioctl, fs_error_t, long, void*)
 FS_OP(list, fs_error_t, fs_list_entry_t*)
 FS_OP(child, fs_error_t, char*, struct fs_node**)
@@ -62,15 +62,16 @@ struct fs_node {
     fs_node_private_t internal;
 
     fs_stat_op_t stat;
+
     fs_read_op_t read;
+    fs_write_op_t write;
+
     fs_list_op_t list;
     fs_child_op_t child;
-    fs_write_op_t write;
 };
 
 typedef struct vfs_entry {
     char* name;
-    char* mount;
     fs_node_t* fs;
 } vfs_entry_t;
 
@@ -82,3 +83,4 @@ fs_error_t vfs_mount(char*, fs_node_t*);
 fs_node_t* vfs_resolve(char* path);
 
 fs_error_t vfs_get_child(fs_node_t* parent, char* child, fs_node_t** node);
+fs_error_t vfs_read(fs_node_t* node, size_t offset, uint8_t* buffer, size_t size);
