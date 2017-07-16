@@ -1,11 +1,11 @@
 cmake_minimum_required(VERSION 3.8)
 project(raptor C)
-option(TESTS "Enable Tests" OFF)
 
 enable_language(ASM)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(RAPTOR_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+
 include(build/cmake/common.cmake)
 include(build/cmake/filesystem.cmake)
 

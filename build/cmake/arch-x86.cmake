@@ -1,10 +1,16 @@
 arch("x86" "arch/x86")
 option(OPTIMIZE_NATIVE "Optimize for the native machine." OFF)
+option(ENABLE_X64 "Enable x86_64 mode." OFF)
 
 cflags(
-  -m32
   -DARCH_X86
 )
+
+if(ENABLE_X64)
+  cflags(-m64)
+else()
+  cflags(-m32)
+endif()
 
 if(CLANG)
   cflags(-target i686-pc-elf)

@@ -1,3 +1,5 @@
+option(TESTS "Enable Tests" OFF)
+
 function(cflags)
   set(ARGLIST "")
   foreach(ARG ${ARGV})
@@ -20,3 +22,5 @@ if(CMAKE_C_COMPILER_ID MATCHES "Clang")
 endif()
 
 cflags(-DRAPTOR)
+
+include(${RAPTOR_DIR}/build/cmake/config.cmake)
