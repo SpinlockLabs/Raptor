@@ -36,6 +36,7 @@ mount "${LOOP}p1" "${MDIR}"
 cp -R filesystem/* "${MDIR}/"
 umount "${MDIR}"
 rm -rf "${MDIR}"
-losetup -d ${LOOP}
+grub-install --target=i386-pc ${LOOP}
 sync
+losetup -d ${LOOP}
 echo "Disk image created."
