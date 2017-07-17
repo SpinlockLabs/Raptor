@@ -14,7 +14,7 @@ static void debug_fs_resolve(tty_t* tty, const char* input) {
 }
 
 static void debug_fs_mount(tty_t* tty, const char* input) {
-    char* rest = (char*) input;
+    char* rest = strdup(input);
 
     uint i = 0;
 
@@ -35,12 +35,14 @@ static void debug_fs_mount(tty_t* tty, const char* input) {
 
     if (strcmp(device, "") == 0 || strcmp(type, "") == 0 || strcmp(path, "") == 0) {
         tty_printf(tty, "Usage: fs-mount <device> <fstype> <path>\n");
+        free(rest);
         return;
     }
 
     block_device_t* dev = block_device_get(device);
     if (dev == NULL) {
         tty_printf(tty, "Unknown block device: %s\n", dev);
+        free(rest);
         return;
     }
 
@@ -51,6 +53,8 @@ static void debug_fs_mount(tty_t* tty, const char* input) {
     } else {
         tty_printf(tty, "Device mounted.\n");
     }
+
+    free(rest);
 }
 
 static void debug_fs_cat(tty_t* tty, const char* input) {

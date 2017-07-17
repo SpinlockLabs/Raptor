@@ -112,11 +112,6 @@ fs_error_t vfs_mount_node(char* path, fs_node_t* node) {
 
     if (*i == '\0') {
         vfs_entry_t* r = vfs_root;
-
-        if (r->fs) {
-            printf(WARN "%s is already mounted.\n", path);
-        }
-
         r->fs = node;
         fs_root = node;
         free(p);

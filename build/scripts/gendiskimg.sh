@@ -24,12 +24,12 @@ then
 fi
 
 rm -rf raptor.img
-dd if=/dev/zero of=raptor.img iflag=fullblock bs=1M count=100
+dd if=/dev/zero of=raptor.img iflag=fullblock bs=1M count=100 > /dev/null 2>&1
 chown ${CUID} raptor.img
-echo -e 'label: dos\nstart=2048, type=83' | "${SFDISK}" raptor.img
-"${SFDISK}" -A raptor.img 1
+echo -e 'label: dos\nstart=2048, type=83' | "${SFDISK}" raptor.img > /dev/null
+"${SFDISK}" -A raptor.img 1 > /dev/null
 losetup -P ${LOOP} raptor.img
-"${MKFS}" ${LOOP}p1
+"${MKFS}" ${LOOP}p1 > /dev/null
 
 MDIR="$(mktemp -d)"
 mount "${LOOP}p1" "${MDIR}"

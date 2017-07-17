@@ -70,8 +70,8 @@ add_custom_target(qemu-cli-network
   DEPENDS kernel diskimg
 )
 
-add_custom_command(
-  OUTPUT raptor.iso
+add_custom_target(
+  iso
   DEPENDS kernel filesystem
   COMMAND bash
             ${CMAKE_SOURCE_DIR}/build/scripts/mkgrubiso.sh
@@ -79,13 +79,13 @@ add_custom_command(
   WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
 )
 
-add_custom_target(iso
-  DEPENDS raptor.iso
-)
-
 add_custom_target(qemu-iso
   COMMAND ${QEMU_CMD_BASE}
             -cdrom "${CMAKE_BINARY_DIR}/raptor.iso"
+            -boot d
+            -monitor none
+            -nographic
+            -net user
   DEPENDS iso diskimg
 )
 
@@ -95,8 +95,11 @@ add_custom_target(bochs
   WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
 )
 
-add_custom_target(diskimg
+add_custom_target(
+  diskimg
   COMMAND "${CMAKE_SOURCE_DIR}/build/scripts/gendiskimg.sh"
   WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
   DEPENDS filesystem
+  SOURCES ${FS_DIR}
+  USES_TERMINAL
 )

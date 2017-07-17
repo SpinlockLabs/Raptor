@@ -20,6 +20,7 @@
 
 #include "paging.h"
 #include "heap.h"
+#include "rootfs.h"
 
 /* Architecture hooks for initialization. */
 extern void kernel_setup_devices(void);
@@ -67,5 +68,8 @@ void kernel_init(void) {
      * CPU in idle mode.
      */
     cpu_task_queue_flush();
+
+    mount_rootfs();
+
     cpu_run_idle();
 }
