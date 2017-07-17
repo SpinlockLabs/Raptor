@@ -34,9 +34,10 @@ losetup -P ${LOOP} raptor.img
 MDIR="$(mktemp -d)"
 mount "${LOOP}p1" "${MDIR}"
 cp -R filesystem/* "${MDIR}/"
+grub-install --target=i386-pc -s --boot-directory="${MDIR}/boot" ${LOOP}
+sync
 umount "${MDIR}"
 rm -rf "${MDIR}"
-grub-install --target=i386-pc ${LOOP}
 sync
 losetup -d ${LOOP}
 echo "Disk image created."

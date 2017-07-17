@@ -41,7 +41,6 @@ set(QEMU_CMD_BASE
 
 set(QEMU_CMD
   ${QEMU_CMD_BASE}
-    -kernel "${CMAKE_BINARY_DIR}/kernel.elf"
 )
 
 add_custom_target(qemu
@@ -61,12 +60,6 @@ add_custom_target(qemu-cli
 
 add_custom_target(qemu-cli-gdb
   COMMAND ${QEMU_CMD} -S -s -append debug -monitor none -nographic
-  DEPENDS kernel diskimg
-)
-
-add_custom_target(qemu-cli-network
-  COMMAND sudo ${QEMU_CMD} -append debug -monitor none -nographic
-    -net tap,ifname=tap0,script=no,downscript=no
   DEPENDS kernel diskimg
 )
 
