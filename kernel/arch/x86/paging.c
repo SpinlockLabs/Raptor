@@ -88,7 +88,8 @@ static bool first_frame(uint32_t* val) {
     return false;
 }
 
-static void alloc_frame(page_t* page, int is_kernel, int is_writable) {
+static bool alloc_frame(page_t* page, int is_kernel, int is_writable) {
+    bool made = false;
     if (page->frame == 0) {
         spin_lock(frame_alloc_lock);
         uint32_t index = 0;
@@ -98,11 +99,13 @@ static void alloc_frame(page_t* page, int is_kernel, int is_writable) {
         set_frame(index * 0x1000);
         page->frame = index;
         spin_unlock(frame_alloc_lock);
+        made = true;
     }
 
     page->present = 1;
     page->rw = (is_writable == 1) ? 1 : 0;
     page->user = (is_kernel == 1) ? 0 : 1;
+    return made;
 }
 
 static void dma_frame(page_t* page, int is_kernel,
@@ -214,7 +217,7 @@ uintptr_t paging_allocate_aligned_large(uintptr_t address, size_t size, uintptr_
         return 0;
     }
 
-    for (unsigned int i = 0; i < (size + 0xFFF) / 0x1000; i++) {
+    for (uint i = 0; i < (size + 0xFFF) / 0x1000; i++) {
         set_frame((index + i) * 0x1000);
         page_t* page = paging_get_page(
             address + (i * 0x1000),
@@ -236,12 +239,12 @@ uintptr_t paging_allocate_aligned_large(uintptr_t address, size_t size, uintptr_
     return address;
 }
 
-void paging_heap_expand_into(uint32_t addr) {
+bool paging_heap_expand_into(uintptr_t addr) {
     page_t* page = paging_get_page(addr, 0, kernel_directory);
     if (page == NULL) {
         panic("Failed to get the page while expanding kernel heap.");
     }
-    alloc_frame(page, 1, 0);
+    return alloc_frame(page, 1, 0);
 }
 
 void paging_mark_system(uint64_t addr) {
@@ -365,7 +368,7 @@ uintptr_t paging_get_physical_address(uintptr_t virt) {
 }
 
 uintptr_t paging_add_map(uintptr_t physical, size_t size) {
-    size = ((size_t) (size / 0x1000) + 0.5) * 0x1000;
+    size = (size_t) (((size / 0x1000) + 0.5) * 0x1000);
     uintptr_t ptr = kpmalloc_a(size);
     for (uintptr_t addr = ptr; addr < ptr + size; addr += 0x1000) {
         paging_map_dma(addr, physical + (addr - ptr));

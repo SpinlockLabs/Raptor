@@ -4,6 +4,8 @@
 
 #include <stdint.h>
 
+#include "vfs.h"
+
 #define EXT2_SUPER_MAGIC 0xEF53
 #define EXT2_DIRECT_BLOCKS 12
 
@@ -162,3 +164,5 @@ typedef struct {
 } ext2_disk_cache_entry_t;
 
 typedef int (*ext2_block_io_t)(void*, uint32_t, uint8_t*);
+
+void ext2_filesystem_init(void);

@@ -2,7 +2,6 @@
 
 #include <liblox/string.h>
 #include <liblox/printf.h>
-#include <liblox/sleep.h>
 
 #include <kernel/arch/x86/devices/pci/pci.h>
 
@@ -144,13 +143,13 @@ static block_device_error_t ata_block_read_sector(
     spin_lock(ata_lock);
 
     ata_wait(ata, 0);
-    outb((uint16_t) ata->bar4, 0x00);
+    outb(ata->bar4, 0x00);
     outl((uint16_t) (ata->bar4 + 0x04), ata->dma_prdt_phys);
     outb((uint16_t) (ata->bar4 + 0x2), (uint8_t) (inb((uint16_t) (ata->bar4 + 0x02)) | 0x04 | 0x02));
-    outb((uint16_t) ata->bar4, 0x08);
+    outb(ata->bar4, 0x08);
 
     int_enable();
-    while (1) {
+    while (true) {
         uint8_t status = ata_inb(bus, ATA_REG_STATUS);
         if (!(status & ATA_SR_BSY)) {
             break;
@@ -167,7 +166,7 @@ static block_device_error_t ata_block_read_sector(
     ata_outb(bus, ATA_REG_LBA1, (uint8_t) ((sector & 0x0000ff00) >> 8));
     ata_outb(bus, ATA_REG_LBA2, (uint8_t) ((sector & 0x00ff0000) >> 16));
 
-    while (1) {
+    while (true) {
         uint8_t status = ata_inb(bus, ATA_REG_STATUS);
         if (!(status & ATA_SR_BSY) && (status & ATA_SR_DRDY)) {
             break;
@@ -177,11 +176,11 @@ static block_device_error_t ata_block_read_sector(
     ata_outb(bus, ATA_REG_COMMAND, ATA_CMD_READ_DMA);
     ata_io_wait(ata);
 
-    ata_outb((uint16_t) ata->bar4, 0, 0x08 | 0x01);
+    ata_outb(ata->bar4, 0, 0x08 | 0x01);
 
-    while (1) {
-        int status = ata_inb((uint16_t) ata->bar4, 0x02);
-        int dstatus = ata_inb(bus, ATA_REG_STATUS);
+    while (true) {
+        uint8_t status = ata_inb(ata->bar4, 0x02);
+        uint8_t dstatus = ata_inb(bus, ATA_REG_STATUS);
 
         if (!(status & 0x04)) {
             continue;
@@ -194,7 +193,7 @@ static block_device_error_t ata_block_read_sector(
     int_disable();
 
     memcpy(buffer, ata->dma_start, 512);
-    ata_outb((uint16_t) ata->bar4, 0x2, (uint8_t) (inb((uint16_t) (ata->bar4 + 0x02)) | 0x04 | 0x02));
+    ata_outb(ata->bar4, 0x2, (uint8_t) (inb((uint16_t) (ata->bar4 + 0x02)) | 0x04 | 0x02));
 
     spin_unlock(ata_lock);
 
@@ -226,7 +225,6 @@ static block_device_error_t ata_block_read(
 
     if (offset % ATA_SECTOR_SIZE) {
         size_t prefix_size = (ATA_SECTOR_SIZE - (offset % ATA_SECTOR_SIZE));
-        uint8_t* tmp = malloc(ATA_SECTOR_SIZE);
         error = ata_block_read_sector(blk, start_block, tmp);
         if (error != BLOCK_DEVICE_ERROR_OK) {
             free(tmp);
@@ -304,8 +302,6 @@ static block_device_t* ata_device_create(ata_device_t* device) {
 }
 
 static void ata_device_init(ata_device_t* dev) {
-    int_enable();
-
     ata_outb(dev->io_base, 1, 1);
     outb(dev->control, 0);
 
@@ -336,8 +332,8 @@ static void ata_device_init(ata_device_t* dev) {
 
     dev->is_atapi = 0;
 
-    dev->dma_prdt = (void*) kpmalloc_p(sizeof(prdt_t) * 1, &dev->dma_prdt_phys);
-    dev->dma_start = (void*) kpmalloc_p(4096, &dev->dma_start_phys);
+    dev->dma_prdt = (void*) kpmalloc_ap(sizeof(prdt_t) * 1, &dev->dma_prdt_phys);
+    dev->dma_start = (void*) kpmalloc_ap(4096, &dev->dma_start_phys);
 
     memset(dev->dma_prdt, 0, sizeof(prdt_t) * 1);
     memset(dev->dma_start, 0, 4096);
@@ -352,13 +348,12 @@ static void ata_device_init(ata_device_t* dev) {
     } else {
         command_reg |= (1 << 2);
         pci_write_field(ata_pci, PCI_COMMAND, 4, command_reg);
-        command_reg = (uint16_t) pci_read_field(ata_pci, PCI_COMMAND, 4);
     }
 
-    dev->bar4 = pci_read_field(ata_pci, PCI_BAR4, 4);
+    uint32_t bar4 = pci_read_field(ata_pci, PCI_BAR4, 4);
 
-    if (dev->bar4 & 0x00000001) {
-        dev->bar4 = dev->bar4 & 0xFFFFFFFC;
+    if (bar4 & 0x00000001) {
+        dev->bar4 = (uint16_t) (bar4 & 0xFFFFFFFC);
     } else {
         dbg("Bus master registers are usually I/O ports.\n");
         return;
@@ -390,7 +385,7 @@ static int ata_device_detect(ata_device_t* dev) {
     }
 
     if ((cl == 0x14 && ch == 0xEB) ||
-               (cl == 0x69 && ch == 0x96)) {
+        (cl == 0x69 && ch == 0x96)) {
         dbg("CD-ROM detected.\n");
         return 2;
     }

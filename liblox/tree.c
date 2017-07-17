@@ -3,9 +3,7 @@
 
 tree_t* tree_create(void) {
     /* Create a new tree */
-    tree_t* out = malloc(sizeof(tree_t));
-    out->nodes = 0;
-    out->root = NULL;
+    tree_t* out = zalloc(sizeof(tree_t));
     return out;
 }
 
@@ -50,7 +48,7 @@ void tree_free(tree_t* tree) {
 
 tree_node_t* tree_node_create(void* value) {
     /* Create a new tree node pointing to the given value */
-    tree_node_t* out = malloc(sizeof(tree_node_t));
+    tree_node_t* out = zalloc(sizeof(tree_node_t));
     out->value = value;
     out->children = list_create();
     out->parent = NULL;

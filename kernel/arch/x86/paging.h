@@ -38,7 +38,7 @@ page_t* paging_get_page(uint32_t, int, page_directory_t*);
  * Expand the kernel heap into the given address.
  * The page tables must be manually invalidated.
  */
-void paging_heap_expand_into(uint32_t);
+bool paging_heap_expand_into(uint32_t);
 
 /**
  * Allocates a large aligned page for use with some devices.

@@ -40,8 +40,8 @@ void kernel_init(void) {
 
     events_subsystem_init();
     tty_subsystem_init();
-    block_device_subsystem_init();
     vfs_subsystem_init();
+    block_device_subsystem_init();
     network_iface_subsystem_init();
     network_stack_init();
     debug_console_init();

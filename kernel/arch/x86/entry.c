@@ -178,6 +178,5 @@ used void kernel_main(multiboot_t *_mboot, uint32_t mboot_hdr, uintptr_t esp) {
         userspace_jump(NULL, 0xB0000000);
     }
 
-    int_disable();
     kernel_init();
 }

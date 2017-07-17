@@ -2,8 +2,9 @@
 #include <kernel/spin.h>
 #include <liblox/string.h>
 #include <liblox/io.h>
+#include <kernel/cmdline.h>
+
 #include "ext2.h"
-#include "vfs.h"
 
 typedef struct ext2_fs {
     ext2_superblock_t* superblock;
@@ -150,7 +151,320 @@ static ext2_inodetable_t* read_inode(
     return table;
 }
 
-used static fs_node_t* ext2_mount(block_device_t* block) {
+static fs_error_t stat_dir_ext2(fs_node_t* node, fs_stat_t* stat) {
+    unused(node);
+
+    stat->type = FS_TYPE_DIRECTORY;
+    stat->size = 0;
+
+    return FS_ERROR_OK;
+}
+
+static fs_error_t stat_ext2(fs_node_t* node, fs_stat_t* stat) {
+    unused(node);
+
+    ext2_fs_t* this = node->internal.owner;
+    uint32_t ind = (uint32_t) node->internal.tag;
+    ext2_inodetable_t* inode = read_inode(this, ind);
+
+    if (inode->flags & EXT2_S_IFDIR) {
+        stat->type = FS_TYPE_DIRECTORY;
+    } else {
+        stat->type = FS_TYPE_FILE;
+    }
+
+    stat->size = inode->size;
+    free(inode);
+
+    return FS_ERROR_OK;
+}
+
+static uint get_block_number(ext2_fs_t* this, ext2_inodetable_t* inode, uint iblock) {
+    uint p = this->pointers_per_block;
+
+    /* We're going to do some crazy math in a bit... */
+    uint a, b, c, d, e, f, g;
+
+    uint8_t* tmp;
+
+    if (iblock < EXT2_DIRECT_BLOCKS) {
+        return inode->block[iblock];
+    }
+
+    if (iblock < EXT2_DIRECT_BLOCKS + p) {
+        /* XXX what if inode->block[EXT2_DIRECT_BLOCKS] isn't set? */
+        tmp = malloc(this->block_size);
+        read_block(this, inode->block[EXT2_DIRECT_BLOCKS], tmp);
+        uint out = ((uint32_t*) tmp)[iblock - EXT2_DIRECT_BLOCKS];
+        free(tmp);
+        return out;
+    }
+
+    if (iblock < EXT2_DIRECT_BLOCKS + p + p * p) {
+        a = iblock - EXT2_DIRECT_BLOCKS;
+        b = a - p;
+        c = b / p;
+        d = b - c * p;
+
+        tmp = malloc(this->block_size);
+        read_block(this, inode->block[EXT2_DIRECT_BLOCKS + 1], tmp);
+
+        uint32_t nblock = ((uint32_t*) tmp)[c];
+        read_block(this, nblock, tmp);
+
+        uint out = ((uint32_t*) tmp)[d];
+        free(tmp);
+        return out;
+    }
+
+    if (iblock < EXT2_DIRECT_BLOCKS + p + p * p + p) {
+        a = iblock - EXT2_DIRECT_BLOCKS;
+        b = a - p;
+        c = b - p * p;
+        d = c / (p * p);
+        e = c - d * p * p;
+        f = e / p;
+        g = e - f * p;
+
+        tmp = malloc(this->block_size);
+        read_block(this, inode->block[EXT2_DIRECT_BLOCKS + 2], tmp);
+
+        uint32_t nblock = ((uint32_t*) tmp)[d];
+        read_block(this, nblock, tmp);
+
+        nblock = ((uint32_t*) tmp)[f];
+        read_block(this, nblock, tmp);
+
+        unsigned int out = ((uint32_t*) tmp)[g];
+        free(tmp);
+        return out;
+    }
+
+    printf(ERROR "EXT2 driver tried to read to a block number that was too high (%d)\n", iblock);
+
+    return 0;
+}
+
+static uint inode_read_block(
+    ext2_fs_t* this,
+    ext2_inodetable_t* inode,
+    uint block,
+    uint8_t* buf) {
+    size_t fn = inode->blocks / (this->block_size / 512);
+    if (block >= fn) {
+        memset(buf, 0x00, this->block_size);
+        printf(WARN "Tried to read an invalid block. Asked for %d (0-indexed), but inode only has %d!\n", block,
+               fn);
+        return 0;
+    }
+
+    uint real_block = get_block_number(this, inode, block);
+    read_block(this, real_block, buf);
+
+    return real_block;
+}
+
+used static ext2_dir_t* direntry_ext2(
+    ext2_fs_t* this,
+    ext2_inodetable_t* inode,
+    uint32_t no,
+    uint32_t index) {
+    unused(no);
+
+    uint8_t* block = malloc(this->block_size);
+    uint8_t block_nr = 0;
+    inode_read_block(this, inode, block_nr, block);
+    uint32_t dir_offset = 0;
+    uint32_t total_offset = 0;
+    uint32_t dir_index = 0;
+
+    while (total_offset < inode->size && dir_index <= index) {
+        ext2_dir_t* d_ent = (ext2_dir_t*) ((uintptr_t) block + dir_offset);
+
+        if (d_ent->inode != 0 && dir_index == index) {
+            ext2_dir_t* out = malloc(d_ent->rec_len);
+            memcpy(out, d_ent, d_ent->rec_len);
+            free(block);
+            return out;
+        }
+
+        dir_offset += d_ent->rec_len;
+        total_offset += d_ent->rec_len;
+
+        if (d_ent->inode) {
+            dir_index++;
+        }
+
+        if (dir_offset >= this->block_size) {
+            block_nr++;
+            dir_offset -= this->block_size;
+            inode_read_block(this, inode, block_nr, block);
+        }
+    }
+
+    free(block);
+    return NULL;
+}
+
+static fs_error_t get_child_ext2(fs_node_t* node, char* name, fs_node_t** out);
+static fs_error_t read_ext2(fs_node_t* node, uint32_t offset, uint8_t* buffer, uint32_t size);
+
+static fs_error_t node_from_file(
+    ext2_fs_t* this,
+    ext2_inodetable_t* inode,
+    ext2_dir_t* direntry,
+    fs_node_t* fnode) {
+    unused(inode);
+
+    if (!fnode) {
+        /* You didn't give me a node to write into, go **** yourself */
+        return FS_ERROR_BAD_STATE;
+    }
+
+    fnode->internal.owner = this;
+    fnode->internal.tag = (void*) direntry->inode;
+
+    memcpy(&fnode->name, &direntry->name, direntry->name_len);
+    fnode->name[direntry->name_len] = '\0';
+
+    fnode->stat = stat_ext2;
+    fnode->child = get_child_ext2;
+    fnode->read = read_ext2;
+
+    return FS_ERROR_OK;
+}
+
+static fs_error_t get_child_ext2(fs_node_t* node, char* name, fs_node_t** out) {
+    ext2_fs_t* this = node->internal.owner;
+
+    ext2_inodetable_t* inode = read_inode(this, (uint32_t) node->internal.tag);
+    uint8_t* block = malloc(this->block_size);
+    ext2_dir_t* direntry = NULL;
+    uint8_t block_nr = 0;
+    inode_read_block(this, inode, block_nr, block);
+    uint32_t dir_offset = 0;
+    uint32_t total_offset = 0;
+
+    while (total_offset < inode->size) {
+        if (dir_offset >= this->block_size) {
+            block_nr++;
+            dir_offset -= this->block_size;
+            inode_read_block(this, inode, block_nr, block);
+        }
+        ext2_dir_t* d_ent = (ext2_dir_t*) ((uintptr_t) block + dir_offset);
+
+        if (d_ent->inode == 0 || strlen(name) != d_ent->name_len) {
+            dir_offset += d_ent->rec_len;
+            total_offset += d_ent->rec_len;
+
+            continue;
+        }
+
+        char* dname = malloc(sizeof(char) * (d_ent->name_len + 1));
+        memcpy(dname, &(d_ent->name), d_ent->name_len);
+        dname[d_ent->name_len] = '\0';
+        if (!strcmp(dname, name)) {
+            free(dname);
+            direntry = malloc(d_ent->rec_len);
+            memcpy(direntry, d_ent, d_ent->rec_len);
+            break;
+        }
+        free(dname);
+
+        dir_offset += d_ent->rec_len;
+        total_offset += d_ent->rec_len;
+    }
+    free(inode);
+
+    if (!direntry) {
+        free(block);
+        return FS_ERROR_DOES_NOT_EXIST;
+    }
+
+    fs_node_t* outnode = zalloc(sizeof(fs_node_t));
+
+    inode = read_inode(this, direntry->inode);
+
+    if (!node_from_file(this, inode, direntry, outnode)) {
+        free(direntry);
+        free(outnode);
+        free(block);
+        free(inode);
+        return FS_ERROR_BAD_STATE;
+    }
+
+    free(direntry);
+    free(inode);
+    free(block);
+    *out = outnode;
+    return FS_ERROR_OK;
+}
+
+static fs_error_t read_ext2(fs_node_t* node, uint32_t offset, uint8_t* buffer, uint32_t size) {
+    ext2_fs_t* this = node->internal.owner;
+    ext2_inodetable_t* inode = read_inode(this, (uint32_t) node->internal.tag);
+    uint32_t end;
+    if (inode->size == 0) {
+        free(inode);
+        return FS_ERROR_OK;
+    }
+
+    if (offset + size > inode->size) {
+        end = inode->size;
+    } else {
+        end = offset + size;
+    }
+    uint32_t start_block = offset / this->block_size;
+    uint32_t end_block = end / this->block_size;
+    uint32_t end_size = end - end_block * this->block_size;
+    uint32_t size_to_read = end - offset;
+
+    uint8_t* buf = malloc(this->block_size);
+    if (start_block == end_block) {
+        inode_read_block(this, inode, start_block, buf);
+        memcpy(buffer, (uint8_t*) (((uint32_t) buf) + (offset % this->block_size)), size_to_read);
+    } else {
+        uint32_t block_offset;
+        uint32_t blocks_read = 0;
+        for (block_offset = start_block; block_offset < end_block; block_offset++, blocks_read++) {
+            if (block_offset == start_block) {
+                inode_read_block(this, inode, block_offset, buf);
+                memcpy(buffer, (uint8_t*) (((uint32_t) buf) + (offset % this->block_size)),
+                       this->block_size - (offset % this->block_size));
+            } else {
+                inode_read_block(this, inode, block_offset, buf);
+                memcpy(buffer + this->block_size * blocks_read - (offset % this->block_size), buf, this->block_size);
+            }
+        }
+
+        if (end_size) {
+            inode_read_block(this, inode, end_block, buf);
+            memcpy(buffer + this->block_size * blocks_read - (offset % this->block_size), buf, end_size);
+        }
+    }
+    free(inode);
+    free(buf);
+    return FS_ERROR_OK;
+}
+
+static uint32_t ext2_root(ext2_fs_t* this, ext2_inodetable_t* inode, fs_node_t* node) {
+    unused(inode);
+
+    if (node == NULL) {
+        return 0;
+    }
+
+    node->internal.owner = this;
+    node->internal.tag = (void*) 2;
+    node->name[0] = '/';
+    node->name[1] = '\0';
+    node->stat = stat_dir_ext2;
+    node->child = get_child_ext2;
+
+    return 1;
+}
+
+static fs_node_t* mount_ext2(block_device_t* block) {
     ext2_fs_t* this = zalloc(sizeof(ext2_fs_t));
 
     this->device = block;
@@ -158,12 +472,18 @@ used static fs_node_t* ext2_mount(block_device_t* block) {
 
     this->superblock = zalloc(this->block_size);
 
-    read_block(this, 1, (uint8_t*) this->superblock);
+    fs_error_t error = read_block(this, 1, (uint8_t*) this->superblock);
 
-    if (this->superblock->magic != EXT2_SUPER_MAGIC) {
-        printf("EXT2 magic check failed for block device %s\n", block->name);
+    if (error != FS_ERROR_OK) {
+        printf(WARN "Failed to read EXT2 superblock from block device %s\n", block->name);
         return NULL;
     }
+
+    if (this->superblock->magic != EXT2_SUPER_MAGIC) {
+        printf(WARN "EXT2 magic check failed for block device %s\n", block->name);
+        return NULL;
+    }
+
     this->inode_size = this->superblock->inode_size;
     if (this->inode_size == 0) {
         this->inode_size = 128;
@@ -188,11 +508,13 @@ used static fs_node_t* ext2_mount(block_device_t* block) {
 
     this->inodes_per_group = this->superblock->inodes_count / this->block_group_count;
 
-    this->disk_cache = zalloc(sizeof(ext2_disk_cache_entry_t) * this->cache_entries);
-    this->cache_data = zalloc(this->block_size * this->cache_entries);
+    if (cmdline_bool_flag("ext2.enable-cache")) {
+        this->disk_cache = zalloc(sizeof(ext2_disk_cache_entry_t) * this->cache_entries);
+        this->cache_data = zalloc(this->block_size * this->cache_entries);
 
-    for (uint32_t i = 0; i < this->cache_entries; i++) {
-        this->disk_cache[i].block = this->cache_data + i * this->block_size;
+        for (uint32_t i = 0; i < this->cache_entries; i++) {
+            this->disk_cache[i].block = this->cache_data + i * this->block_size;
+        }
     }
 
     this->bgd_block_span = sizeof(ext2_bgdescriptor_t) *
@@ -213,7 +535,21 @@ used static fs_node_t* ext2_mount(block_device_t* block) {
     }
 
     ext2_inodetable_t* root_inode = read_inode(this, 2);
-    this->root = fs_create_node("");
+    this->root = fs_create_node("/");
 
+    if (!ext2_root(this, root_inode, this->root)) {
+        free(root_inode);
+        return NULL;
+    }
+
+    free(root_inode);
     return this->root;
+}
+
+static fs_node_t* ext2_mount(block_device_t* block) {
+    return mount_ext2(block);
+}
+
+void ext2_filesystem_init(void) {
+    vfs_register_filesystem("ext2", ext2_mount);
 }

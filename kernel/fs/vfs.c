@@ -2,20 +2,39 @@
 
 #include <liblox/io.h>
 #include <liblox/string.h>
+#include <liblox/hashmap.h>
 #include <liblox/tree.h>
 
 #include <kernel/spin.h>
 
+#include "filesystems.h"
+
 static fs_node_t* fs_root;
 static vfs_entry_t* vfs_root;
-static tree_t* tree;
+static tree_t* tree = NULL;
 static spin_lock_t lock = {0};
+static hashmap_t* filesystems;
+
+static void vfs_dump(tree_node_t* c, uint level) {
+    list_for_each(a, c->children) {
+        tree_node_t* at = a->value;
+        vfs_entry_t* ent = at->value;
+        printf("N: %s\n", ent->name);
+        printf("L: %d\n", level);
+        vfs_dump(at, level + 1);
+    }
+}
+
+used static void vfs_dump_tree(tree_node_t* node) {
+    printf("Tree at 0x%x\n", node);
+    vfs_dump(node, 0);
+}
 
 fs_node_t* fs_create_node(char* name) {
     size_t name_size = strlen(name);
 
     if (name_size > VFS_MAX_NAME_SIZE - 1) {
-        name_size = 255;
+        name_size = VFS_MAX_NAME_SIZE - 1;
     }
 
     fs_node_t* node = zalloc(sizeof(fs_node_t));
@@ -31,14 +50,45 @@ vfs_entry_t* vfs_create_entry(char* name) {
 }
 
 void vfs_subsystem_init(void) {
+    filesystems = hashmap_create(2);
+    tree = tree_create();
+
     fs_root = fs_create_node("[root]");
     vfs_root = vfs_create_entry("[root]");
     vfs_root->fs = fs_root;
-    tree = tree_create();
     tree_set_root(tree, vfs_root);
+    vfs_filesystems_init();
 }
 
-fs_error_t vfs_mount(char* path, fs_node_t* node) {
+fs_error_t vfs_register_filesystem(char* name, vfs_filesystem_mounter_t mounter) {
+    if (hashmap_has(filesystems, name)) {
+        return FS_ERROR_EXISTS;
+    }
+
+    hashmap_set(filesystems, name, mounter);
+    return FS_ERROR_OK;
+}
+
+fs_error_t vfs_mount(block_device_t* block, char* type, char* path) {
+    if (block == NULL) {
+        return FS_ERROR_BAD_CALL;
+    }
+
+    if (!hashmap_has(filesystems, type)) {
+        return FS_ERROR_DOES_NOT_EXIST;
+    }
+
+    vfs_filesystem_mounter_t mounter = hashmap_get(filesystems, type);
+    fs_node_t* node = mounter(block);
+    if (node == NULL) {
+        return FS_ERROR_BAD_STATE;
+    }
+
+    fs_error_t error = vfs_mount_node(path, node);
+    return error;
+}
+
+fs_error_t vfs_mount_node(char* path, fs_node_t* node) {
     if (!tree) {
         return FS_ERROR_BAD_STATE;
     }
@@ -58,9 +108,15 @@ fs_error_t vfs_mount(char* path, fs_node_t* node) {
         i++;
     }
     p[path_size] = '\0';
+    i = p + 1;
 
     if (*i == '\0') {
         vfs_entry_t* r = vfs_root;
+
+        if (r->fs) {
+            printf(WARN "%s is already mounted.\n", path);
+        }
+
         r->fs = node;
         fs_root = node;
         free(p);
@@ -112,7 +168,7 @@ fs_error_t vfs_mount(char* path, fs_node_t* node) {
     return FS_ERROR_OK;
 }
 
-fs_error_t vfs_get_child(fs_node_t* parent, char* child, fs_node_t** node) {
+fs_error_t fs_get_child(fs_node_t* parent, char* child, fs_node_t** node) {
     *node = NULL;
 
     if (parent == NULL) {
@@ -128,7 +184,7 @@ fs_error_t vfs_get_child(fs_node_t* parent, char* child, fs_node_t** node) {
         return FS_ERROR_NOT_IMPLEMENTED;
     }
 
-    return parent->child(child, node);
+    return parent->child(parent, child, node);
 }
 
 static fs_node_t* vfs_get_mount(
@@ -167,7 +223,7 @@ static fs_node_t* vfs_get_mount(
                 at = at + strlen(at) + 1;
 
                 if (entry->fs) {
-                    _tree_depth = depth;
+                    _tree_depth = _depth;
                     last = entry->fs;
                     *out_path = at;
                 }
@@ -187,7 +243,7 @@ static fs_node_t* vfs_get_mount(
     return last;
 }
 
-fs_node_t* vfs_resolve(char* _path) {
+fs_node_t* fs_resolve(char* _path) {
     if (_path == NULL) {
         return NULL;
     }
@@ -214,6 +270,7 @@ fs_node_t* vfs_resolve(char* _path) {
 
     path[path_size] = '\0';
     path_offset = path + 1;
+
     uint depth = 0;
 
     fs_node_t* mount = vfs_get_mount(path, path_depth, &path_offset, &depth);
@@ -225,14 +282,14 @@ fs_node_t* vfs_resolve(char* _path) {
 
     if (path_offset >= path + path_size) {
         free(path);
-        return NULL;
+        return mount;
     }
 
     fs_node_t* node = mount;
     fs_error_t error;
 
-    for (; depth < path_size; ++depth) {
-        error = vfs_get_child(node, path_offset, &node);
+    for (; depth < path_depth; ++depth) {
+        error = fs_get_child(node, path_offset, &node);
         if (error != FS_ERROR_OK || node == NULL) {
             free(path);
             return NULL;
@@ -250,7 +307,7 @@ fs_node_t* vfs_resolve(char* _path) {
     return NULL;
 }
 
-fs_error_t vfs_read(fs_node_t* node, size_t offset, uint8_t* buffer, size_t size) {
+fs_error_t fs_read(fs_node_t* node, size_t offset, uint8_t* buffer, size_t size) {
     if (node == NULL) {
         return FS_ERROR_BAD_CALL;
     }
@@ -259,7 +316,21 @@ fs_error_t vfs_read(fs_node_t* node, size_t offset, uint8_t* buffer, size_t size
         return FS_ERROR_NOT_IMPLEMENTED;
     }
 
-    fs_error_t error = node->read(offset, buffer, size);
+    fs_error_t error = node->read(node, offset, buffer, size);
+
+    return error;
+}
+
+fs_error_t fs_stat(fs_node_t* node, fs_stat_t* stat) {
+    if (node == NULL) {
+        return FS_ERROR_BAD_CALL;
+    }
+
+    if (node->stat == NULL) {
+        return FS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    fs_error_t error = node->stat(node, stat);
 
     return error;
 }

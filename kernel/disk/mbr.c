@@ -4,8 +4,6 @@
 #include <liblox/printf.h>
 
 #include <kernel/dispatch/events.h>
-#include <liblox/io.h>
-#include <liblox/sleep.h>
 
 bool mbr_check_signature(uint8_t* buffer, size_t size) {
     if (size < sizeof(mbr_t)) {
@@ -28,6 +26,7 @@ static block_device_error_t mbr_partition_block_read(
 ) {
     mbr_block_partition_t* part = block->internal.owner;
     block_device_t* disk = part->parent;
+    uint32_t bsect = part->mbr.lba_first_sector;
 
     if (offset > (part->mbr.sector_count * 512)) {
         return BLOCK_DEVICE_ERROR_BAD_OFFSET;
@@ -38,7 +37,7 @@ static block_device_error_t mbr_partition_block_read(
         return BLOCK_DEVICE_ERROR_OVERRUN;
     }
 
-    size_t real_offset = (part_size) + offset;
+    size_t real_offset = (bsect * 512) + offset;
     return block_device_read(disk, real_offset, buffer, size);
 }
 
@@ -100,7 +99,7 @@ static bool mbr_load_partitions(block_device_t* block, mbr_t* mbr) {
             continue;
         }
 
-        mbr_create_block_partition(block, i, part);
+        mbr_create_block_partition(block, i + 1, part);
         created = true;
     }
 
@@ -110,9 +109,7 @@ static bool mbr_load_partitions(block_device_t* block, mbr_t* mbr) {
 static bool mbr_partition_probe(block_device_t* block) {
     uint8_t mbr[512] = {0};
     if (block_device_read(block, 0, mbr, 512) != BLOCK_DEVICE_ERROR_OK) {
-        if (block_device_read(block, 0, mbr, 512) != BLOCK_DEVICE_ERROR_OK) {
-            return false;
-        }
+        return false;
     }
 
     bool is_signature_valid = mbr_check_signature(mbr, 512);
@@ -129,11 +126,7 @@ static void mbr_partition_probe_handler(void* event, void* extra) {
 
     block_device_t* block = event;
 
-    for (uint i = 1; i <= 3; i++) {
-        if (mbr_partition_probe(block)) {
-            break;
-        }
-    }
+    mbr_partition_probe(block);
 }
 
 void block_device_mbr_subsystem_init(void) {
