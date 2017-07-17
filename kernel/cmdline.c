@@ -1,9 +1,10 @@
 #include <liblox/common.h>
 #include <liblox/string.h>
+#include <liblox/printf.h>
+#include <liblox/memory.h>
+#include <liblox/io.h>
 
 #include "cmdline.h"
-
-static const uint kMaxArgLength = 256;
 
 extern char* (*arch_get_cmdline)(void);
 
@@ -15,6 +16,8 @@ char* cmdline_get(void) {
     return "";
 }
 
+#define MAX_FLAG_SIZE 256
+
 bool cmdline_bool_flag(char *name) {
     char *ptr = cmdline_get();
 
@@ -22,8 +25,8 @@ bool cmdline_bool_flag(char *name) {
         return false;
     }
 
-    char buf[kMaxArgLength];
-    memset(buf, 0, kMaxArgLength);
+    char buf[MAX_FLAG_SIZE];
+    memset(buf, 0, MAX_FLAG_SIZE);
 
     uint i = 0;
 
@@ -33,12 +36,12 @@ bool cmdline_bool_flag(char *name) {
                 return true;
             }
             i = 0;
-            memset(buf, 0, kMaxArgLength);
+            memset(buf, 0, MAX_FLAG_SIZE);
             ptr++;
             continue;
         }
 
-        if (i >= kMaxArgLength) {
+        if (i >= MAX_FLAG_SIZE) {
             ptr++;
             continue;
         }
@@ -53,4 +56,26 @@ bool cmdline_bool_flag(char *name) {
     }
 
     return false;
+}
+
+char* cmdline_read(char* name) {
+    size_t size = strlen(name);
+
+    char name_with_equals[256] = "";
+    sprintf(name_with_equals, "%s=", name);
+
+    char* cmdline = strdup(cmdline_get());
+    char* state = cmdline;
+
+    char* token;
+    while ((token = strtok(state, " ", &state)) != NULL) {
+        char* result = strstr(token, name_with_equals);
+        if (result == token) {
+            free(cmdline);
+            return strdup(token + size + 1);
+        }
+    }
+
+    free(cmdline);
+    return NULL;
 }

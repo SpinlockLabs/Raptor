@@ -260,7 +260,7 @@ static void pcnet_init(uint32_t device_pci) {
     inl((uint16_t) (state->io_base + 0x18));
     ins((uint16_t) (state->io_base + 0x14));
 
-    sleep(10);
+    // sleep(10);
 
     /* set 32-bit mode */
     outl((uint16_t) (state->io_base + 0x10), 0);

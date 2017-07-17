@@ -1,5 +1,4 @@
 #include "commands.h"
-#include "console.h"
 
 #define GROUP(n) \
     extern void debug_## n ##_init(); \
@@ -15,4 +14,5 @@ void debug_init_commands(void) {
     GROUP(time);
     GROUP(cmdline);
     GROUP(disk);
+    GROUP(fs);
 }

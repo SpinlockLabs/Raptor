@@ -10,19 +10,25 @@
 
 #include <kernel/disk/block.h>
 
+#include <kernel/fs/vfs.h>
+
 #include <kernel/network/iface.h>
 #include <kernel/network/stack/stack.h>
 
 #include <kernel/dispatch/events.h>
+#include <kernel/cpu/task.h>
 
 #include "paging.h"
 #include "heap.h"
+#include "rootfs.h"
 
 /* Architecture hooks for initialization. */
-extern void post_subsystem_init(void);
+extern void kernel_setup_devices(void);
 
 extern void tty_write_kernel_log_char(char c);
 extern void tty_write_kernel_log_string(char* msg);
+
+volatile bool kernel_initialized = false;
 
 void kernel_init(void) {
     puts(INFO "Raptor kernel v" RAPTOR_VERSION "\n");
@@ -35,12 +41,11 @@ void kernel_init(void) {
 
     events_subsystem_init();
     tty_subsystem_init();
+    vfs_subsystem_init();
     block_device_subsystem_init();
     network_iface_subsystem_init();
     network_stack_init();
     debug_console_init();
-
-    post_subsystem_init();
 
     lox_output_char_provider = tty_write_kernel_log_char;
     lox_output_string_provider = tty_write_kernel_log_string;
@@ -49,7 +54,22 @@ void kernel_init(void) {
     kernel_modules_load();
     puts(DEBUG "Kernel modules loaded.\n");
 
+    kernel_setup_devices();
     debug_console_start();
+
+    /**
+     * This flag is set to tell x86 timer IRQs
+     * to execute the CPU task queue.
+     */
+    kernel_initialized = true;
+
+    /**
+     * Flush any CPU tasks before running the
+     * CPU in idle mode.
+     */
+    cpu_task_queue_flush();
+
+    mount_rootfs();
 
     cpu_run_idle();
 }

@@ -62,7 +62,7 @@ block_device_error_t block_device_register(block_device_t* device) {
     hashmap_set(registry, device->name, device);
     spin_unlock(lock);
 
-    event_dispatch(
+    event_dispatch_async(
         "block-device:initialized",
         device
     );
@@ -86,7 +86,7 @@ block_device_error_t block_device_destroy(block_device_t* device) {
     }
 
     hashmap_remove(registry, device);
-    event_dispatch(
+    event_dispatch_async(
         "block-device:destroyed",
         name
     );

@@ -3,6 +3,7 @@
 #include <kernel/timer.h>
 
 #include <liblox/list.h>
+#include <kernel/arch/x86/irq.h>
 
 typedef struct cpu_task_t {
     task_id id;

@@ -31,6 +31,10 @@ function(mkdir PATH)
   make_directory("filesystem/${PATH}")
 endfunction()
 
+function(copy A B)
+  file(COPY "${A}" DESTINATION "${B}")
+endfunction()
+
 file(GLOB_RECURSE FSBUILD_SCRIPTS "${FS_DIR}/cmake/*.cmake")
 foreach(FSBUILD_SCRIPT ${FSBUILD_SCRIPTS})
   if(FSBUILD_SCRIPT STREQUAL "${CMAKE_CURRENT_LIST_FILE}")

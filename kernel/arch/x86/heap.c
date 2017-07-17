@@ -89,6 +89,10 @@ void* kpmalloc_kheap_expand(size_t size) {
     spin_lock(kheap_lock);
     uintptr_t address = kheap_end;
 
+    if (kheap_end + size > KERNEL_HEAP_END - 1) {
+        panic("Kernel heap grew too much.");
+    }
+
     if (kheap_end + size > kheap_alloc_point) {
         printf(
             INFO "Hit the end of the available kernel heap, expanding."
@@ -97,10 +101,14 @@ void* kpmalloc_kheap_expand(size_t size) {
             kheap_end + size
         );
 
+        bool didExpand = false;
         for (uintptr_t i = kheap_end; i < kheap_end + size; i += 0x1000) {
-            paging_heap_expand_into(i);
+            didExpand |= paging_heap_expand_into(i);
         }
-        paging_invalidate_tables();
+
+        if (didExpand) {
+            paging_invalidate_tables();
+        }
     }
 
     kheap_end += size;
