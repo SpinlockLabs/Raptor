@@ -329,3 +329,16 @@ fs_error_t fs_stat(fs_node_t* node, fs_stat_t* stat) {
 
     return error;
 }
+
+fs_error_t fs_list(fs_node_t* node, fs_list_entry_t** entry) {
+    if (node == NULL) {
+        return FS_ERROR_BAD_CALL;
+    }
+
+    if (node->list == NULL) {
+        return FS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    fs_error_t error = node->list(node, entry);
+    return error;
+}

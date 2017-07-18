@@ -86,6 +86,30 @@ static void debug_fs_cat(tty_t* tty, const char* input) {
     free(buf);
 }
 
+static void debug_fs_list(tty_t* tty, const char* input) {
+    fs_node_t* node = fs_resolve((char*) input);
+    if (node == NULL) {
+        tty_printf(tty, "VFS failed to resolve: %s\n", input);
+        return;
+    }
+
+    fs_list_entry_t* entry = NULL;
+
+    while (true) {
+        fs_error_t error = fs_list(node, &entry);
+        if (error != FS_ERROR_OK) {
+            tty_printf(tty, "VFS failed to list: %s (%d)\n", input, error);
+            return;
+        }
+
+        if (entry == NULL) {
+            break;
+        }
+
+        tty_printf(tty, "%s\n", entry->name);
+    }
+}
+
 static void debug_fs_stat(tty_t* tty, const char* input) {
     fs_node_t* node = fs_resolve((char*) input);
     if (node == NULL) {
@@ -121,4 +145,5 @@ void debug_fs_init(void) {
     debug_console_register_command("fs-stat", debug_fs_stat);
     debug_console_register_command("fs-mount", debug_fs_mount);
     debug_console_register_command("fs-cat", debug_fs_cat);
+    debug_console_register_command("fs-list", debug_fs_list);
 }

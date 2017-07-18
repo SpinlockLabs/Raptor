@@ -2,7 +2,7 @@
 
 char *cmdline = NULL;
 
-void init_cmdline(multiboot_t *mboot) {
+void init_cmdline(multiboot_t* mboot) {
     cmdline = (char*) mboot->cmdline;
 }
 
