@@ -2,6 +2,7 @@
 #include <liblox/hex.h>
 
 #include <kernel/spin.h>
+#include <kernel/paging.h>
 
 #include "heap.h"
 #include "irq.h"
@@ -142,9 +143,9 @@ void paging_install(uint32_t memsize) {
 
 void paging_invalidate_tables(void) {
     asm volatile (
-        "movl %%cr3, %%eax\n"
+    "movl %%cr3, %%eax\n"
         "movl %%eax, %%cr3\n"
-        ::: "%eax"
+    :: : "%eax"
     );
 }
 
@@ -205,7 +206,7 @@ static uint32_t first_n_frames(int n) {
     return 0xFFFFFFFF;
 }
 
-uintptr_t paging_allocate_aligned_large(uintptr_t address, size_t size, uintptr_t *phys) {
+uintptr_t paging_allocate_aligned_large(uintptr_t address, size_t size, uintptr_t* phys) {
     for (uintptr_t i = address; i < address + size; i += 0x1000) {
         clear_frame(map_to_physical(i));
     }
@@ -264,7 +265,7 @@ void paging_finalize(void) {
         dma_frame(paging_get_page(i, 1, kernel_directory), 1, 0, i);
     }
 
-    for (uintptr_t i = 0x80000; i < 0x100000; i+= 0x1000) {
+    for (uintptr_t i = 0x80000; i < 0x100000; i += 0x1000) {
         dma_frame(paging_get_page(i, 1, kernel_directory), 1, 0, i);
     }
 
@@ -307,6 +308,7 @@ void paging_finalize(void) {
         paging_get_page(i, 1, kernel_directory);
     }
 
+    current_directory = paging_clone_directory(kernel_directory);
     paging_switch_directory(kernel_directory);
 }
 
@@ -314,11 +316,11 @@ void paging_switch_directory(page_directory_t* dir) {
     current_directory = dir;
 
     asm volatile (
-        "mov %0, %%cr3\n"
+    "mov %0, %%cr3\n"
         "mov %%cr0, %%eax\n"
         "orl $0x80000000, %%eax\n"
         "mov %%eax, %%cr0\n"
-        :: "r"(dir->physicalAddr)
+        ::"r"(dir->physicalAddr)
         : "%eax"
     );
 }
@@ -394,14 +396,14 @@ void page_fault(cpu_registers_t regs) {
 
     printf(
         ERROR
-        "Segmentation fault ("
-        "present: %d, "
-        "rw: %d, "
-        "user: %d, "
-        "reserved: %d, "
-        "id: %d, "
-        "address: 0x%x, "
-        "caused by: 0x%x)\n",
+            "Segmentation fault ("
+            "present: %d, "
+            "rw: %d, "
+            "user: %d, "
+            "reserved: %d, "
+            "id: %d, "
+            "address: 0x%x, "
+            "caused by: 0x%x)\n",
         present,
         rw,
         us,
@@ -412,4 +414,68 @@ void page_fault(cpu_registers_t regs) {
     );
 
     panic(NULL);
+}
+
+extern void copy_page_physical(uint32_t, uint32_t);
+
+page_table_t* paging_clone_table(page_table_t* src, uintptr_t* phys) {
+    page_table_t* table = (page_table_t*) kpmalloc_ap(sizeof(page_table_t), phys);
+    memset(table, 0, sizeof(page_table_t));
+    uint32_t i;
+    for (i = 0; i < 1024; ++i) {
+        if (!src->pages[i].frame) {
+            continue;
+        }
+        alloc_frame(&table->pages[i], 0, 0);
+        if (src->pages[i].present) {
+            table->pages[i].present = 1;
+        }
+
+        if (src->pages[i].rw) {
+            table->pages[i].rw = 1;
+        }
+
+        if (src->pages[i].user) {
+            table->pages[i].user = 1;
+        }
+
+        if (src->pages[i].dirty) {
+            table->pages[i].dirty = 1;
+        }
+
+        if (src->pages[i].accessed) {
+            table->pages[i].accessed = 1;
+        }
+
+        copy_page_physical(src->pages[i].frame * 0x1000, table->pages[i].frame * 0x1000);
+    }
+    return table;
+}
+
+page_directory_t* paging_clone_directory(page_directory_t* src) {
+    uintptr_t phys;
+    page_directory_t* out = (page_directory_t*) kpmalloc_ap(
+        sizeof(page_directory_t),
+        &phys
+    );
+
+    memset(out, 0, sizeof(page_directory_t));
+    out->physicalAddr = phys;
+
+    for (uint32_t i = 0; i < 1024; i++) {
+        if (!src->tables[i] ||
+            (uintptr_t) src->tables[i] == (uintptr_t) 0xFFFFFFFF) {
+            continue;
+        }
+
+        if (kernel_directory->tables[i] == src->tables[i]) {
+            out->tables[i] = src->tables[i];
+            out->tablesPhysical[i] = src->tablesPhysical[i];
+        } else {
+            out->tables[i] = paging_clone_table(src->tables[i], &phys);
+            out->tablesPhysical[i] = phys | 0x07;
+        }
+    }
+
+    return out;
 }
