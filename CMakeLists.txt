@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.6)
 project(raptor C)
 
 enable_language(ASM)
@@ -22,7 +22,10 @@ endif()
 
 if(CLANG)
   cflags(-Wno-unused-command-line-argument -O0)
-  cflags(-fno-integrated-as)
+
+  if(NOT CMAKE_HOST_WIN32)
+    cflags(-fno-integrated-as)
+  endif()
 endif()
 
 include_directories(${RAPTOR_DIR})
@@ -41,7 +44,11 @@ else()
 endif()
 arch_post_init()
 
-add_subdirectory(userspace)
+if(NOT RAPTOR_CLANG_WIN)
+  add_subdirectory(userspace)
+else()
+  include(${RAPTOR_DIR}/build/cmake/windows-build.cmake)
+endif()
 
 if(TESTS)
   include(${RAPTOR_DIR}/build/cmake/tests.cmake)

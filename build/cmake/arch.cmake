@@ -16,6 +16,10 @@ set(KERNEL_C_FLAGS "${CMAKE_C_FLAGS}")
 set(KERNEL_ASM_FLAGS "${CMAKE_ASM_FLAGS}")
 set(KERNEL_LD_FLAGS "${CMAKE_C_FLAGS}")
 
+if(RAPTOR_CLANG_WIN)
+  set(KERNEL_LD_FLAGS "")
+endif()
+
 function(kernel_cflags)
   set(ARGLIST "")
   foreach(ARG ${ARGV})
@@ -23,7 +27,10 @@ function(kernel_cflags)
   endforeach()
   set(KERNEL_C_FLAGS "${KERNEL_C_FLAGS} ${ARGLIST}" PARENT_SCOPE)
   set(KERNEL_ASM_FLAGS "${KERNEL_ASM_FLAGS} ${ARGLIST}" PARENT_SCOPE)
-  set(KERNEL_LD_FLAGS "${KERNEL_LD_FLAGS} ${ARGLIST}" PARENT_SCOPE)
+
+  if(NOT RAPTOR_CLANG_WIN)
+    set(KERNEL_LD_FLAGS "${KERNEL_LD_FLAGS} ${ARGLIST}" PARENT_SCOPE)
+  endif()
 endfunction()
 
 function(kernel_ldscript LDSCRIPT)
@@ -39,6 +46,11 @@ function(arch_post_init)
   set_target_properties(lox-kernel PROPERTIES
     COMPILE_FLAGS "${KERNEL_C_FLAGS}"
   )
+
+  install(
+      TARGETS kernel
+      RUNTIME DESTINATION boot
+  )
 endfunction()
 
 kernel_cflags(
@@ -46,8 +58,11 @@ kernel_cflags(
   -nostartfiles
   -ffreestanding
   -fno-lto
-  -fno-use-linker-plugin
 )
+
+if(NOT CLANG)
+  kernel_cflags(-fno-use-linker-plugin)
+endif()
 
 if(UBSAN)
   kernel_cflags(-fsanitize=undefined)

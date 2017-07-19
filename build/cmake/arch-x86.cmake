@@ -23,13 +23,23 @@ else()
 endif()
 
 kernel_cflags(
-  -no-pie
   -fno-stack-protector
   -fno-pic
-  -I${RAPTOR_DIR}/kernel/arch/x86/acpi/include
 )
 
-kernel_ldscript(${KERNEL_DIR}/arch/x86/linker.ld)
+if(NOT CLANG)
+  kernel_cflags(-no-pie)
+endif()
+
+if(EXISTS ${RAPTOR_DIR}/kernel/arch/x86/acpi/include)
+  kernel_cflags(-I${RAPTOR_DIR}/kernel/arch/x86/acpi/include)
+endif()
+
+if(RAPTOR_CLANG_WIN)
+  kernel_ldscript("\"${KERNEL_DIR}/arch/x86/linker-llvm.ld\"")
+else()
+  kernel_ldscript("\"${KERNEL_DIR}/arch/x86/linker.ld\"")
+endif()
 
 set(QEMU_CMD_BASE
   qemu-system-i386
@@ -96,3 +106,15 @@ add_custom_target(
   SOURCES ${FS_DIR}
   USES_TERMINAL
 )
+
+if(RAPTOR_CLANG_WIN)
+    add_custom_target(qemu-windows
+      COMMAND "C:/Program Files/qemu/qemu-system-i386.exe"
+            -net user
+            -net nic,model=e1000
+            -cpu core2duo
+            -m 256
+            -kernel "${CMAKE_BINARY_DIR}/kernel.elf"
+      DEPENDS kernel
+    )
+endif()
