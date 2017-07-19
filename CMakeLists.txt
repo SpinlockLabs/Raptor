@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.6)
 project(raptor C)
 
 enable_language(ASM)
@@ -22,6 +22,7 @@ endif()
 
 if(CLANG)
   cflags(-Wno-unused-command-line-argument -O0)
+
   cflags(-fno-integrated-as)
 endif()
 
