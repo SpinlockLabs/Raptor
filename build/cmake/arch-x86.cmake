@@ -103,7 +103,7 @@ add_custom_target(
   USES_TERMINAL
 )
 
-if(WIN32)
+if(RAPTOR_WINDOWS)
     add_custom_target(qemu-windows
       COMMAND "C:/Program Files/qemu/qemu-system-i386.exe"
             -net user
@@ -111,6 +111,6 @@ if(WIN32)
             -cpu core2duo
             -m 256
             -kernel "${CMAKE_BINARY_DIR}/kernel.elf"
-      DEPENDS kernel
+      DEPENDS kernel diskimg
     )
 endif()
