@@ -23,9 +23,7 @@ endif()
 if(CLANG)
   cflags(-Wno-unused-command-line-argument -O0)
 
-  if(NOT CMAKE_HOST_WIN32)
-    cflags(-fno-integrated-as)
-  endif()
+  cflags(-fno-integrated-as)
 endif()
 
 include_directories(${RAPTOR_DIR})
@@ -44,11 +42,7 @@ else()
 endif()
 arch_post_init()
 
-if(NOT RAPTOR_CLANG_WIN)
-  add_subdirectory(userspace)
-else()
-  include(${RAPTOR_DIR}/build/cmake/windows-build.cmake)
-endif()
+add_subdirectory(userspace)
 
 if(TESTS)
   include(${RAPTOR_DIR}/build/cmake/tests.cmake)

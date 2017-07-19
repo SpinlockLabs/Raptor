@@ -35,11 +35,7 @@ if(EXISTS ${RAPTOR_DIR}/kernel/arch/x86/acpi/include)
   kernel_cflags(-I${RAPTOR_DIR}/kernel/arch/x86/acpi/include)
 endif()
 
-if(RAPTOR_CLANG_WIN)
-  kernel_ldscript("\"${KERNEL_DIR}/arch/x86/linker-llvm.ld\"")
-else()
-  kernel_ldscript("\"${KERNEL_DIR}/arch/x86/linker.ld\"")
-endif()
+kernel_ldscript("${KERNEL_DIR}/arch/x86/linker.ld")
 
 set(QEMU_CMD_BASE
   qemu-system-i386
@@ -107,7 +103,7 @@ add_custom_target(
   USES_TERMINAL
 )
 
-if(RAPTOR_CLANG_WIN)
+if(WIN32)
     add_custom_target(qemu-windows
       COMMAND "C:/Program Files/qemu/qemu-system-i386.exe"
             -net user
