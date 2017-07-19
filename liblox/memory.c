@@ -17,6 +17,16 @@ __attribute__((malloc)) void* zalloc(size_t size) {
     return ptr;
 }
 
+__attribute__((malloc)) void* realloc(void* ptr, size_t size) {
+    if (lox_realloc_provider != NULL) {
+        return lox_realloc_provider(ptr, size);
+    }
+    void* ret = malloc(size);
+    memcpy(ret, ptr, size);
+    free(ptr);
+    return ret;
+}
+
 void free(void *ptr) {
     if (lox_free_provider != NULL) {
         lox_free_provider(ptr);

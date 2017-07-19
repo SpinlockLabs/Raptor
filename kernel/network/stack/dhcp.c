@@ -97,6 +97,8 @@ static void dhcp_accept_offer(network_iface_t* iface, uint32_t offer) {
     dhcp_send(iface, options, sizeof(options));
 
     state->accepted = true;
+
+    hashmap_set(iface->_stack, "source", (void*) ntohl(state->offer));
 }
 
 static void handle_potential_dhcp_reply(void* event, void* extra) {
@@ -110,11 +112,8 @@ static void handle_potential_dhcp_reply(void* event, void* extra) {
     }
 
     ipv4_packet_t* ipv4 = pkt->ipv4;
-    if (ipv4->destination != dhcp_request_dest.address) {
-        return;
-    }
 
-    if (ipv4->protocol != IPV4_PROTOCOL_UDP) {
+    if (ipv4->protocol != IP_PROTOCOL_UDP) {
         return;
     }
     udp_packet_t* udp = (udp_packet_t*) pkt->ipv4->payload;
@@ -130,6 +129,7 @@ static void handle_potential_dhcp_reply(void* event, void* extra) {
     }
 
     dhcp_internal_state_t* state = get_state(iface);
+
     if (state->accepted) {
         return;
     }
@@ -140,11 +140,41 @@ static void handle_potential_dhcp_reply(void* event, void* extra) {
         return;
     }
 
-    uint8_t* offer8 = ((uint8_t*) &offer);
     info("Interface %s received a DHCP offer for %d.%d.%d.%d\n",
-        iface->name, offer8[0], offer8[1], offer8[2], offer8[3]);
+        iface->name, ip_cp(offer));
 
     dhcp_accept_offer(iface, offer);
+
+    uint32_t gateway = 0;
+
+    size_t i = sizeof(dhcp_packet_t);
+    size_t j = 0;
+    while (i < udp->length) {
+        uint8_t type = dhcp->options[j];
+        uint8_t len = dhcp->options[j + 1];
+        uint8_t* data = &dhcp->options[j + 2];
+
+        if (type == 255) {
+            break;
+        }
+
+        if (type == 3) {
+            gateway = *(uint32_t*)(data);
+        }
+
+        j += len + 2;
+        i += len + 2;
+    }
+
+    dbg("Interface %s was told %d.%d.%d.%d is the gateway\n",
+         iface->name, ip_cp(gateway));
+
+    hashmap_set(iface->_stack, "gateway", (void*) ntohl(gateway));
+
+    event_dispatch(
+        "network:stack:iface-update",
+        iface
+    );
 }
 
 void network_stack_dhcp_init(void) {

@@ -1,0 +1,258 @@
+#include "arp.h"
+#include "stack.h"
+#include "log.h"
+
+#include <liblox/hashmap.h>
+#include <liblox/net.h>
+
+#include <kernel/dispatch/events.h>
+#include <kernel/network/ethernet.h>
+
+typedef struct arp_state {
+    hashmap_t* table;
+} arp_state_t;
+
+static arp_state_t* get_state(network_iface_t* iface) {
+    if (iface == NULL) {
+        return NULL;
+    }
+    return hashmap_get(iface->_stack, "arp");
+}
+
+typedef struct arp_entry {
+    ipv4_address_t address;
+    uint8_t mac[6];
+} arp_entry_t;
+
+static void ask(network_iface_t* iface, uint32_t addr) {
+    if (iface->class_type != IFACE_CLASS_ETHERNET) {
+        return;
+    }
+
+    uint32_t source = (uint32_t) hashmap_get(iface->_stack, "source");
+
+    if (source == 0) {
+        return;
+    }
+
+    addr = ntohl(addr);
+    source = ntohl(source);
+
+    arp_packet_t* pkt = zalloc(sizeof(arp_packet_t));
+
+    pkt->htype = ntohs(1);
+    pkt->proto = ntohs(0x0800);
+    pkt->hlen = 6;
+    pkt->plen = 4;
+    pkt->oper = ntohs(1);
+
+    uint8_t mac[6] = {0};
+    network_iface_error_t error = network_iface_get_mac(iface, mac);
+
+    if (error != IFACE_ERR_OK) {
+        return;
+    }
+
+    for (uint i = 0; i < 5; i++) {
+        pkt->sender_ha[i] = mac[i];
+    }
+    pkt->sender_ip = source;
+    pkt->target_ip = addr;
+
+    dbg(
+        "Asking interface %s who owns %d.%d.%d.%d\n",
+        iface->name,
+        ip_cp(addr)
+    );
+
+    network_stack_send_packet(
+        iface,
+        (uint8_t*) pkt,
+        sizeof(arp_packet_t),
+        PACKET_CLASS_ARP,
+        0
+    );
+}
+
+static void tell(network_iface_t* iface, uint32_t who, const uint8_t who_hw[6]) {
+    if (iface->class_type != IFACE_CLASS_ETHERNET) {
+        return;
+    }
+
+    uint32_t source = (uint32_t) hashmap_get(iface->_stack, "source");
+
+    if (source == 0) {
+        return;
+    }
+
+    source = ntohl(source);
+    who = ntohl(who);
+
+    arp_packet_t* pkt = zalloc(sizeof(arp_packet_t));
+
+    pkt->htype = ntohs(1);
+    pkt->proto = ntohs(0x0800);
+    pkt->hlen = 6;
+    pkt->plen = 4;
+    pkt->oper = ntohs(2);
+
+    uint8_t mac[6] = {0};
+    network_iface_error_t error = network_iface_get_mac(iface, mac);
+
+    if (error != IFACE_ERR_OK) {
+        return;
+    }
+
+    for (uint i = 0; i < 5; i++) {
+        pkt->sender_ha[i] = mac[i];
+    }
+
+    for (uint i = 0; i < 5; i++) {
+        pkt->target_ha[i] = who_hw[i];
+    }
+
+    pkt->sender_ip = source;
+    pkt->target_ip = who;
+
+    dbg(
+        "Telling %d.%d.%d.%d on interface %s we own %d.%d.%d.%d\n",
+        ip_cp(who),
+        iface->name,
+        ip_cp(source)
+    );
+
+    network_stack_send_packet(
+        iface,
+        (uint8_t*) pkt,
+        sizeof(arp_packet_t),
+        PACKET_CLASS_ARP,
+        0
+    );
+}
+
+static void handle_config_change(void* event, void* extra) {
+    unused(extra);
+
+    network_iface_t* iface = event;
+    uint32_t gw = (uint32_t) hashmap_get(iface->_stack, "gateway");
+
+    if (gw == 0) {
+        return;
+    }
+
+    ask(iface, gw);
+}
+
+static void handle_potential_arp(void* event, void* extra) {
+    unused(extra);
+
+    raw_packet_t* raw = event;
+
+    if (raw->iface_class_type != IFACE_CLASS_ETHERNET) {
+        return;
+    }
+
+    char* iface_name = raw->iface;
+    network_iface_t* iface = network_iface_get(iface_name);
+
+    if (iface == NULL) {
+        return;
+    }
+
+    ethernet_packet_t* eth = (ethernet_packet_t*) raw->buffer;
+
+    if (ntohs(eth->type) != ETH_TYPE_ARP) {
+        return;
+    }
+
+    arp_state_t* state = get_state(iface);
+    arp_packet_t* arp = (arp_packet_t*) eth->payload;
+
+    uint16_t oper = ntohs(arp->oper);
+    if (oper == 1) {
+        tell(iface, ntohl(arp->sender_ip), arp->sender_ha);
+    }
+
+    if (oper == 2) {
+        arp_entry_t* entry = hashmap_get(state->table, (void*) arp->sender_ip);
+
+        if (entry == NULL) {
+            entry = zalloc(sizeof(arp_entry_t));
+            hashmap_set(state->table, (void*) arp->sender_ip, entry);
+        }
+
+        for (uint i = 0; i < 5; i++) {
+            entry->mac[i] = arp->sender_ha[i];
+        }
+
+        dbg(
+            "Interface %s was told that %d.%d.%d.%d is %2x:%2x:%2x:%2x:%2x:%2x\n",
+            iface->name,
+            ip_cp(arp->sender_ip),
+            entry->mac[0],
+            entry->mac[1],
+            entry->mac[2],
+            entry->mac[3],
+            entry->mac[4],
+            entry->mac[5]
+        );
+    }
+}
+
+static void handle_interface_up(void* event, void* extra) {
+    unused(extra);
+
+    network_iface_t* iface = event;
+    arp_state_t* state = zalloc(sizeof(arp_state_t));
+    state->table = hashmap_create_int(2);
+    hashmap_set(iface->_stack, "arp", state);
+}
+
+static void handle_interface_down(void* event, void* extra) {
+    unused(extra);
+
+    network_iface_t* iface = event;
+    hashmap_remove(iface->_stack, "arp");
+}
+
+void network_stack_arp_init(void) {
+    event_add_handler(
+        "network:stack:raw:packet-receive",
+        handle_potential_arp,
+        NULL
+    );
+
+    event_add_handler(
+        "network:stack:iface-up",
+        handle_interface_up,
+        NULL
+    );
+
+    event_add_handler(
+        "network:stack:iface-down",
+        handle_interface_down,
+        NULL
+    );
+
+    event_add_handler(
+        "network:stack:iface-update",
+        handle_config_change,
+        NULL
+    );
+}
+
+void arp_lookup(network_iface_t* iface, uint32_t addr, uint8_t hw[6]) {
+    arp_state_t* state = get_state(iface);
+    if (state == NULL) {
+        return;
+    }
+
+    arp_entry_t* entry = hashmap_get(state->table, (void*) addr);
+    if (entry == NULL) {
+        return;
+    }
+
+    for (uint i = 0; i < 5; i++) {
+        hw[i] = entry->mac[i];
+    }
+}

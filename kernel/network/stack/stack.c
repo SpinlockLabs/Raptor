@@ -3,8 +3,12 @@
 #include <liblox/hashmap.h>
 #include <kernel/dispatch/events.h>
 
+#include "arp.h"
+#include "icmp.h"
 #include "ethernet.h"
 #include "dhcp.h"
+#include "route/layer.h"
+
 #include "log.h"
 
 static void network_stack_handle_untranslated_receive(
@@ -118,6 +122,9 @@ void network_stack_send_packet(
 }
 
 void network_stack_init(void) {
+    network_stack_arp_init();
+    network_stack_icmp_init();
+    network_stack_route_init();
     network_stack_ethernet_init();
     network_stack_dhcp_init();
 

@@ -7,18 +7,12 @@
 
 #include <liblox/net.h>
 #include <liblox/string.h>
+#include <liblox/hashmap.h>
 
 #include <kernel/network/ethernet.h>
 #include <kernel/dispatch/events.h>
 
-static const uint8_t broadcast[6] = {
-    255,
-    255,
-    255,
-    255,
-    255,
-    255
-};
+#include "arp.h"
 
 static bool is_ours(network_iface_t* iface, ethernet_packet_t* packet) {
     uint8_t our_mac[6];
@@ -99,6 +93,11 @@ static void handle_ethernet_packet_send(void* event, void* extra) {
         return;
     }
 
+    uint8_t dest[6] = {255, 255, 255, 255, 255, 255};
+
+    uint32_t gw = (uint32_t) hashmap_get(iface->_stack, "gateway");
+    arp_lookup(iface, gw, dest);
+
     uint8_t mac[6];
     network_iface_get_mac(iface, mac);
     size_t payload_size = ntohs(out->length);
@@ -106,7 +105,7 @@ static void handle_ethernet_packet_send(void* event, void* extra) {
     ethernet_packet_t* ether = zalloc(total_size);
     ether->type = htons(ether_type);
     memcpy(&ether->source, mac, 6);
-    memcpy(&ether->destination, broadcast, 6);
+    memcpy(&ether->destination, dest, 6);
     memcpy(&ether->payload, out->buffer, payload_size);
 
     network_iface_send(iface, (uint8_t*) ether, total_size);

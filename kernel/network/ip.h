@@ -4,10 +4,12 @@
 #include <stdint.h>
 
 #include <liblox/common.h>
+#include <stdbool.h>
 
 #include "udp.h"
 
-#define IPV4_PROTOCOL_UDP 17
+#define IP_PROTOCOL_UDP 17
+#define IP_PROTOCOL_ICMP 1
 
 typedef union ipv4_address {
     struct {
@@ -38,12 +40,20 @@ typedef struct ipv4_packet {
     uint8_t payload[];
 } packed ipv4_packet_t;
 
+typedef struct ip_packet_moving {
+    union {
+        ipv4_packet_t ipv4;
+    };
+    char* iface;
+} packed ip_packet_moving_t;
+
 typedef struct udp_ipv4_packet {
     ipv4_packet_t ipv4;
     udp_packet_t udp;
     uint8_t payload[];
 } packed udp_ipv4_packet_t;
 
-uint16_t ipv4_calculate_checksum(ipv4_packet_t* p);
+uint16_t ip_calculate_checksum(void* p, size_t width);
 udp_ipv4_packet_t* ipv4_create_udp_packet(size_t payload_size);
 size_t ipv4_finalize_packet(ipv4_packet_t* p, size_t payload_size);
+bool ipv4_cidr_match(ipv4_address_cidr_t* cidr, ipv4_address_t* address);
