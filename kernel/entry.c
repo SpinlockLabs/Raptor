@@ -30,8 +30,6 @@ extern void tty_write_kernel_log_string(char* msg);
 
 volatile bool kernel_initialized = false;
 
-void* (*lox_realloc_provider)(void*, size_t) = NULL;
-
 void kernel_init(void) {
     puts(INFO "Raptor kernel v" RAPTOR_VERSION "\n");
 

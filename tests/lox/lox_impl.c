@@ -42,6 +42,6 @@ void (*lox_output_string_provider)(char*) = __output_string;
 void (*lox_output_char_provider)(char) = __output_char;
 void* (*lox_allocate_provider)(size_t) = __malloc;
 void (*lox_free_provider)(void*) = __free;
-void* (*lox_realloc_provider)(void*, size_t) = __realloc;
+void* (*lox_reallocate_provider)(void*, size_t) = __realloc;
 void (*lox_sleep_provider)(ulong) = __sleep;
 void (*lox_abort_provider)(char*) = __abort;

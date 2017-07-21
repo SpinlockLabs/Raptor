@@ -21,6 +21,10 @@ void* kheap_allocate(size_t size) {
     return rkmalloc_allocate(kheap, size);
 }
 
+void* kheap_reallocate(void* ptr, size_t size) {
+    return rkmalloc_resize(kheap, ptr, size);
+}
+
 void kheap_free(void* ptr) {
     rkmalloc_free(kheap, ptr);
 }
@@ -148,4 +152,5 @@ size_t kpused(void) {
 }
 
 void* (*lox_allocate_provider)(size_t) = kheap_allocate;
+void* (*lox_reallocate_provider)(void* ptr, size_t size) = kheap_reallocate;
 void (*lox_free_provider)(void* ptr) = kheap_free;

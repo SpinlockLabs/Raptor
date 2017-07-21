@@ -18,8 +18,8 @@ __attribute__((malloc)) void* zalloc(size_t size) {
 }
 
 __attribute__((malloc)) void* realloc(void* ptr, size_t size) {
-    if (lox_realloc_provider != NULL) {
-        return lox_realloc_provider(ptr, size);
+    if (lox_reallocate_provider != NULL) {
+        return lox_reallocate_provider(ptr, size);
     }
     void* ret = malloc(size);
     memcpy(ret, ptr, size);
