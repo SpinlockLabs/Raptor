@@ -37,5 +37,5 @@ typedef struct process {
     scheduler_state_t scheduler;
 } process_t;
 
-volatile pid_t process_get_next_pid(void);
-volatile process_t* process_get_current(void);
+pid_t process_get_next_pid(void);
+process_t* process_get_current(void);

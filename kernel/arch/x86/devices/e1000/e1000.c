@@ -67,7 +67,7 @@ typedef struct e1000_state {
 typedef struct e1000_iface {
     network_iface_t* iface;
     e1000_state_t* state;
-    task_id poll_task;
+    ktask_id poll_task;
 } e1000_iface_t;
 
 static void write_command(e1000_state_t* state, uint16_t addr, uint32_t val) {
@@ -323,7 +323,7 @@ static uint8_t* get_iface_mac(network_iface_t* iface) {
 
 static network_iface_error_t iface_destroy(network_iface_t* iface) {
     e1000_iface_t* net = iface->data;
-    cpu_task_cancel(net->poll_task);
+    ktask_cancel(net->poll_task);
 
     hashmap_remove(e1000_irqs, (void*) net->state->irq);
     free(net->state);
@@ -452,7 +452,7 @@ static void e1000_device_init(uint32_t device_pci) {
 
     network_iface_register(iface);
 
-    net->poll_task = cpu_task_repeat(1, dequeue_packet_task, net);
+    net->poll_task = ktask_repeat(1, dequeue_packet_task, net);
 }
 
 static void find_e1000(uint32_t device, uint16_t vid, uint16_t did,

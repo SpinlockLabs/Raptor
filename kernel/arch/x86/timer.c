@@ -15,7 +15,7 @@ static int timer_callback(cpu_registers_t* regs) {
 
     timer_ticks++;
     if (kernel_initialized) {
-        cpu_task_queue_flush();
+        ktask_queue_flush();
     }
 
     return 1;

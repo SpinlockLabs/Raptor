@@ -28,7 +28,7 @@ void spin_wait(volatile int* addr, volatile int* waiters) {
 
     while (*addr) {
         if (kernel_initialized) {
-            cpu_task_queue_flush();
+            ktask_queue_flush();
         } else {
             asm("hlt");
         }
@@ -59,7 +59,7 @@ void spin_unlock(spin_lock_t lock) {
     if (lock[0]) {
         arch_atomic_store(lock, 0);
         if (lock[1] && kernel_initialized) {
-            cpu_task_queue_flush();
+            ktask_queue_flush();
         }
     }
 }

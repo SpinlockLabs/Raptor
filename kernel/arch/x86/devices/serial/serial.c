@@ -56,7 +56,7 @@ static void tty_serial_write(tty_t* tty, const uint8_t* buffer, size_t len) {
 
 static void tty_serial_destroy(tty_t* tty) {
     tty_serial_t* serial = tty->data;
-    cpu_task_cancel(serial->poll_task);
+    ktask_cancel(serial->poll_task);
 
     free(tty->data);
     free(tty);
@@ -99,6 +99,6 @@ tty_serial_t* tty_create_serial(char* name, uint index) {
     tty->data = serial;
     tty->write = tty_serial_write;
     tty->destroy = tty_serial_destroy;
-    serial->poll_task = cpu_task_repeat(1, serial_poll, tty);
+    serial->poll_task = ktask_repeat(1, serial_poll, tty);
     return serial;
 }

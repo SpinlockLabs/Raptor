@@ -46,7 +46,7 @@ typedef struct pcnet_state {
 
 typedef struct pcnet_network_iface {
     network_iface_t* iface;
-    task_id poll_task;
+    ktask_id poll_task;
     pcnet_state_t* state;
 } pcnet_network_iface_t;
 
@@ -220,7 +220,7 @@ static uint8_t* pcnet_get_iface_mac(network_iface_t* iface) {
 
 static network_iface_error_t pcnet_iface_destroy(network_iface_t* iface) {
     pcnet_network_iface_t* net = iface->data;
-    cpu_task_cancel(net->poll_task);
+    ktask_cancel(net->poll_task);
 
     hashmap_remove(pcnet_irqs, (void*) net->state->irq);
     free(net->state);
@@ -392,7 +392,7 @@ static void pcnet_init(uint32_t device_pci) {
 
     network_iface_register(pcnet_iface);
 
-    dat->poll_task = cpu_task_repeat(1, dequeue_packet_task, dat);
+    dat->poll_task = ktask_repeat(1, dequeue_packet_task, dat);
 }
 
 static void find_pcnet(uint32_t device, uint16_t vendor_id, uint16_t device_id, void* extra) {
