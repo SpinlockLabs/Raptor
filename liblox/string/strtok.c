@@ -1,4 +1,4 @@
-#include "string.h"
+#include "../string.h"
 
 char* strtok(char* restrict s, const char* restrict sep, char** restrict p) {
     if (!s && !(s = *p)) {

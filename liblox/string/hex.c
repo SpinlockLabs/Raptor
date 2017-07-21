@@ -1,4 +1,4 @@
-#include "hex.h"
+#include "../hex.h"
 
 void puthex(int value) {
     char buf[256];

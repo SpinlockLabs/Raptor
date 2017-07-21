@@ -1,6 +1,6 @@
-#include "common.h"
-#include "list.h"
-#include "string.h"
+#include "../common.h"
+#include "../list.h"
+#include "../string.h"
 
 #define list_invalid_index(list, idx) (idx) >= (list)->size
 

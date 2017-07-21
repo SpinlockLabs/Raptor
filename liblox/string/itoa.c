@@ -1,3 +1,5 @@
+#include "../string.h"
+
 char* itoa(int value, char* str, int base) {
     char *rc;
     char *ptr;

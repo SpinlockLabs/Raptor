@@ -1,5 +1,5 @@
-#include "bitset.h"
-#include "string.h"
+#include "../bitset.h"
+#include "../string.h"
 
 #define CEIL(NUMBER, BASE) \
     (((NUMBER) + (BASE) - 1) & ~((BASE) - 1))

@@ -1,6 +1,6 @@
-#include "string.h"
-#include "memory.h"
-#include "common.h"
+#include "../string.h"
+#include "../memory.h"
+#include "../common.h"
 
 char* strdup(const char* s) {
     size_t l = strlen(s);

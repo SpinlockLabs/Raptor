@@ -1,4 +1,4 @@
-#include "string.h"
+#include "../string.h"
 
 void reverse(char* str, int len) {
     int start = 0;

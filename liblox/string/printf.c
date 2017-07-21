@@ -1,6 +1,6 @@
 /* Implementation of printf, taken from Toaruos, all credits to that project. */
 
-#include "va_list.h"
+#include "../va_list.h"
 
 #include <stddef.h>
 #include <stdint.h>

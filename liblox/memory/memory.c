@@ -1,6 +1,6 @@
-#include "lox-internal.h"
-#include "memory.h"
-#include "string.h"
+#include "../lox-internal.h"
+#include "../memory.h"
+#include "../string.h"
 
 __attribute__((malloc)) void* malloc(size_t size) {
     if (lox_allocate_provider != NULL) {

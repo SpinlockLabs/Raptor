@@ -1,5 +1,5 @@
-#include "lox-internal.h"
-#include "printf.h"
+#include "../lox-internal.h"
+#include "../printf.h"
 
 void puts(char *msg) {
     if (lox_output_string_provider != NULL) {

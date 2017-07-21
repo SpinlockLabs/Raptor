@@ -1,6 +1,6 @@
-#include "list.h"
-#include "hashmap.h"
-#include "string.h"
+#include "../list.h"
+#include "../hashmap.h"
+#include "../string.h"
 
 uint hashmap_string_hash(void* _key) {
     uint hash = 0;
