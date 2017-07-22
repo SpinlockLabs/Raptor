@@ -51,7 +51,7 @@ size_t ipv4_finalize_packet(ipv4_packet_t* p, size_t payload_size) {
 
     p->checksum = htons(ip_calculate_checksum(p, 10));
 
-    return p->length;
+    return ntohs(p->length);
 }
 
 bool ipv4_cidr_match(ipv4_address_cidr_t* cidr, ipv4_address_t* address) {

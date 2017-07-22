@@ -1,4 +1,5 @@
 #include "arp.h"
+#include "config.h"
 #include "stack.h"
 #include "log.h"
 
@@ -8,6 +9,11 @@
 #include <kernel/dispatch/events.h>
 #include <kernel/network/ethernet.h>
 
+#define copy_mac(target, src) \
+        for (uint i = 0; i <= 5; i++) { \
+            (target)[i] = (src)[i]; \
+        }
+
 typedef struct arp_state {
     hashmap_t* table;
 } arp_state_t;
@@ -16,7 +22,7 @@ static arp_state_t* get_state(network_iface_t* iface) {
     if (iface == NULL) {
         return NULL;
     }
-    return hashmap_get(iface->_stack, "arp");
+    return hashmap_get(iface->stack, "arp");
 }
 
 typedef struct arp_entry {
@@ -29,7 +35,10 @@ static void ask(network_iface_t* iface, uint32_t addr) {
         return;
     }
 
-    uint32_t source = (uint32_t) hashmap_get(iface->_stack, "source");
+    netconf_t* conf = netconf_get(iface);
+    netconf_lock(conf);
+    uint32_t source = conf->ipv4.source;
+    netconf_unlock(conf);
 
     if (source == 0) {
         return;
@@ -53,9 +62,8 @@ static void ask(network_iface_t* iface, uint32_t addr) {
         return;
     }
 
-    for (uint i = 0; i <= 5; i++) {
-        pkt->sender_ha[i] = mac[i];
-    }
+    copy_mac(pkt->sender_ha, mac);
+
     pkt->sender_ip = source;
     pkt->target_ip = addr;
 
@@ -79,7 +87,10 @@ static void tell(network_iface_t* iface, uint32_t who, const uint8_t who_hw[6]) 
         return;
     }
 
-    uint32_t source = (uint32_t) hashmap_get(iface->_stack, "source");
+    netconf_t* conf = netconf_get(iface);
+    netconf_lock(conf);
+    uint32_t source = conf->ipv4.source;
+    netconf_unlock(conf);
 
     if (source == 0) {
         return;
@@ -103,23 +114,11 @@ static void tell(network_iface_t* iface, uint32_t who, const uint8_t who_hw[6]) 
         return;
     }
 
-    for (uint i = 0; i <= 5; i++) {
-        pkt->sender_ha[i] = mac[i];
-    }
-
-    for (uint i = 0; i <= 5; i++) {
-        pkt->target_ha[i] = who_hw[i];
-    }
+    copy_mac(pkt->sender_ha, mac);
+    copy_mac(pkt->target_ha, who_hw);
 
     pkt->sender_ip = source;
     pkt->target_ip = who;
-
-    dbg(
-        "Telling %d.%d.%d.%d on interface %s we own %d.%d.%d.%d\n",
-        ip_cp(who),
-        iface->name,
-        ip_cp(source)
-    );
 
     network_stack_send_packet(
         iface,
@@ -134,7 +133,7 @@ static void handle_config_change(void* event, void* extra) {
     unused(extra);
 
     network_iface_t* iface = event;
-    uint32_t gw = (uint32_t) hashmap_get(iface->_stack, "gateway");
+    uint32_t gw = (uint32_t) hashmap_get(iface->stack, "gateway");
 
     if (gw == 0) {
         return;
@@ -181,20 +180,13 @@ static void handle_potential_arp(void* event, void* extra) {
             hashmap_set(state->table, (void*) arp->sender_ip, entry);
         }
 
-        for (uint i = 0; i <= 5; i++) {
-            entry->mac[i] = arp->sender_ha[i];
-        }
+        copy_mac(entry->mac, arp->sender_ha);
 
         dbg(
-            "Interface %s was told that %d.%d.%d.%d is %2x:%2x:%2x:%2x:%2x:%2x\n",
+            "Interface %s was told that " L_IP_FMT " is " L_MAC_FMT "\n",
             iface->name,
             ip_cp(arp->sender_ip),
-            entry->mac[0],
-            entry->mac[1],
-            entry->mac[2],
-            entry->mac[3],
-            entry->mac[4],
-            entry->mac[5]
+            mac_cp(entry->mac)
         );
     }
 }
@@ -205,14 +197,14 @@ static void handle_interface_up(void* event, void* extra) {
     network_iface_t* iface = event;
     arp_state_t* state = zalloc(sizeof(arp_state_t));
     state->table = hashmap_create_int(2);
-    hashmap_set(iface->_stack, "arp", state);
+    hashmap_set(iface->stack, "arp", state);
 }
 
 static void handle_interface_down(void* event, void* extra) {
     unused(extra);
 
     network_iface_t* iface = event;
-    hashmap_remove(iface->_stack, "arp");
+    hashmap_remove(iface->stack, "arp");
 }
 
 void network_stack_arp_init(void) {
@@ -241,7 +233,7 @@ void network_stack_arp_init(void) {
     );
 }
 
-void arp_lookup(network_iface_t* iface, uint32_t addr, uint8_t hw[6]) {
+void arp_lookup(network_iface_t* iface, uint32_t addr, uint8_t* hw) {
     arp_state_t* state = get_state(iface);
     if (state == NULL) {
         return;
@@ -252,9 +244,7 @@ void arp_lookup(network_iface_t* iface, uint32_t addr, uint8_t hw[6]) {
         return;
     }
 
-    for (uint i = 0; i <= 5; i++) {
-        hw[i] = entry->mac[i];
-    }
+    copy_mac(hw, entry->mac);
 }
 
 list_t* arp_get_known(network_iface_t* iface) {

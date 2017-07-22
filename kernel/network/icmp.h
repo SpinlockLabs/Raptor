@@ -23,7 +23,9 @@ typedef struct icmp4_packet {
             uint16_t _unused;
             uint16_t mtu;
         } fragment;
-    } data;
+    } info;
+
+    uint8_t payload[];
 } packed icmp4_packet_t;
 
 void icmp4_finalize(icmp4_packet_t*);

@@ -1,11 +1,9 @@
 #include "pcnet.h"
 
 #include <liblox/list.h>
-#include <liblox/hashmap.h>
 #include <liblox/printf.h>
 #include <liblox/string.h>
 #include <liblox/io.h>
-#include <liblox/sleep.h>
 
 #include <kernel/spin.h>
 #include <kernel/cpu/task.h>
@@ -143,7 +141,10 @@ static void dequeue_packet_task(void* extra) {
     }
 }
 
-static network_iface_error_t pcnet_send_packet(network_iface_t* iface, uint8_t* payload, size_t payload_size) {
+static network_iface_error_t pcnet_send_packet(
+    network_iface_t* iface,
+    uint8_t* payload,
+    size_t payload_size) {
     unused(iface);
 
     pcnet_network_iface_t* net = iface->data;
@@ -178,16 +179,9 @@ static network_iface_error_t pcnet_send_packet(network_iface_t* iface, uint8_t* 
 }
 
 static network_iface_t* pcnet_iface = NULL;
-static hashmap_t* pcnet_irqs = NULL;
+static list_t* pcnet_list = NULL;
 
-static int pcnet_irq_handler(cpu_registers_t* r) {
-    uint32_t irq_id = r->int_no - 32;
-    pcnet_network_iface_t* iface = hashmap_get(pcnet_irqs, (void*) irq_id);
-
-    if (iface == NULL) {
-        return 0;
-    }
-
+static int pcnet_interrupt(pcnet_network_iface_t* iface) {
     pcnet_state_t* state = iface->state;
     write_csr32(state, 0, read_csr32(state, 0) | 0x0400);
     irq_ack(state->irq);
@@ -209,6 +203,19 @@ static int pcnet_irq_handler(cpu_registers_t* r) {
     return 1;
 }
 
+static int pcnet_irq_handler(cpu_registers_t* r) {
+    unused(r);
+
+    bool handled = false;
+    list_for_each(node, pcnet_list) {
+        pcnet_network_iface_t* iface = node->value;
+        if (pcnet_interrupt(iface) == 1) {
+            handled = true;
+        }
+    }
+    return handled ? 1 : 0;
+}
+
 static uint8_t* pcnet_get_iface_mac(network_iface_t* iface) {
     unused(iface);
 
@@ -222,7 +229,9 @@ static network_iface_error_t pcnet_iface_destroy(network_iface_t* iface) {
     pcnet_network_iface_t* net = iface->data;
     ktask_cancel(net->poll_task);
 
-    hashmap_remove(pcnet_irqs, (void*) net->state->irq);
+    int_disable();
+    list_remove(list_find(pcnet_list, net));
+    int_enable();
     free(net->state);
     free(net);
     free(iface->name);
@@ -372,7 +381,9 @@ static void pcnet_init(uint32_t device_pci) {
     csr0 |= (1 << 1);
     write_csr32(state, 0, csr0);
 
-    size_t idx = hashmap_count(pcnet_irqs);
+    int_disable();
+    size_t idx = pcnet_list->size;
+    int_enable();
     char* name = zalloc(16);
     sprintf(name, "pcnet%d", (int) idx);
     pcnet_iface = network_iface_create(name);
@@ -381,7 +392,7 @@ static void pcnet_init(uint32_t device_pci) {
     dat->state = state;
     dat->iface = pcnet_iface;
 
-    hashmap_set(pcnet_irqs, (void*) state->irq, dat);
+    list_add(pcnet_list, dat);
     irq_add_handler(state->irq, &pcnet_irq_handler);
 
     pcnet_iface->class_type = IFACE_CLASS_ETHERNET;
@@ -404,6 +415,6 @@ static void find_pcnet(uint32_t device, uint16_t vendor_id, uint16_t device_id, 
 }
 
 void pcnet_setup(void) {
-    pcnet_irqs = hashmap_create_int(5);
+    pcnet_list = list_create();
     pci_scan(&find_pcnet, -1, NULL);
 }

@@ -282,7 +282,7 @@ void paging_finalize(void) {
     }
 
     /* Install the page fault handler. */
-    isr_add_handler(14, (irq_handler_t) page_fault);
+    isr_add_handler(14, page_fault);
 
     /* Store the physical address of the physical table. */
     kernel_directory->physicalAddr = (uintptr_t) kernel_directory->tablesPhysical;
@@ -383,16 +383,18 @@ void paging_remove_map(uintptr_t logical, size_t size) {
     unused(size);
 }
 
-void page_fault(cpu_registers_t regs) {
+void page_fault(cpu_registers_t* regs) {
     int_disable();
     uint32_t faulting_address;
     asm volatile("mov %%cr2, %0" : "=r" (faulting_address));
 
-    int present = !(regs.err_code & 0x1) ? 1 : 0;
-    int rw = (regs.err_code & 0x2) ? 1 : 0;
-    int us = (regs.err_code & 0x4) ? 1 : 0;
-    int reserved = (regs.err_code & 0x8) ? 1 : 0;
-    int id = (regs.err_code & 0x10) ? 1 : 0;
+    int present = !(regs->err_code & 0x1) ? 1 : 0;
+    int rw = (regs->err_code & 0x2) ? 1 : 0;
+    int us = (regs->err_code & 0x4) ? 1 : 0;
+    int reserved = (regs->err_code & 0x8) ? 1 : 0;
+    int id = (regs->err_code & 0x10) ? 1 : 0;
+
+    uintptr_t eip = regs->eip;
 
     printf(
         ERROR
@@ -410,8 +412,10 @@ void page_fault(cpu_registers_t regs) {
         reserved,
         id,
         faulting_address,
-        regs.eip
+        eip
     );
+
+    print_registers(regs);
 
     panic(NULL);
 }

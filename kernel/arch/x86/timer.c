@@ -8,7 +8,7 @@
 #include "io.h"
 #include "irq.h"
 
-static ulong timer_ticks = 0;
+static volatile ulong timer_ticks = 0;
 
 static int timer_callback(cpu_registers_t* regs) {
     unused(regs);

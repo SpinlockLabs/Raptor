@@ -15,7 +15,7 @@
 #define get_cpuid(in, a, b, c, d) __get_cpuid(in, a, b, c, d)
 
 #define IRQ_CHAIN_SIZE 16
-#define IRQ_CHAIN_DEPTH 4
+#define IRQ_CHAIN_DEPTH 16
 
 typedef void (*irq_handler_t)(cpu_registers_t*);
 typedef int (*irq_handler_chain_t)(cpu_registers_t*);

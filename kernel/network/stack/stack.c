@@ -4,6 +4,7 @@
 #include <kernel/dispatch/events.h>
 
 #include "arp.h"
+#include "config.h"
 #include "icmp.h"
 #include "ethernet.h"
 #include "dhcp.h"
@@ -72,7 +73,7 @@ static void network_stack_on_interface_registered(void* event, void* extra) {
 
     info("Interface %s registered.\n", name);
 
-    iface->_stack = hashmap_create(2);
+    iface->stack = hashmap_create(2);
     iface->handle_receive = network_stack_handle_interface_receive;
 
     event_dispatch("network:stack:iface-up", iface);
@@ -85,9 +86,9 @@ static void network_stack_on_interface_destroying(void* event, void* extra) {
 
     event_dispatch("network:stack:iface-down", iface);
 
-    if (iface->_stack != NULL) {
-        hashmap_free((hashmap_t*) iface->_stack);
-        iface->_stack = NULL;
+    if (iface->stack != NULL) {
+        hashmap_free((hashmap_t*) iface->stack);
+        iface->stack = NULL;
     }
 
     info("Interface %s destroyed.\n", iface->name);
@@ -122,6 +123,7 @@ void network_stack_send_packet(
 }
 
 void network_stack_init(void) {
+    network_stack_config_init();
     network_stack_arp_init();
     network_stack_icmp_init();
     network_stack_route_init();

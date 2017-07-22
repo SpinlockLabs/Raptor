@@ -1,34 +1,51 @@
 #include "icmp.h"
 #include "stack.h"
+#include "log.h"
+#include "config.h"
 
-#include <liblox/hashmap.h>
 #include <liblox/net.h>
 
 #include <kernel/dispatch/events.h>
+#include <liblox/string.h>
 
-static void ping_reply(network_iface_t* iface, uint32_t addr, uint16_t id, uint16_t seq) {
-    uint32_t source = (uint32_t) hashmap_get(iface->_stack, "source");
+static void ping_reply(
+    network_iface_t* iface,
+    uint32_t addr,
+    uint16_t id,
+    uint16_t seq,
+    uint8_t* data,
+    size_t data_size) {
+    netconf_t* conf = netconf_get(iface);
+    netconf_lock(conf);
+    uint32_t source = conf->ipv4.source;
+    netconf_unlock(conf);
 
-    ipv4_packet_t* ipv4 = zalloc(sizeof(ipv4_packet_t) + sizeof(icmp4_packet_t));
+    ipv4_packet_t* ipv4 = zalloc(
+        sizeof(ipv4_packet_t) +
+            sizeof(icmp4_packet_t) + data_size
+    );
     icmp4_packet_t* pkt = (icmp4_packet_t*) ipv4->payload;
-    pkt->type = 0;
-    pkt->code = ICMP_TYPE_ECHO_REPLY;
-    pkt->data.echo.id = id;
-    pkt->data.echo.sequence = seq;
+    pkt->type = ICMP_TYPE_ECHO_REPLY;
+    pkt->code = 0;
+    pkt->info.echo.id = id;
+    pkt->info.echo.sequence = seq;
+    memcpy(pkt->payload, data, data_size);
     icmp4_finalize(pkt);
     ipv4->protocol = IP_PROTOCOL_ICMP;
-    ipv4->length = htons((uint16_t) sizeof(*ipv4) + sizeof(*pkt));
     ipv4->source = htonl(source);
     ipv4->destination = htonl(addr);
 
-    ipv4_finalize_packet(ipv4, sizeof(icmp4_packet_t));
+    size_t final = ipv4_finalize_packet(
+        ipv4,
+        sizeof(icmp4_packet_t) + data_size
+    );
 
     network_stack_send_packet(
-      iface,
-      (uint8_t*) ipv4,
-      sizeof(*ipv4),
-      PACKET_CLASS_IPV4,
-      0
+        iface,
+        (uint8_t*) ipv4,
+        final,
+        PACKET_CLASS_IPV4,
+        0
     );
 }
 
@@ -48,23 +65,28 @@ static void handle_ipv4_packet(void* event, void* extra) {
         return;
     }
 
-    uint32_t source = (uint32_t) hashmap_get(iface->_stack, "source");
+    netconf_t* conf = netconf_get(iface);
+    netconf_lock(conf);
 
-    if (htonl(ipv4->destination) != source) {
+    if (htonl(ipv4->destination) != conf->ipv4.source) {
+        netconf_unlock(conf);
         return;
     }
+    netconf_unlock(conf);
 
     icmp4_packet_t* icmp = (icmp4_packet_t*) ipv4->payload;
-    if (icmp->type != 0) {
+    if (icmp->code != 0) {
         return;
     }
 
-    if (icmp->code == ICMP_TYPE_ECHO) {
+    if (icmp->type == ICMP_TYPE_ECHO) {
         ping_reply(
             iface,
             ntohl(ipv4->source),
-            icmp->data.echo.id,
-            icmp->data.echo.sequence
+            icmp->info.echo.id,
+            icmp->info.echo.sequence,
+            icmp->payload,
+            ntohs(ipv4->length) - sizeof(icmp4_packet_t)
         );
     }
 }

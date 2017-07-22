@@ -1,7 +1,7 @@
 #include "dhcp.h"
 
-#include <liblox/io.h>
 #include <liblox/string.h>
+#include <liblox/io.h>
 #include <liblox/net.h>
 #include <liblox/hashmap.h>
 
@@ -10,6 +10,7 @@
 #include <kernel/dispatch/events.h>
 #include <kernel/network/ip.h>
 
+#include "config.h"
 #include "stack.h"
 #include "log.h"
 
@@ -17,7 +18,7 @@ static dhcp_internal_state_t* get_state(network_iface_t* iface) {
     if (iface == NULL) {
         return NULL;
     }
-    return hashmap_get(iface->_stack, "dhcp");
+    return hashmap_get(iface->stack, "dhcp");
 }
 
 static ipv4_address_t dhcp_request_src = {{0, 0, 0, 0}};
@@ -56,7 +57,7 @@ static void dhcp_handle_interface_up(void* event, void* extra) {
     network_iface_t* iface = event;
 
     dhcp_internal_state_t* state = zalloc(sizeof(dhcp_internal_state_t));
-    hashmap_set(iface->_stack, "dhcp", state);
+    hashmap_set(iface->stack, "dhcp", state);
 
     dhcp_send_request(iface);
 }
@@ -77,7 +78,7 @@ static void dhcp_accept_offer(network_iface_t* iface, uint32_t offer) {
 
     uint8_t* ip = ((uint8_t*) &offer);
 
-    info("Accepting offer for IP %d.%d.%d.%d on interface %s\n",
+    info("Accepting offer for IP " L_IP_FMT " on interface %s\n",
         ip[0], ip[1], ip[2], ip[3], iface->name);
 
     uint8_t options[] = {
@@ -97,7 +98,10 @@ static void dhcp_accept_offer(network_iface_t* iface, uint32_t offer) {
     dhcp_send(iface, options, sizeof(options));
     state->accepted = true;
 
-    hashmap_set(iface->_stack, "source", (void*) ntohl(state->offer));
+    netconf_t* conf = netconf_get(iface);
+    netconf_lock(conf);
+    conf->ipv4.source = ntohl(state->offer);
+    netconf_unlock(conf);
 }
 
 static void handle_potential_dhcp_reply(void* event, void* extra) {
@@ -139,7 +143,7 @@ static void handle_potential_dhcp_reply(void* event, void* extra) {
         return;
     }
 
-    info("Interface %s received a DHCP offer for %d.%d.%d.%d\n",
+    info("Interface %s received a DHCP offer for " L_IP_FMT "\n",
         iface->name, ip_cp(offer));
 
     dhcp_accept_offer(iface, offer);
@@ -165,10 +169,13 @@ static void handle_potential_dhcp_reply(void* event, void* extra) {
         i += len + 2;
     }
 
-    dbg("Interface %s was told %d.%d.%d.%d is the gateway\n",
+    dbg("Interface %s was told " L_IP_FMT " is the gateway\n",
          iface->name, ip_cp(gateway));
 
-    hashmap_set(iface->_stack, "gateway", (void*) ntohl(gateway));
+    netconf_t* conf = netconf_get(iface);
+    netconf_lock(conf);
+    conf->ipv4.gateway = ntohl(gateway);
+    netconf_unlock(conf);
 
     event_dispatch(
         "network:stack:iface-update",

@@ -132,7 +132,7 @@ struct network_iface {
     void* data;
 
     /* Pointer to network stack private data. */
-    void* _stack;
+    void* stack;
 };
 
 /*
