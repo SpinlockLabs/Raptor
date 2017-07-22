@@ -46,7 +46,7 @@ void rkmalloc_init_heap(rkmalloc_heap* heap) {
     CHKSIZE(heap->types.huge)
 }
 
-static list_node_t* get_pointer_entry(rkmalloc_heap* heap, void* ptr) {
+static list_node_t* get_pointer_entry(rkmalloc_heap* heap, void* ptr, rkmalloc_entry** eout) {
 #ifndef RKMALLOC_DISABLE_MAGIC
     unused(heap);
 
@@ -54,8 +54,10 @@ static list_node_t* get_pointer_entry(rkmalloc_heap* heap, void* ptr) {
     list_node_t* node = (list_node_t*) (entry - sizeof(list_node_t));
 
     if (entry->magic != rkmagic((uintptr_t) ptr)) {
+        *eout = NULL;
         return NULL;
     }
+    *eout = entry;
 #else
     spin_lock(heap->lock);
     list_node_t* node = heap->index.head;
@@ -69,6 +71,7 @@ static list_node_t* get_pointer_entry(rkmalloc_heap* heap, void* ptr) {
         node = node->next;
     }
     spin_unlock(heap->lock);
+    *eout = entry;
 #endif
 
     return node;
@@ -206,7 +209,8 @@ void* rkmalloc_allocate(rkmalloc_heap* heap, size_t size) {
 }
 
 void* rkmalloc_resize(rkmalloc_heap* heap, void* ptr, size_t new_size) {
-    list_node_t* node = get_pointer_entry(heap, ptr);
+    rkmalloc_entry* entry = NULL;
+    list_node_t* node = get_pointer_entry(heap, ptr, &entry);
     if (node == NULL) {
         printf(
             WARN "Failed to resize 0x%x: "
@@ -215,8 +219,6 @@ void* rkmalloc_resize(rkmalloc_heap* heap, void* ptr, size_t new_size) {
         );
         return NULL;
     }
-
-    rkmalloc_entry* entry = node->value;
 
     if (entry->free) {
         printf(
@@ -251,11 +253,8 @@ void rkmalloc_free(rkmalloc_heap* heap, void* ptr) {
         return;
     }
 
-    list_node_t* node = get_pointer_entry(heap, ptr);
     rkmalloc_entry* entry = NULL;
-    if (node != NULL) {
-        entry = node->value;
-    }
+    list_node_t* node = get_pointer_entry(heap, ptr, &entry);
 
     if (node == NULL) {
         puts(WARN "Attempted to free an invalid pointer (");

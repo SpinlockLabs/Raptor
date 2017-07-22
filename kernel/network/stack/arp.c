@@ -256,3 +256,12 @@ void arp_lookup(network_iface_t* iface, uint32_t addr, uint8_t hw[6]) {
         hw[i] = entry->mac[i];
     }
 }
+
+list_t* arp_get_known(network_iface_t* iface) {
+    arp_state_t* state = get_state(iface);
+    if (state == NULL) {
+        return NULL;
+    }
+
+    return hashmap_keys(state->table);
+}

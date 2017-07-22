@@ -95,7 +95,6 @@ static void dhcp_accept_offer(network_iface_t* iface, uint32_t offer) {
     };
 
     dhcp_send(iface, options, sizeof(options));
-
     state->accepted = true;
 
     hashmap_set(iface->_stack, "source", (void*) ntohl(state->offer));

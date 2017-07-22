@@ -27,7 +27,7 @@ ktask_id ktask_repeat(ulong ticks, ktask_func_t func, void* data) {
     init_if_needed();
 
     ktask_id id = ++ktask_counter;
-    ktask_t *task = malloc(sizeof(ktask_t));
+    ktask_t *task = zalloc(sizeof(ktask_t));
 
     task->id = id;
     task->repeat = ticks;
@@ -44,7 +44,7 @@ ktask_id ktask_queue(ktask_func_t func, void* data) {
     init_if_needed();
 
     ktask_id id = ++ktask_counter;
-    ktask_t *task = malloc(sizeof(ktask_t));
+    ktask_t *task = zalloc(sizeof(ktask_t));
 
     task->id = id;
     task->repeat = 0;
