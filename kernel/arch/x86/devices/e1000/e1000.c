@@ -88,11 +88,12 @@ static void dequeue_packet_task(void* data) {
     e1000_iface_t* net = data;
     e1000_state_t* state = net->state;
 
+    spin_lock(state->net_queue_lock);
     if (state->net_queue->size == 0) {
+        spin_unlock(state->net_queue_lock);
         return;
     }
 
-    spin_lock(state->net_queue_lock);
     list_node_t* n = list_dequeue(state->net_queue);
     void* value = n->value;
     free(n);

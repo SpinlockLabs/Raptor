@@ -13,7 +13,6 @@
 #include <kernel/dispatch/events.h>
 
 #include "arp.h"
-#include "log.h"
 
 static bool is_ours(network_iface_t* iface, ethernet_packet_t* packet) {
     uint8_t our_mac[6];

@@ -53,7 +53,7 @@ static void ask(network_iface_t* iface, uint32_t addr) {
         return;
     }
 
-    for (uint i = 0; i < 5; i++) {
+    for (uint i = 0; i <= 5; i++) {
         pkt->sender_ha[i] = mac[i];
     }
     pkt->sender_ip = source;
@@ -103,11 +103,11 @@ static void tell(network_iface_t* iface, uint32_t who, const uint8_t who_hw[6]) 
         return;
     }
 
-    for (uint i = 0; i < 5; i++) {
+    for (uint i = 0; i <= 5; i++) {
         pkt->sender_ha[i] = mac[i];
     }
 
-    for (uint i = 0; i < 5; i++) {
+    for (uint i = 0; i <= 5; i++) {
         pkt->target_ha[i] = who_hw[i];
     }
 
@@ -181,7 +181,7 @@ static void handle_potential_arp(void* event, void* extra) {
             hashmap_set(state->table, (void*) arp->sender_ip, entry);
         }
 
-        for (uint i = 0; i < 5; i++) {
+        for (uint i = 0; i <= 5; i++) {
             entry->mac[i] = arp->sender_ha[i];
         }
 
@@ -252,7 +252,7 @@ void arp_lookup(network_iface_t* iface, uint32_t addr, uint8_t hw[6]) {
         return;
     }
 
-    for (uint i = 0; i < 5; i++) {
+    for (uint i = 0; i <= 5; i++) {
         hw[i] = entry->mac[i];
     }
 }
@@ -264,4 +264,8 @@ list_t* arp_get_known(network_iface_t* iface) {
     }
 
     return hashmap_keys(state->table);
+}
+
+void arp_ask(network_iface_t* iface, uint32_t addr) {
+    ask(iface, htonl(addr));
 }

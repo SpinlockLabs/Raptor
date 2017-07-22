@@ -1,5 +1,6 @@
 #include "ip.h"
 
+#include <liblox/string.h>
 #include <liblox/net.h>
 #include <liblox/memory.h>
 
@@ -63,4 +64,32 @@ bool ipv4_cidr_match(ipv4_address_cidr_t* cidr, ipv4_address_t* address) {
     uint8_t bits = cidr->mask;
 
     return !((addr ^ netmask) & htonl(0xFFFFFFFFu << (32 - bits)));
+}
+
+uint32_t ipv4_address_parse(char* in) {
+    char ip[16];
+    char* c = ip;
+    uint32_t out[4];
+    char* i;
+    memcpy(ip, in, strlen(in) < 15 ? strlen(in) + 1 : 15);
+    ip[15] = '\0';
+
+    i = strchr(c, '.');
+    *i = '\0';
+    out[0] = (uint32_t) atoi(c);
+    c += strlen(c) + 1;
+
+    i = strchr(c, '.');
+    *i = '\0';
+    out[1] = (uint32_t) atoi(c);
+    c += strlen(c) + 1;
+
+    i = strchr(c, '.');
+    *i = '\0';
+    out[2] = (uint32_t) atoi(c);
+    c += strlen(c) + 1;
+
+    out[3] = (uint32_t) atoi(c);
+
+    return ntohl(((out[0] << 24) | (out[1] << 16) | (out[2] << 8) | (out[3])));
 }

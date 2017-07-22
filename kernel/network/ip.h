@@ -57,3 +57,4 @@ uint16_t ip_calculate_checksum(void* p, size_t width);
 udp_ipv4_packet_t* ipv4_create_udp_packet(size_t payload_size);
 size_t ipv4_finalize_packet(ipv4_packet_t* p, size_t payload_size);
 bool ipv4_cidr_match(ipv4_address_cidr_t* cidr, ipv4_address_t* address);
+uint32_t ipv4_address_parse(char*);
