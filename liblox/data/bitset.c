@@ -37,14 +37,16 @@ void bitset_set(bitset_t* set, size_t bit) {
     set->data[index] |= mask;
 }
 
-int bitset_ffub(bitset_t* set) {
+bool bitset_ffub(bitset_t* set, size_t* out) {
     for (size_t i = 0; i < set->size * 8; i++) {
         if (bitset_test(set, i)) {
             continue;
         }
-        return (int) i;
+        *out = i;
+        return true;
     }
-    return -1;
+    *out = 0;
+    return false;
 }
 
 void bitset_clear(bitset_t* set, size_t bit) {
@@ -52,7 +54,25 @@ void bitset_clear(bitset_t* set, size_t bit) {
     set->data[index] &= ~mask;
 }
 
-int bitset_test(bitset_t* set, size_t bit) {
+bool bitset_test(bitset_t* set, size_t bit) {
     iom;
     return (mask & set->data[index]) != 0;
+}
+
+bool bitset_test_all(bitset_t* set) {
+    for (size_t i = 0; i < set->size; i++) {
+        if (!bitset_test(set, i)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool bitset_test_any(bitset_t* set) {
+    for (size_t i = 0; i < set->size; i++) {
+        if (bitset_test(set, i)) {
+            return true;
+        }
+    }
+    return false;
 }

@@ -4,6 +4,7 @@
 #include <liblox/string.h>
 
 #include <kernel/panic.h>
+#include <liblox/bitset.h>
 
 #define dbg(msg, ...) printf(DEBUG msg, ##_VA_ARGS__)
 
@@ -136,7 +137,33 @@ route_error_t route_packet(ip_packet_moving_t* packet) {
 
         spin_lock(table->lock);
         list_for_each(node, table->entries) {
-            /* TODO(kaendfinger): Implement route matching. */
+            route_table_entry_t* entry = node->value;
+
+            bitset_t match_set = {0};
+            bitset_init(&match_set, entry->criteria_size);
+
+            for (size_t x = 0; x < entry->criteria_size; x++) {
+                route_attribute_t* attr = &entry->criteria[x];
+
+                if (does_attribute_match(attr, packet)) {
+                    bitset_set(&match_set, x);
+                } else {
+                    bitset_clear(&match_set, x);
+                }
+            }
+
+            bool matches = false;
+
+            if (entry->type == ROUTE_ENTRY_TYPE_MATCH_ALL) {
+                matches = bitset_test_all(&match_set);
+            }
+
+            if (matches) {
+                for (size_t x = 0; x < entry->modifier_size; x++) {
+                    route_attribute_t* attr = &entry->modifiers[x];
+                    apply_attribute(attr, packet);
+                }
+            }
         }
         spin_unlock(table->lock);
     }
