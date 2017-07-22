@@ -17,6 +17,10 @@ __attribute__((malloc)) void* zalloc(size_t size) {
     return ptr;
 }
 
+__attribute__((malloc)) void* calloc(size_t count, size_t size) {
+    return zalloc(count * size);
+}
+
 __attribute__((malloc)) void* realloc(void* ptr, size_t size) {
     if (lox_reallocate_provider != NULL) {
         return lox_reallocate_provider(ptr, size);
