@@ -1,5 +1,7 @@
 #include <liblox/common.h>
 
+#include <stdbool.h>
+
 #include "idt.h"
 #include "io.h"
 #include "irq.h"
@@ -26,6 +28,7 @@
 
 static irq_handler_chain_t irq_routines[IRQ_CHAIN_SIZE * IRQ_CHAIN_DEPTH] = { NULL };
 
+static volatile bool irq_enabled = false;
 static volatile int sync_depth = 0;
 
 void int_disable(void) {
@@ -57,28 +60,50 @@ void int_resume(void) {
 }
 
 void int_enable(void) {
+    irq_enabled = true;
     sync_depth = 0;
     sti();
 }
 
-void irq_add_handler(size_t irq, irq_handler_chain_t handler) {
+static inline bool cli_guarded(void) {
+    if (!irq_enabled) {
+        return false;
+    }
+
     cli();
+    return true;
+}
+
+void irq_add_handler(size_t irq, irq_handler_chain_t handler) {
+    bool state = cli_guarded();
+
     for (size_t i = 0; i < IRQ_CHAIN_DEPTH; i++) {
-        if (irq_routines[i * IRQ_CHAIN_SIZE + irq]) {
+        irq_handler_chain_t current = irq_routines[i * IRQ_CHAIN_SIZE + irq];
+        if (current != NULL) {
+            if (current == handler) {
+                break;
+            }
             continue;
         }
         irq_routines[i * IRQ_CHAIN_SIZE + irq] = handler;
         break;
     }
-    sti();
+
+    if (state) {
+        sti();
+    }
 }
 
 void irq_remove_handler(size_t irq) {
-    cli();
+    bool state = cli_guarded();
+
     for (size_t i = 0; i < IRQ_CHAIN_DEPTH; i++) {
         irq_routines[i * IRQ_CHAIN_SIZE + irq] = NULL;
     }
-    sti();
+
+    if (state) {
+        sti();
+    }
 }
 
 static void irq_remap() {
@@ -153,6 +178,7 @@ used void irq_handler(cpu_registers_t *r) {
             }
         }
     }
+
 done:
     irq_ack(r->int_no - 32);
     int_resume();

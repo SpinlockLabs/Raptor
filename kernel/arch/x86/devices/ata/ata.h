@@ -149,7 +149,7 @@ typedef struct ata_device {
     uintptr_t dma_prdt_phys;
     uint8_t* dma_start;
     uintptr_t dma_start_phys;
-    uint32_t bar4;
+    uint16_t bar4;
     uint32_t atapi_lba;
     uint32_t atapi_sector_size;
 } ata_device_t;

@@ -2,6 +2,7 @@
 #include <liblox/hex.h>
 
 #include <kernel/spin.h>
+#include <kernel/paging.h>
 
 #include "heap.h"
 #include "irq.h"
@@ -88,7 +89,8 @@ static bool first_frame(uint32_t* val) {
     return false;
 }
 
-static void alloc_frame(page_t* page, int is_kernel, int is_writable) {
+static bool alloc_frame(page_t* page, int is_kernel, int is_writable) {
+    bool made = false;
     if (page->frame == 0) {
         spin_lock(frame_alloc_lock);
         uint32_t index = 0;
@@ -98,11 +100,13 @@ static void alloc_frame(page_t* page, int is_kernel, int is_writable) {
         set_frame(index * 0x1000);
         page->frame = index;
         spin_unlock(frame_alloc_lock);
+        made = true;
     }
 
     page->present = 1;
     page->rw = (is_writable == 1) ? 1 : 0;
     page->user = (is_kernel == 1) ? 0 : 1;
+    return made;
 }
 
 static void dma_frame(page_t* page, int is_kernel,
@@ -139,9 +143,9 @@ void paging_install(uint32_t memsize) {
 
 void paging_invalidate_tables(void) {
     asm volatile (
-        "movl %%cr3, %%eax\n"
+    "movl %%cr3, %%eax\n"
         "movl %%eax, %%cr3\n"
-        ::: "%eax"
+    :: : "%eax"
     );
 }
 
@@ -202,7 +206,7 @@ static uint32_t first_n_frames(int n) {
     return 0xFFFFFFFF;
 }
 
-uintptr_t paging_allocate_aligned_large(uintptr_t address, size_t size, uintptr_t *phys) {
+uintptr_t paging_allocate_aligned_large(uintptr_t address, size_t size, uintptr_t* phys) {
     for (uintptr_t i = address; i < address + size; i += 0x1000) {
         clear_frame(map_to_physical(i));
     }
@@ -214,7 +218,7 @@ uintptr_t paging_allocate_aligned_large(uintptr_t address, size_t size, uintptr_
         return 0;
     }
 
-    for (unsigned int i = 0; i < (size + 0xFFF) / 0x1000; i++) {
+    for (uint i = 0; i < (size + 0xFFF) / 0x1000; i++) {
         set_frame((index + i) * 0x1000);
         page_t* page = paging_get_page(
             address + (i * 0x1000),
@@ -236,12 +240,12 @@ uintptr_t paging_allocate_aligned_large(uintptr_t address, size_t size, uintptr_
     return address;
 }
 
-void paging_heap_expand_into(uint32_t addr) {
+bool paging_heap_expand_into(uintptr_t addr) {
     page_t* page = paging_get_page(addr, 0, kernel_directory);
     if (page == NULL) {
         panic("Failed to get the page while expanding kernel heap.");
     }
-    alloc_frame(page, 1, 0);
+    return alloc_frame(page, 1, 0);
 }
 
 void paging_mark_system(uint64_t addr) {
@@ -261,7 +265,7 @@ void paging_finalize(void) {
         dma_frame(paging_get_page(i, 1, kernel_directory), 1, 0, i);
     }
 
-    for (uintptr_t i = 0x80000; i < 0x100000; i+= 0x1000) {
+    for (uintptr_t i = 0x80000; i < 0x100000; i += 0x1000) {
         dma_frame(paging_get_page(i, 1, kernel_directory), 1, 0, i);
     }
 
@@ -278,7 +282,7 @@ void paging_finalize(void) {
     }
 
     /* Install the page fault handler. */
-    isr_add_handler(14, (irq_handler_t) page_fault);
+    isr_add_handler(14, page_fault);
 
     /* Store the physical address of the physical table. */
     kernel_directory->physicalAddr = (uintptr_t) kernel_directory->tablesPhysical;
@@ -304,6 +308,7 @@ void paging_finalize(void) {
         paging_get_page(i, 1, kernel_directory);
     }
 
+    current_directory = paging_clone_directory(kernel_directory);
     paging_switch_directory(kernel_directory);
 }
 
@@ -311,11 +316,11 @@ void paging_switch_directory(page_directory_t* dir) {
     current_directory = dir;
 
     asm volatile (
-        "mov %0, %%cr3\n"
+    "mov %0, %%cr3\n"
         "mov %%cr0, %%eax\n"
         "orl $0x80000000, %%eax\n"
         "mov %%eax, %%cr0\n"
-        :: "r"(dir->physicalAddr)
+        ::"r"(dir->physicalAddr)
         : "%eax"
     );
 }
@@ -365,7 +370,7 @@ uintptr_t paging_get_physical_address(uintptr_t virt) {
 }
 
 uintptr_t paging_add_map(uintptr_t physical, size_t size) {
-    size = ((size_t) (size / 0x1000) + 0.5) * 0x1000;
+    size = (size_t) (((size / 0x1000) + 0.5) * 0x1000);
     uintptr_t ptr = kpmalloc_a(size);
     for (uintptr_t addr = ptr; addr < ptr + size; addr += 0x1000) {
         paging_map_dma(addr, physical + (addr - ptr));
@@ -378,35 +383,103 @@ void paging_remove_map(uintptr_t logical, size_t size) {
     unused(size);
 }
 
-void page_fault(cpu_registers_t regs) {
+void page_fault(cpu_registers_t* regs) {
     int_disable();
     uint32_t faulting_address;
     asm volatile("mov %%cr2, %0" : "=r" (faulting_address));
 
-    int present = !(regs.err_code & 0x1) ? 1 : 0;
-    int rw = (regs.err_code & 0x2) ? 1 : 0;
-    int us = (regs.err_code & 0x4) ? 1 : 0;
-    int reserved = (regs.err_code & 0x8) ? 1 : 0;
-    int id = (regs.err_code & 0x10) ? 1 : 0;
+    int present = !(regs->err_code & 0x1) ? 1 : 0;
+    int rw = (regs->err_code & 0x2) ? 1 : 0;
+    int us = (regs->err_code & 0x4) ? 1 : 0;
+    int reserved = (regs->err_code & 0x8) ? 1 : 0;
+    int id = (regs->err_code & 0x10) ? 1 : 0;
+
+    uintptr_t eip = regs->eip;
 
     printf(
         ERROR
-        "Segmentation fault ("
-        "present: %d, "
-        "rw: %d, "
-        "user: %d, "
-        "reserved: %d, "
-        "id: %d, "
-        "address: 0x%x, "
-        "caused by: 0x%x)\n",
+            "Segmentation fault ("
+            "present: %d, "
+            "rw: %d, "
+            "user: %d, "
+            "reserved: %d, "
+            "id: %d, "
+            "address: 0x%x, "
+            "caused by: 0x%x)\n",
         present,
         rw,
         us,
         reserved,
         id,
         faulting_address,
-        regs.eip
+        eip
     );
 
+    print_registers(regs);
+
     panic(NULL);
+}
+
+extern void copy_page_physical(uint32_t, uint32_t);
+
+page_table_t* paging_clone_table(page_table_t* src, uintptr_t* phys) {
+    page_table_t* table = (page_table_t*) kpmalloc_ap(sizeof(page_table_t), phys);
+    memset(table, 0, sizeof(page_table_t));
+    uint32_t i;
+    for (i = 0; i < 1024; ++i) {
+        if (!src->pages[i].frame) {
+            continue;
+        }
+        alloc_frame(&table->pages[i], 0, 0);
+        if (src->pages[i].present) {
+            table->pages[i].present = 1;
+        }
+
+        if (src->pages[i].rw) {
+            table->pages[i].rw = 1;
+        }
+
+        if (src->pages[i].user) {
+            table->pages[i].user = 1;
+        }
+
+        if (src->pages[i].dirty) {
+            table->pages[i].dirty = 1;
+        }
+
+        if (src->pages[i].accessed) {
+            table->pages[i].accessed = 1;
+        }
+
+        copy_page_physical(src->pages[i].frame * 0x1000, table->pages[i].frame * 0x1000);
+    }
+    return table;
+}
+
+page_directory_t* paging_clone_directory(page_directory_t* src) {
+    uintptr_t phys;
+    page_directory_t* out = (page_directory_t*) kpmalloc_ap(
+        sizeof(page_directory_t),
+        &phys
+    );
+
+    memset(out, 0, sizeof(page_directory_t));
+    out->physicalAddr = phys;
+
+    for (uint32_t i = 0; i < 1024; i++) {
+        if (!src->tables[i] ||
+            (uintptr_t) src->tables[i] == (uintptr_t) 0xFFFFFFFF) {
+            continue;
+        }
+
+        if (kernel_directory->tables[i] == src->tables[i]) {
+            out->tables[i] = src->tables[i];
+            out->tablesPhysical[i] = src->tablesPhysical[i];
+        } else {
+            out->tables[i] = paging_clone_table(src->tables[i], &phys);
+            out->tablesPhysical[i] = phys | 0x07;
+        }
+    }
+
+    return out;
 }

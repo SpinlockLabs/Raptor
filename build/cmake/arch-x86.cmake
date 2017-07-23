@@ -1,10 +1,16 @@
 arch("x86" "arch/x86")
 option(OPTIMIZE_NATIVE "Optimize for the native machine." OFF)
+option(ENABLE_X64 "Enable x86_64 mode." OFF)
 
 cflags(
-  -m32
   -DARCH_X86
 )
+
+if(ENABLE_X64)
+  cflags(-m64)
+else()
+  cflags(-m32)
+endif()
 
 if(CLANG)
   cflags(-target i686-pc-elf)
@@ -17,13 +23,19 @@ else()
 endif()
 
 kernel_cflags(
-  -no-pie
   -fno-stack-protector
   -fno-pic
-  -I${RAPTOR_DIR}/kernel/arch/x86/acpi/include
 )
 
-kernel_ldscript(${KERNEL_DIR}/arch/x86/linker.ld)
+if(NOT CLANG)
+  kernel_cflags(-no-pie)
+endif()
+
+if(EXISTS ${RAPTOR_DIR}/kernel/arch/x86/acpi/include)
+  kernel_cflags(-I${RAPTOR_DIR}/kernel/arch/x86/acpi/include)
+endif()
+
+kernel_ldscript("${KERNEL_DIR}/arch/x86/linker.ld")
 
 set(QEMU_CMD_BASE
   qemu-system-i386
@@ -35,7 +47,6 @@ set(QEMU_CMD_BASE
 
 set(QEMU_CMD
   ${QEMU_CMD_BASE}
-    -kernel "${CMAKE_BINARY_DIR}/kernel.elf"
 )
 
 add_custom_target(qemu
@@ -58,14 +69,8 @@ add_custom_target(qemu-cli-gdb
   DEPENDS kernel diskimg
 )
 
-add_custom_target(qemu-cli-network
-  COMMAND sudo ${QEMU_CMD} -append debug -monitor none -nographic
-    -net tap,ifname=tap0,script=no,downscript=no
-  DEPENDS kernel diskimg
-)
-
-add_custom_command(
-  OUTPUT raptor.iso
+add_custom_target(
+  iso
   DEPENDS kernel filesystem
   COMMAND bash
             ${CMAKE_SOURCE_DIR}/build/scripts/mkgrubiso.sh
@@ -73,13 +78,13 @@ add_custom_command(
   WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
 )
 
-add_custom_target(iso
-  DEPENDS raptor.iso
-)
-
 add_custom_target(qemu-iso
   COMMAND ${QEMU_CMD_BASE}
             -cdrom "${CMAKE_BINARY_DIR}/raptor.iso"
+            -boot d
+            -monitor none
+            -nographic
+            -net user
   DEPENDS iso diskimg
 )
 
@@ -89,8 +94,23 @@ add_custom_target(bochs
   WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
 )
 
-add_custom_target(diskimg
+add_custom_target(
+  diskimg
   COMMAND "${CMAKE_SOURCE_DIR}/build/scripts/gendiskimg.sh"
   WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
   DEPENDS filesystem
+  SOURCES ${FS_DIR}
+  USES_TERMINAL
 )
+
+if(RAPTOR_WINDOWS)
+    add_custom_target(qemu-windows
+      COMMAND "C:/Program Files/qemu/qemu-system-i386.exe"
+            -net user
+            -net nic,model=e1000
+            -cpu core2duo
+            -m 256
+            -kernel "${CMAKE_BINARY_DIR}/kernel.elf"
+      DEPENDS kernel diskimg
+    )
+endif()

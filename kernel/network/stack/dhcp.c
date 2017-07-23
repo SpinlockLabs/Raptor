@@ -1,7 +1,7 @@
 #include "dhcp.h"
 
-#include <liblox/io.h>
 #include <liblox/string.h>
+#include <liblox/io.h>
 #include <liblox/net.h>
 #include <liblox/hashmap.h>
 
@@ -10,6 +10,7 @@
 #include <kernel/dispatch/events.h>
 #include <kernel/network/ip.h>
 
+#include "config.h"
 #include "stack.h"
 #include "log.h"
 
@@ -17,7 +18,7 @@ static dhcp_internal_state_t* get_state(network_iface_t* iface) {
     if (iface == NULL) {
         return NULL;
     }
-    return hashmap_get(iface->_stack, "dhcp");
+    return hashmap_get(iface->manager_data, "dhcp");
 }
 
 static ipv4_address_t dhcp_request_src = {{0, 0, 0, 0}};
@@ -56,7 +57,7 @@ static void dhcp_handle_interface_up(void* event, void* extra) {
     network_iface_t* iface = event;
 
     dhcp_internal_state_t* state = zalloc(sizeof(dhcp_internal_state_t));
-    hashmap_set(iface->_stack, "dhcp", state);
+    hashmap_set(iface->manager_data, "dhcp", state);
 
     dhcp_send_request(iface);
 }
@@ -77,7 +78,7 @@ static void dhcp_accept_offer(network_iface_t* iface, uint32_t offer) {
 
     uint8_t* ip = ((uint8_t*) &offer);
 
-    info("Accepting offer for IP %d.%d.%d.%d on interface %s\n",
+    info("Accepting offer for IP " L_IP_FMT " on interface %s\n",
         ip[0], ip[1], ip[2], ip[3], iface->name);
 
     uint8_t options[] = {
@@ -95,8 +96,12 @@ static void dhcp_accept_offer(network_iface_t* iface, uint32_t offer) {
     };
 
     dhcp_send(iface, options, sizeof(options));
-
     state->accepted = true;
+
+    netconf_t* conf = netconf_get(iface);
+    netconf_lock(conf);
+    conf->ipv4.source = ntohl(state->offer);
+    netconf_unlock(conf);
 }
 
 static void handle_potential_dhcp_reply(void* event, void* extra) {
@@ -110,11 +115,8 @@ static void handle_potential_dhcp_reply(void* event, void* extra) {
     }
 
     ipv4_packet_t* ipv4 = pkt->ipv4;
-    if (ipv4->destination != dhcp_request_dest.address) {
-        return;
-    }
 
-    if (ipv4->protocol != IPV4_PROTOCOL_UDP) {
+    if (ipv4->protocol != IP_PROTOCOL_UDP) {
         return;
     }
     udp_packet_t* udp = (udp_packet_t*) pkt->ipv4->payload;
@@ -130,6 +132,7 @@ static void handle_potential_dhcp_reply(void* event, void* extra) {
     }
 
     dhcp_internal_state_t* state = get_state(iface);
+
     if (state->accepted) {
         return;
     }
@@ -140,11 +143,44 @@ static void handle_potential_dhcp_reply(void* event, void* extra) {
         return;
     }
 
-    uint8_t* offer8 = ((uint8_t*) &offer);
-    info("Interface %s received a DHCP offer for %d.%d.%d.%d\n",
-        iface->name, offer8[0], offer8[1], offer8[2], offer8[3]);
+    info("Interface %s received a DHCP offer for " L_IP_FMT "\n",
+        iface->name, ip_cp(offer));
 
     dhcp_accept_offer(iface, offer);
+
+    uint32_t gateway = 0;
+
+    size_t i = sizeof(dhcp_packet_t);
+    size_t j = 0;
+    while (i < udp->length) {
+        uint8_t type = dhcp->options[j];
+        uint8_t len = dhcp->options[j + 1];
+        uint8_t* data = &dhcp->options[j + 2];
+
+        if (type == 255) {
+            break;
+        }
+
+        if (type == 3) {
+            gateway = *(uint32_t*)(data);
+        }
+
+        j += len + 2;
+        i += len + 2;
+    }
+
+    dbg("Interface %s was told " L_IP_FMT " is the gateway\n",
+         iface->name, ip_cp(gateway));
+
+    netconf_t* conf = netconf_get(iface);
+    netconf_lock(conf);
+    conf->ipv4.gateway = ntohl(gateway);
+    netconf_unlock(conf);
+
+    event_dispatch(
+        "network:stack:iface-update",
+        iface
+    );
 }
 
 void network_stack_dhcp_init(void) {

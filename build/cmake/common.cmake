@@ -1,7 +1,13 @@
+option(TESTS "Enable Tests" OFF)
+
 function(cflags)
   set(ARGLIST "")
   foreach(ARG ${ARGV})
-    set(ARGLIST "${ARGLIST} ${ARG}")
+    if(NOT MSVC)
+      set(ARGLIST "${ARGLIST} ${ARG}")
+    else()
+      set(ARGLIST "${ARGLIST} ${ARG}")
+    endif()
   endforeach()
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${ARGLIST}" PARENT_SCOPE)
   set(CMAKE_ASM_FLAGS "${CMAKE_ASM_FLAGS} ${ARGLIST}" PARENT_SCOPE)
@@ -16,7 +22,10 @@ function(ldflags)
 endfunction()
 
 if(CMAKE_C_COMPILER_ID MATCHES "Clang")
+  message(WARNING "Using Clang is experimental.")
   set(CLANG ON)
 endif()
 
 cflags(-DRAPTOR)
+
+include(${RAPTOR_DIR}/build/cmake/config.cmake)

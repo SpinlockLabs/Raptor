@@ -3,7 +3,7 @@
 #include <liblox/common.h>
 #include <stdint.h>
 
-#define KERNEL_HEAP_START 0x00800000
+#define KERNEL_HEAP_START 0x01000000
 #define KERNEL_HEAP_END 0x20000000
 
 extern uintptr_t kp_placement_pointer;

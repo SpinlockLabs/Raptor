@@ -31,7 +31,7 @@ mkdir -p cdboot/boot
 GRUB_RESCUE="$(which grub-mkrescue)"
 GRUB_RESCUE_DIR="$(dirname ${GRUB_RESCUE})"
 GRUB_ROOT="$(realpath ${GRUB_RESCUE_DIR}/..)"
-cp -R "${ROOT}/build/grub" cdboot/boot/grub
+cp -R "${ROOT}/filesystem/boot" cdboot/
 cp "${BIN}" cdboot/boot/kernel.elf
 grub-mkrescue -d "${GRUB_ROOT}/lib/grub/i386-pc" -o raptor.iso cdboot/
 rm -rf cdboot

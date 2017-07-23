@@ -2,22 +2,13 @@
 #include "heap.h"
 #include "paging.h"
 
-#include <liblox/net.h>
-
 #include <kernel/tty.h>
-
-#include <kernel/network/iface.h>
-#include <kernel/network/ip.h>
-#include <kernel/network/udp.h>
-#include <kernel/network/ethernet.h>
 
 #include <kernel/dispatch/events.h>
 
 #include <kernel/debug/console.h>
 
 #include <kernel/arch/x86/devices/pci/pci.h>
-
-#include <kernel/rkmalloc/rkmalloc.h>
 
 static void debug_kpused(tty_t* tty, const char* input) {
     unused(input);

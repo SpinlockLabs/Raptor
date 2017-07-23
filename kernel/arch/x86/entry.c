@@ -105,7 +105,7 @@ void paging_init(void) {
     paging_finalize();
 }
 
-void post_subsystem_init(void) {
+void kernel_setup_devices(void) {
     vga_pty = tty_create("vga");
     vga_pty->write = vga_pty_write;
     vga_pty->flags.allow_debug_console = true;
@@ -119,11 +119,9 @@ void post_subsystem_init(void) {
     serial_port_a->tty->flags.write_kernel_log = true;
     tty_register(serial_port_a->tty);
 
+    ata_setup();
     pcnet_setup();
     e1000_setup();
-
-    ata_setup();
-
     debug_x86_init();
 }
 

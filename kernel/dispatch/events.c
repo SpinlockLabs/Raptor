@@ -5,6 +5,7 @@
 
 #include <kernel/panic.h>
 #include <kernel/spin.h>
+#include <kernel/cpu/task.h>
 
 typedef struct event_dispatch_info {
     event_handler_t handler;
@@ -89,4 +90,25 @@ void event_dispatch(char* type, void* event) {
         event_dispatch_info_t* info = node->value;
         info->handler(event, info->extra);
     }
+}
+
+typedef struct event_dispatch_async_data {
+    char* type;
+    void* event;
+} event_dispatch_async_data_t;
+
+static void event_dispatch_async_task(void* data) {
+    event_dispatch_async_data_t* info = data;
+    event_dispatch(info->type, info->event);
+    free(info);
+}
+
+void event_dispatch_async(char* type, void* event) {
+    event_dispatch_async_data_t* data = zalloc(
+        sizeof(event_dispatch_async_data_t)
+    );
+
+    data->type = type;
+    data->event = event;
+    ktask_queue(event_dispatch_async_task, data);
 }
