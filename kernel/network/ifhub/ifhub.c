@@ -13,6 +13,13 @@ static network_iface_error_t ifhub_destroy(
 ) {
     ifhub_cfg_t* cfg = iface->data;
 
+    cfg->left->manager = NULL;
+    cfg->right->manager = NULL;
+    cfg->left->handle_receive = NULL;
+    cfg->right->handle_receive = NULL;
+    cfg->left->manager_data = NULL;
+    cfg->right->manager_data = NULL;
+
     network_stack_takeover(cfg->left);
     network_stack_takeover(cfg->right);
 
@@ -26,6 +33,14 @@ static network_iface_error_t ifhub_destroy(
     free(iface->name);
 
     return IFACE_ERR_OK;
+}
+
+static network_iface_error_t ifhub_handle_receive(
+    network_iface_t* iface,
+    uint8_t* buffer,
+    size_t size) {
+    network_iface_t* target = iface->manager_data;
+    return network_iface_send(target, buffer, size);
 }
 
 network_iface_t* ifhub_create(
@@ -52,8 +67,14 @@ network_iface_t* ifhub_create(
     network_stack_disown(cfg->left);
     network_stack_disown(cfg->right);
 
-    cfg->left->handle_receive = cfg->right->send;
-    cfg->right->handle_receive = cfg->left->send;
+    cfg->left->manager = "ifhub";
+    cfg->right->manager = "ifhub";
+
+    cfg->left->manager_data = cfg->right;
+    cfg->right->manager_data = cfg->left;
+
+    cfg->left->handle_receive = ifhub_handle_receive;
+    cfg->right->handle_receive = ifhub_handle_receive;
 
     network_iface_t* hub = network_iface_create(name);
     hub->class_type = IFACE_CLASS_VIRTUAL;

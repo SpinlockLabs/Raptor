@@ -217,7 +217,6 @@ static void pcnet_interrupt(pcnet_network_iface_t* iface) {
 static int pcnet_irq_handler(cpu_registers_t* r) {
     unused(r);
 
-    bool handled = false;
     list_for_each(node, pcnet_list) {
         pcnet_network_iface_t* iface = node->value;
         pcnet_interrupt(iface);
