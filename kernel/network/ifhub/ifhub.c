@@ -48,7 +48,7 @@ static network_iface_error_t ifhub_destroy(
     return IFACE_ERR_OK;
 }
 
-static network_iface_error_t ifhub_handle_receive(
+static network_iface_error_t ifhub_handle_member_receive(
     network_iface_t* iface,
     uint8_t* buffer,
     size_t size) {
@@ -98,8 +98,8 @@ network_iface_t* ifhub_create(
         NULL
     );
 
-    cfg->left->handle_receive = ifhub_handle_receive;
-    cfg->right->handle_receive = ifhub_handle_receive;
+    cfg->left->handle_receive = ifhub_handle_member_receive;
+    cfg->right->handle_receive = ifhub_handle_member_receive;
 
     network_iface_t* hub = network_iface_create(name);
     hub->class_type = IFACE_CLASS_VIRTUAL;
