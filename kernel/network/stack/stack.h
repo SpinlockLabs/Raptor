@@ -124,6 +124,9 @@ void network_stack_init(void);
 /* Lets the network stack takeover the given interface. */
 bool network_stack_takeover(network_iface_t* iface);
 
+/* Lets the network stack takeover the given interface. */
+void network_stack_takeover_async(network_iface_t* iface);
+
 /* Lets the network stack disown the given interface. */
 bool network_stack_disown(network_iface_t* iface);
 

@@ -195,6 +195,64 @@ static uint16_t eeprom_read(e1000_state_t* state, uint8_t addr) {
     return (uint16_t) ((temp >> 16) & 0xFFFF);
 }
 
+static void enable_promisc(e1000_state_t* state) {
+    uint32_t rctl = read_command(state, E1000_REG_RCTRL);
+
+    rctl |= RCTL_UPE;
+    rctl |= RCTL_MPE;
+
+    write_command(
+        state,
+        E1000_REG_RCTRL,
+        rctl
+    );
+}
+
+static void disable_promisc(e1000_state_t* state) {
+    uint32_t rctl = read_command(state, E1000_REG_RCTRL);
+
+    rctl |= ~(RCTL_UPE);
+    rctl |= ~(RCTL_MPE);
+
+    write_command(
+        state,
+        E1000_REG_RCTRL,
+        rctl
+    );
+}
+
+static bool get_promisc(e1000_state_t* state) {
+    uint32_t rctl = read_command(state, E1000_REG_RCTRL);
+
+    if ((rctl >> 3) & 1) {
+        return true;
+    }
+
+    return false;
+}
+
+static int e1000_ioctl(network_iface_t* iface, ulong req, void* data) {
+    unused(data);
+
+    e1000_iface_t* net = iface->data;
+
+    if (req == NET_IFACE_IOCTL_ENABLE_PROMISCUOUS) {
+        enable_promisc(net->state);
+        return 0;
+    }
+
+    if (req == NET_IFACE_IOCTL_DISABLE_PROMISCUOUS) {
+        disable_promisc(net->state);
+        return 0;
+    }
+
+    if (req == NET_IFACE_IOCTL_GET_PROMISCUOUS) {
+        return get_promisc(net->state);
+    }
+
+    return -1;
+}
+
 static void read_mac(e1000_state_t* state) {
     if (state->has_eeprom) {
         uint32_t t;
@@ -462,6 +520,7 @@ static void e1000_device_init(uint32_t device_pci) {
     iface->get_mac = get_iface_mac;
     iface->send = send_packet;
     iface->destroy = iface_destroy;
+    iface->handle_ioctl = e1000_ioctl;
     iface->data = net;
     net->iface = iface;
 

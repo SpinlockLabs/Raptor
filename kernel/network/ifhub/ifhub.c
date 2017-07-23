@@ -13,6 +13,18 @@ static network_iface_error_t ifhub_destroy(
 ) {
     ifhub_cfg_t* cfg = iface->data;
 
+    network_iface_ioctl(
+        cfg->left,
+        NET_IFACE_IOCTL_DISABLE_PROMISCUOUS,
+        NULL
+    );
+
+    network_iface_ioctl(
+        cfg->left,
+        NET_IFACE_IOCTL_DISABLE_PROMISCUOUS,
+        NULL
+    );
+
     cfg->left->manager = NULL;
     cfg->right->manager = NULL;
     cfg->left->handle_receive = NULL;
@@ -20,8 +32,8 @@ static network_iface_error_t ifhub_destroy(
     cfg->left->manager_data = NULL;
     cfg->right->manager_data = NULL;
 
-    network_stack_takeover(cfg->left);
-    network_stack_takeover(cfg->right);
+    network_stack_takeover_async(cfg->left);
+    network_stack_takeover_async(cfg->right);
 
     free(cfg);
 
@@ -31,6 +43,7 @@ static network_iface_error_t ifhub_destroy(
     );
 
     free(iface->name);
+    free(iface);
 
     return IFACE_ERR_OK;
 }
@@ -72,6 +85,18 @@ network_iface_t* ifhub_create(
 
     cfg->left->manager_data = cfg->right;
     cfg->right->manager_data = cfg->left;
+
+    network_iface_ioctl(
+        cfg->left,
+        NET_IFACE_IOCTL_ENABLE_PROMISCUOUS,
+        NULL
+    );
+
+    network_iface_ioctl(
+        cfg->right,
+        NET_IFACE_IOCTL_ENABLE_PROMISCUOUS,
+        NULL
+    );
 
     cfg->left->handle_receive = ifhub_handle_receive;
     cfg->right->handle_receive = ifhub_handle_receive;

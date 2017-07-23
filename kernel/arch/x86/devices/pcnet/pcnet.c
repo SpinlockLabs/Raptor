@@ -86,6 +86,43 @@ static int driver_owns(const uint8_t* de_table, int index) {
     return (de_table[PCNET_DE_SIZE * index + 7] & 0x80) == 0;
 }
 
+static bool get_promiscuous_mode(pcnet_state_t* state) {
+    uint16_t csr15 = (uint16_t) read_csr32(state, 15);
+    return ((csr15 >> 15)) & 1 ? true : false;
+}
+
+static void set_promiscuous_mode(pcnet_state_t* state, bool val) {
+    uint16_t csr15 = (uint16_t) read_csr32(state, 15);
+    if (val) {
+        csr15 |= 1 << 15;
+    } else {
+        csr15 |= ~(1 << 15);
+    }
+    write_csr32(state, 15, csr15);
+}
+
+static int pcnet_ioctl(network_iface_t* iface, ulong req, void* data) {
+    unused(data);
+
+    pcnet_network_iface_t* net = iface->data;
+
+    if (req == NET_IFACE_IOCTL_ENABLE_PROMISCUOUS) {
+        set_promiscuous_mode(net->state, true);
+        return 0;
+    }
+
+    if (req == NET_IFACE_IOCTL_DISABLE_PROMISCUOUS) {
+        set_promiscuous_mode(net->state, false);
+        return 0;
+    }
+
+    if (req == NET_IFACE_IOCTL_GET_PROMISCUOUS) {
+        return get_promiscuous_mode(net->state);
+    }
+
+    return -1;
+}
+
 static int next_tx_index(int current_tx_index) {
     int out = current_tx_index + 1;
     if (out == PCNET_TX_COUNT) {
@@ -406,6 +443,7 @@ static void pcnet_init(uint32_t device_pci) {
     pcnet_iface->class_type = IFACE_CLASS_ETHERNET;
     pcnet_iface->get_mac = pcnet_get_iface_mac;
     pcnet_iface->send = pcnet_send_packet;
+    pcnet_iface->handle_ioctl = pcnet_ioctl;
     pcnet_iface->destroy = pcnet_iface_destroy;
     pcnet_iface->data = dat;
 

@@ -39,6 +39,15 @@ static void debug_network_iface_list(tty_t* tty, const char* input) {
             "  Manager: %s\n",
             iface->manager
         );
+
+        int promisc = network_iface_ioctl(
+            iface, NET_IFACE_IOCTL_GET_PROMISCUOUS, NULL);
+
+        if (promisc > 0) {
+            tty_printf(tty, "  Promiscuous: true\n");
+        } else {
+            tty_printf(tty, "  Promiscuous: false\n");
+        }
     }
 }
 

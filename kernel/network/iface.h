@@ -199,3 +199,9 @@ void network_iface_each(network_iface_handle_iter_t, void*);
 
 /* Initializes the network interface subsystem. */
 void network_iface_subsystem_init(void);
+
+/* Common network interface ioctls */
+#define NET_IFACE_IOCTL_GET_PROMISCUOUS 0xEF420
+#define NET_IFACE_IOCTL_ENABLE_PROMISCUOUS 0xEF421
+#define NET_IFACE_IOCTL_DISABLE_PROMISCUOUS 0xEF422
+

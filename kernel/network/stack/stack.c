@@ -3,6 +3,7 @@
 #include <liblox/hashmap.h>
 #include <kernel/dispatch/events.h>
 #include <liblox/string.h>
+#include <kernel/cpu/task.h>
 
 #include "arp.h"
 #include "config.h"
@@ -180,4 +181,12 @@ bool network_stack_disown(network_iface_t* iface) {
 
     iface->manager = NULL;
     return true;
+}
+
+static void stack_takeover_later(void* iface) {
+    network_stack_takeover(iface);
+}
+
+void network_stack_takeover_async(network_iface_t* iface) {
+    ktask_queue(stack_takeover_later, iface);
 }
