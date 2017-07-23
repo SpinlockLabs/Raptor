@@ -78,7 +78,11 @@ void irq_add_handler(size_t irq, irq_handler_chain_t handler) {
     bool state = cli_guarded();
 
     for (size_t i = 0; i < IRQ_CHAIN_DEPTH; i++) {
-        if (irq_routines[i * IRQ_CHAIN_SIZE + irq]) {
+        irq_handler_chain_t current = irq_routines[i * IRQ_CHAIN_SIZE + irq];
+        if (current != NULL) {
+            if (current == handler) {
+                break;
+            }
             continue;
         }
         irq_routines[i * IRQ_CHAIN_SIZE + irq] = handler;

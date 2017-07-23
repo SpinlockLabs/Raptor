@@ -8,14 +8,14 @@
 #include "io.h"
 #include "irq.h"
 
-static ulong timer_ticks = 0;
+static volatile ulong timer_ticks = 0;
 
 static int timer_callback(cpu_registers_t* regs) {
     unused(regs);
 
     timer_ticks++;
     if (kernel_initialized) {
-        cpu_task_queue_flush();
+        ktask_queue_flush();
     }
 
     return 1;

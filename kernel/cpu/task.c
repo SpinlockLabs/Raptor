@@ -1,34 +1,33 @@
 #include "task.h"
 
+#include <liblox/list.h>
+
 #include <kernel/timer.h>
 
-#include <liblox/list.h>
-#include <kernel/arch/x86/irq.h>
-
-typedef struct cpu_task_t {
-    task_id id;
+typedef struct ktask {
+    ktask_id id;
     ulong repeat;
     ulong last_tick;
     ulong tick;
-    cpu_task_func_t func;
+    ktask_func_t func;
     void* data;
-} cpu_task_t;
+} ktask_t;
 
-static list_t *__cpu_task_queue = NULL;
+static list_t* __task_queue = NULL;
 
-static task_id cpu_task_counter = 0UL;
+static ktask_id ktask_counter = 0UL;
 
-static void cpu_task_queue_init_if_needed(void) {
-    if (__cpu_task_queue == NULL) {
-        __cpu_task_queue = list_create();
+static void init_if_needed(void) {
+    if (__task_queue == NULL) {
+        __task_queue = list_create();
     }
 }
 
-task_id cpu_task_repeat(ulong ticks, cpu_task_func_t func, void* data) {
-    cpu_task_queue_init_if_needed();
+ktask_id ktask_repeat(ulong ticks, ktask_func_t func, void* data) {
+    init_if_needed();
 
-    task_id id = ++cpu_task_counter;
-    cpu_task_t *task = malloc(sizeof(cpu_task_t));
+    ktask_id id = ++ktask_counter;
+    ktask_t *task = zalloc(sizeof(ktask_t));
 
     task->id = id;
     task->repeat = ticks;
@@ -37,15 +36,15 @@ task_id cpu_task_repeat(ulong ticks, cpu_task_func_t func, void* data) {
     task->func = func;
     task->data = data;
 
-    list_add(__cpu_task_queue, task);
+    list_add(__task_queue, task);
     return id;
 }
 
-task_id cpu_task_queue(cpu_task_func_t func, void* data) {
-    cpu_task_queue_init_if_needed();
+ktask_id ktask_queue(ktask_func_t func, void* data) {
+    init_if_needed();
 
-    task_id id = ++cpu_task_counter;
-    cpu_task_t *task = malloc(sizeof(cpu_task_t));
+    ktask_id id = ++ktask_counter;
+    ktask_t *task = zalloc(sizeof(ktask_t));
 
     task->id = id;
     task->repeat = 0;
@@ -54,22 +53,22 @@ task_id cpu_task_queue(cpu_task_func_t func, void* data) {
     task->func = func;
     task->data = data;
 
-    list_add(__cpu_task_queue, task);
+    list_add(__task_queue, task);
     return id;
 }
 
-static volatile int __cpu_queue_state = 0;
+static volatile int __queue_state = 0;
 
-static void __cpu_task_queue_flush(void) {
-    if (__cpu_task_queue == NULL) {
+static void __ktask_queue_flush(void) {
+    if (__task_queue == NULL) {
         return;
     }
 
     ulong current_ticks = timer_get_ticks();
-    list_node_t* node = __cpu_task_queue->head;
+    list_node_t* node = __task_queue->head;
 
     while (node != NULL) {
-        cpu_task_t *task = (cpu_task_t*) node->value;
+        ktask_t* task = node->value;
         bool run = task->repeat == 0;
 
         if (task->repeat != 0) {
@@ -93,23 +92,23 @@ static void __cpu_task_queue_flush(void) {
     }
 }
 
-void cpu_task_queue_flush(void) {
-    if (__cpu_queue_state > 0) {
+void ktask_queue_flush(void) {
+    if (__queue_state > 0) {
         return;
     }
 
-    __cpu_queue_state = 1;
-    __cpu_task_queue_flush();
-    __cpu_queue_state = 0;
+    __queue_state = 1;
+    __ktask_queue_flush();
+    __queue_state = 0;
 }
 
-void cpu_task_cancel(task_id id) {
-    cpu_task_queue_init_if_needed();
+void ktask_cancel(ktask_id id) {
+    init_if_needed();
 
-    list_node_t* node = __cpu_task_queue->head;
+    list_node_t* node = __task_queue->head;
 
     while (node != NULL) {
-        cpu_task_t *task = (cpu_task_t*) node->value;
+        ktask_t* task = node->value;
 
         if (task->id == id) {
             list_remove(node);

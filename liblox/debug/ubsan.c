@@ -1,6 +1,6 @@
 #include "ubsan.h"
 
-#include <liblox/io.h>
+#include "../io.h"
 
 void ubsan_debug(struct SourceLocation *location) {
     printf("[UBSAN] %s:%d:%dc - ", location->file_name,

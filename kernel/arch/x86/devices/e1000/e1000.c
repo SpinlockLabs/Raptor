@@ -2,7 +2,6 @@
 
 #include <liblox/common.h>
 #include <liblox/list.h>
-#include <liblox/hashmap.h>
 #include <liblox/string.h>
 #include <liblox/sleep.h>
 #include <liblox/printf.h>
@@ -17,11 +16,11 @@
 #include <kernel/arch/x86/devices/pci/pci.h>
 
 static uint32_t mmio_read32(uintptr_t addr) {
-    return *((volatile uint32_t *)(addr));
+    return *((volatile uint32_t*) (addr));
 }
 
 static void mmio_write32(uintptr_t addr, uint32_t val) {
-    (*((volatile uint32_t *)(addr))) = val;
+    (*((volatile uint32_t*) (addr))) = val;
 }
 
 #define E1000_NUM_RX_DESC 32
@@ -67,8 +66,13 @@ typedef struct e1000_state {
 typedef struct e1000_iface {
     network_iface_t* iface;
     e1000_state_t* state;
-    task_id poll_task;
+    ktask_id poll_task;
 } e1000_iface_t;
+
+typedef struct e1000_netbuf {
+    uint8_t* buffer;
+    size_t size;
+} e1000_netbuf_t;
 
 static void write_command(e1000_state_t* state, uint16_t addr, uint32_t val) {
     mmio_write32(state->mem_base + addr, val);
@@ -78,7 +82,7 @@ static uint32_t read_command(e1000_state_t* state, uint16_t addr) {
     return mmio_read32(state->mem_base + addr);
 }
 
-static void enqueue_packet(e1000_state_t* state, void *buffer) {
+static void enqueue_packet(e1000_state_t* state, e1000_netbuf_t* buffer) {
     spin_lock(state->net_queue_lock);
     list_add(state->net_queue, buffer);
     spin_unlock(state->net_queue_lock);
@@ -88,20 +92,22 @@ static void dequeue_packet_task(void* data) {
     e1000_iface_t* net = data;
     e1000_state_t* state = net->state;
 
+    spin_lock(state->net_queue_lock);
     if (state->net_queue->size == 0) {
+        spin_unlock(state->net_queue_lock);
         return;
     }
 
-    spin_lock(state->net_queue_lock);
     list_node_t* n = list_dequeue(state->net_queue);
-    void* value = n->value;
+    e1000_netbuf_t* value = n->value;
     free(n);
     spin_unlock(state->net_queue_lock);
 
     network_iface_t* iface = net->iface;
     if (iface->handle_receive != NULL) {
-        iface->handle_receive(iface, (uint8_t*) value);
+        iface->handle_receive(iface, value->buffer, value->size);
     }
+    free(value);
 }
 
 #define E1000_REG_CTRL 0x0000
@@ -184,9 +190,67 @@ static int eeprom_detect(e1000_state_t* state) {
 
 static uint16_t eeprom_read(e1000_state_t* state, uint8_t addr) {
     uint32_t temp = 0;
-    write_command(state, E1000_REG_EEPROM, 1 | ((uint32_t)(addr) << 8));
+    write_command(state, E1000_REG_EEPROM, 1 | ((uint32_t) (addr) << 8));
     while (!((temp = read_command(state, E1000_REG_EEPROM)) & (1 << 4))) {}
     return (uint16_t) ((temp >> 16) & 0xFFFF);
+}
+
+static void enable_promisc(e1000_state_t* state) {
+    uint32_t rctl = read_command(state, E1000_REG_RCTRL);
+
+    rctl |= RCTL_UPE;
+    rctl |= RCTL_MPE;
+
+    write_command(
+        state,
+        E1000_REG_RCTRL,
+        rctl
+    );
+}
+
+static void disable_promisc(e1000_state_t* state) {
+    uint32_t rctl = read_command(state, E1000_REG_RCTRL);
+
+    rctl |= ~(RCTL_UPE);
+    rctl |= ~(RCTL_MPE);
+
+    write_command(
+        state,
+        E1000_REG_RCTRL,
+        rctl
+    );
+}
+
+static bool get_promisc(e1000_state_t* state) {
+    uint32_t rctl = read_command(state, E1000_REG_RCTRL);
+
+    if ((rctl >> 3) & 1) {
+        return true;
+    }
+
+    return false;
+}
+
+static int e1000_ioctl(network_iface_t* iface, ulong req, void* data) {
+    unused(data);
+
+    e1000_iface_t* net = iface->data;
+
+    if (req == NET_IFACE_IOCTL_ENABLE_PROMISCUOUS) {
+        enable_promisc(net->state);
+        return 0;
+    }
+
+    if (req == NET_IFACE_IOCTL_DISABLE_PROMISCUOUS) {
+        disable_promisc(net->state);
+        return 0;
+    }
+
+    if (req == NET_IFACE_IOCTL_GET_PROMISCUOUS) {
+        return get_promisc(net->state);
+    }
+
+    return -1;
 }
 
 static void read_mac(e1000_state_t* state) {
@@ -202,27 +266,18 @@ static void read_mac(e1000_state_t* state) {
         state->mac[4] = (uint8_t) (t & 0xFF);
         state->mac[5] = (uint8_t) (t >> 8);
     } else {
-        uint8_t *mac_addr = (uint8_t*) (state->mem_base + 0x5400);
+        uint8_t* mac_addr = (uint8_t*) (state->mem_base + 0x5400);
         for (int i = 0; i < 6; ++i) {
             state->mac[i] = mac_addr[i];
         }
     }
 }
 
-static hashmap_t* e1000_irqs = NULL;
+static list_t* e1000_list = NULL;
 
-static int e1000_irq_handler(cpu_registers_t* r) {
-    uint32_t irq_id = r->int_no - 32;
-    e1000_iface_t* iface = hashmap_get(e1000_irqs, (void*) irq_id);
-
-    if (iface == NULL) {
-        return 0;
-    }
-
+static int e1000_device_interrupt(e1000_iface_t* iface) {
     e1000_state_t* state = iface->state;
     uint32_t status = read_command(state, 0xc0);
-
-    irq_ack(irq_id);
 
     if (!status) {
         return 0;
@@ -241,15 +296,18 @@ static int e1000_irq_handler(cpu_registers_t* r) {
             }
             state->rx_index = (state->rx_index + 1) % E1000_NUM_RX_DESC;
             if (state->rx[state->rx_index].status & 0x01) {
-                uint8_t *pbuf = state->rx_virt[state->rx_index];
+                uint8_t* pbuf = state->rx_virt[state->rx_index];
                 uint16_t plen = state->rx[state->rx_index].length;
 
-                void *packet = malloc(plen);
+                void* packet = malloc(plen);
                 memcpy(packet, pbuf, plen);
 
                 state->rx[state->rx_index].status = 0;
 
-                enqueue_packet(state, packet);
+                e1000_netbuf_t* buf = zalloc(sizeof(e1000_netbuf_t));
+                buf->buffer = packet;
+                buf->size = plen;
+                enqueue_packet(state, buf);
 
                 write_command(state, E1000_REG_RXDESCTAIL, (uint32_t) state->rx_index);
             } else {
@@ -261,7 +319,20 @@ static int e1000_irq_handler(cpu_registers_t* r) {
     return 1;
 }
 
-static network_iface_error_t send_packet(network_iface_t* iface, uint8_t* payload, size_t payload_size) {
+static int e1000_irq_handler(cpu_registers_t* r) {
+    unused(r);
+
+    list_for_each(node, e1000_list) {
+        e1000_iface_t* iface = node->value;
+        e1000_device_interrupt(iface);
+    }
+    return 0;
+}
+
+static network_iface_error_t send_packet(
+    network_iface_t* iface,
+    uint8_t* payload,
+    size_t payload_size) {
     e1000_iface_t* net = iface->data;
     e1000_state_t* state = net->state;
     state->tx_index = read_command(state, E1000_REG_TXDESCTAIL);
@@ -298,7 +369,6 @@ static void init_rx(e1000_state_t* state) {
 }
 
 static void init_tx(e1000_state_t* state) {
-
     write_command(state, E1000_REG_TXDESCLO, state->tx_phys);
     write_command(state, E1000_REG_TXDESCHI, 0);
 
@@ -323,9 +393,12 @@ static uint8_t* get_iface_mac(network_iface_t* iface) {
 
 static network_iface_error_t iface_destroy(network_iface_t* iface) {
     e1000_iface_t* net = iface->data;
-    cpu_task_cancel(net->poll_task);
+    ktask_cancel(net->poll_task);
 
-    hashmap_remove(e1000_irqs, (void*) net->state->irq);
+    int_disable();
+    list_remove(list_find(e1000_list, net));
+    int_enable();
+
     free(net->state);
     free(net);
     free(iface->name);
@@ -335,7 +408,7 @@ static network_iface_error_t iface_destroy(network_iface_t* iface) {
 }
 
 static void e1000_device_init(uint32_t device_pci) {
-    size_t idx = hashmap_count(e1000_irqs);
+    size_t idx = e1000_list->size;
     e1000_state_t* state = zalloc(sizeof(e1000_state_t));
     state->device_pci = device_pci;
     e1000_iface_t* net = zalloc(sizeof(e1000_iface_t));
@@ -409,7 +482,7 @@ static void e1000_device_init(uint32_t device_pci) {
     state->net_queue = list_create();
     state->irq = pci_read_field(state->device_pci, PCI_INTERRUPT_LINE, 1);
 
-    hashmap_set(e1000_irqs, (void*) state->irq, net);
+    list_add(e1000_list, net);
     irq_add_handler(state->irq, &e1000_irq_handler);
 
     for (int i = 0; i < 128; ++i) {
@@ -429,7 +502,7 @@ static void e1000_device_init(uint32_t device_pci) {
     write_command(state, 0x00D0, 0xFF);
     write_command(state, 0x00D8, 0xFF);
     write_command(state, 0x00D0,
-        (1 << 2) | (1 << 6) | (1 << 7) | (1 << 1) | (1 << 0));
+                  (1 << 2) | (1 << 6) | (1 << 7) | (1 << 1) | (1 << 0));
 
     sleep(10);
 
@@ -447,25 +520,29 @@ static void e1000_device_init(uint32_t device_pci) {
     iface->get_mac = get_iface_mac;
     iface->send = send_packet;
     iface->destroy = iface_destroy;
+    iface->handle_ioctl = e1000_ioctl;
     iface->data = net;
     net->iface = iface;
 
     network_iface_register(iface);
 
-    net->poll_task = cpu_task_repeat(1, dequeue_packet_task, net);
+    net->poll_task = ktask_repeat(1, dequeue_packet_task, net);
 }
 
 static void find_e1000(uint32_t device, uint16_t vid, uint16_t did,
-                       void *extra) {
+                       void* extra) {
     unused(extra);
 
     if ((vid == 0x8086) &&
-        (did == 0x100e || did == 0x1004 || did == 0x100f)) {
+        (did == 0x100e ||
+            did == 0x1004 ||
+            did == 0x100f ||
+            did == 0x15b8)) {
         e1000_device_init(device);
     }
 }
 
 void e1000_setup(void) {
-    e1000_irqs = hashmap_create_int(5);
+    e1000_list = list_create();
     pci_scan(&find_e1000, -1, NULL);
 }

@@ -64,10 +64,10 @@ void kernel_init(void) {
     kernel_initialized = true;
 
     /**
-     * Flush any CPU tasks before running the
+     * Flush any kernel tasks before running the
      * CPU in idle mode.
      */
-    cpu_task_queue_flush();
+    ktask_queue_flush();
 
     mount_rootfs();
 

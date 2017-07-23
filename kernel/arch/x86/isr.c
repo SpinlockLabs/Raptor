@@ -63,7 +63,14 @@ used void fault_handler(cpu_registers_t* r) {
         puts(exceptions[i]);
         putc('\n');
 
-        char buf[64];
+        print_registers(r);
+
+        panic(NULL);
+    }
+}
+
+void print_registers(cpu_registers_t* r) {
+    char buf[64];
 
 #define _PUTRV(name, reg) \
         puts(name " = 0x"); \
@@ -71,17 +78,26 @@ used void fault_handler(cpu_registers_t* r) {
         puts(buf); \
         putc('\n')
 
-        _PUTRV("cs", r->cs);
-        _PUTRV("ds", r->ds);
-        _PUTRV("fs", r->fs);
-        _PUTRV("gs", r->gs);
+    _PUTRV("cs", r->cs);
+    _PUTRV("ds", r->ds);
+    _PUTRV("es", r->es);
+    _PUTRV("fs", r->fs);
+    _PUTRV("gs", r->gs);
 
-        _PUTRV("eip", r->eip);
-        _PUTRV("esp", r->esp);
-        _PUTRV("esi", r->esi);
-        _PUTRV("eax", r->eax);
+    _PUTRV("eip", r->eip);
+    _PUTRV("ebp", r->ebp);
+    _PUTRV("edi", r->edi);
+    _PUTRV("esp", r->esp);
+    _PUTRV("esi", r->esi);
+
+    _PUTRV("eax", r->eax);
+    _PUTRV("ebx", r->ebx);
+    _PUTRV("ecx", r->ecx);
+    _PUTRV("edx", r->edx);
+
+    _PUTRV("eflags", r->eflags);
+    _PUTRV("int_no", r->int_no);
+    _PUTRV("err_code", r->err_code);
+
 #undef _PUTRV
-
-        panic(NULL);
-    }
 }

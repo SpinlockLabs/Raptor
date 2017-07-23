@@ -126,6 +126,10 @@ static void refresh_inode(
         return;
     }
 
+    if (this->block_size == 0) {
+        return;
+    }
+
     uint32_t inode_table_block = this->block_groups[group].inode_table;
     inode -= group * this->inodes_per_group;
     uint32_t block_offset = ((inode - 1) * this->inode_size) / this->block_size;
@@ -167,7 +171,7 @@ static fs_error_t stat_ext2(fs_node_t* node, fs_stat_t* stat) {
     uint32_t ind = (uint32_t) node->internal.tag;
     ext2_inodetable_t* inode = read_inode(this, ind);
 
-    if (inode->flags & EXT2_S_IFDIR) {
+    if (inode->mode & EXT2_S_IFDIR) {
         stat->type = FS_TYPE_DIRECTORY;
     } else {
         stat->type = FS_TYPE_FILE;
@@ -250,11 +254,18 @@ static uint inode_read_block(
     ext2_inodetable_t* inode,
     uint block,
     uint8_t* buf) {
-    size_t fn = inode->blocks / (this->block_size / 512);
+    size_t fn = 0;
+    if (this->block_size != 0) {
+        fn = inode->blocks / (this->block_size / 512);
+    }
+
     if (block >= fn) {
         memset(buf, 0x00, this->block_size);
-        printf(WARN "Tried to read an invalid block. Asked for %d (0-indexed), but inode only has %d!\n", block,
-               fn);
+        printf(WARN "Tried to read an invalid block. Asked "
+                    "for %d (0-indexed), but inode only has %d!\n",
+               block,
+               fn
+        );
         return 0;
     }
 
@@ -264,7 +275,7 @@ static uint inode_read_block(
     return real_block;
 }
 
-used static ext2_dir_t* direntry_ext2(
+static ext2_dir_t* direntry_ext2(
     ext2_fs_t* this,
     ext2_inodetable_t* inode,
     uint32_t no,
@@ -282,7 +293,7 @@ used static ext2_dir_t* direntry_ext2(
         ext2_dir_t* d_ent = (ext2_dir_t*) ((uintptr_t) block + dir_offset);
 
         if (d_ent->inode != 0 && dir_index == index) {
-            ext2_dir_t* out = malloc(d_ent->rec_len);
+            ext2_dir_t* out = zalloc(d_ent->rec_len);
             memcpy(out, d_ent, d_ent->rec_len);
             free(block);
             return out;
@@ -308,6 +319,7 @@ used static ext2_dir_t* direntry_ext2(
 
 static fs_error_t get_child_ext2(fs_node_t* node, char* name, fs_node_t** out);
 static fs_error_t read_ext2(fs_node_t* node, uint32_t offset, uint8_t* buffer, uint32_t size);
+static fs_error_t list_ext2(fs_node_t* node, fs_list_entry_t** eout);
 
 static fs_error_t node_from_file(
     ext2_fs_t* this,
@@ -317,7 +329,6 @@ static fs_error_t node_from_file(
     unused(inode);
 
     if (!fnode) {
-        /* You didn't give me a node to write into, go **** yourself */
         return FS_ERROR_BAD_STATE;
     }
 
@@ -330,6 +341,7 @@ static fs_error_t node_from_file(
     fnode->stat = stat_ext2;
     fnode->child = get_child_ext2;
     fnode->read = read_ext2;
+    fnode->list = list_ext2;
 
     return FS_ERROR_OK;
 }
@@ -400,6 +412,43 @@ static fs_error_t get_child_ext2(fs_node_t* node, char* name, fs_node_t** out) {
     return FS_ERROR_OK;
 }
 
+static fs_error_t list_ext2(fs_node_t* node, fs_list_entry_t** eout) {
+    ext2_fs_t* this = (ext2_fs_t*) node->internal.owner;
+    ext2_inodetable_t* inode = read_inode(this, (uint32_t) node->internal.tag);
+    if ((inode->mode & EXT2_S_IFDIR) == 0) {
+        free(inode);
+        return FS_ERROR_BAD_TYPE;
+    }
+
+    uint32_t index = 0;
+    if (*eout != NULL) {
+        index = (uint32_t) (*eout)->internal.tag;
+        free(*eout);
+    }
+
+    ext2_dir_t* dir = direntry_ext2(
+        this,
+        inode,
+        (uint32_t) node->internal.tag,
+        index
+    );
+
+    if (dir == NULL) {
+        *eout = NULL;
+        free(inode);
+        return FS_ERROR_OK;
+    }
+
+    fs_list_entry_t* entry = zalloc(sizeof(fs_list_entry_t));
+    memcpy(&entry->name, dir->name, dir->name_len);
+    entry->internal.owner = this;
+    entry->internal.tag = (void*) dir->inode;
+    *eout = entry;
+    free(dir);
+    free(inode);
+    return FS_ERROR_OK;
+}
+
 static fs_error_t read_ext2(fs_node_t* node, uint32_t offset, uint8_t* buffer, uint32_t size) {
     ext2_fs_t* this = node->internal.owner;
     ext2_inodetable_t* inode = read_inode(this, (uint32_t) node->internal.tag);
@@ -460,6 +509,7 @@ static uint32_t ext2_root(ext2_fs_t* this, ext2_inodetable_t* inode, fs_node_t* 
     node->name[1] = '\0';
     node->stat = stat_dir_ext2;
     node->child = get_child_ext2;
+    node->list = list_ext2;
 
     return 1;
 }

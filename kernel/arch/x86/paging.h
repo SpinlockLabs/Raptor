@@ -89,4 +89,4 @@ page_directory_t* paging_get_directory(void);
 /**
  * Page fault handler.
  */
-void page_fault(cpu_registers_t regs);
+void page_fault(cpu_registers_t* regs);

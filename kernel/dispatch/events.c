@@ -110,5 +110,5 @@ void event_dispatch_async(char* type, void* event) {
 
     data->type = type;
     data->event = event;
-    cpu_task_queue(event_dispatch_async_task, data);
+    ktask_queue(event_dispatch_async_task, data);
 }
