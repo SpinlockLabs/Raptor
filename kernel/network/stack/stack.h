@@ -121,6 +121,12 @@ typedef struct raw_ipv4_packet {
 /* Network stack subsystem initialization. */
 void network_stack_init(void);
 
+/* Lets the network stack takeover the given interface. */
+bool network_stack_takeover(network_iface_t* iface);
+
+/* Lets the network stack disown the given interface. */
+bool network_stack_disown(network_iface_t* iface);
+
 /**
  * Triggers the network stack to send the given buffer through the
  * given network interface. This will potentially translate the packet

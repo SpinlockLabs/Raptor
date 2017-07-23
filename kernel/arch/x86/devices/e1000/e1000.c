@@ -69,6 +69,11 @@ typedef struct e1000_iface {
     ktask_id poll_task;
 } e1000_iface_t;
 
+typedef struct e1000_netbuf {
+    uint8_t* buffer;
+    size_t size;
+} e1000_netbuf_t;
+
 static void write_command(e1000_state_t* state, uint16_t addr, uint32_t val) {
     mmio_write32(state->mem_base + addr, val);
 }
@@ -77,7 +82,7 @@ static uint32_t read_command(e1000_state_t* state, uint16_t addr) {
     return mmio_read32(state->mem_base + addr);
 }
 
-static void enqueue_packet(e1000_state_t* state, void* buffer) {
+static void enqueue_packet(e1000_state_t* state, e1000_netbuf_t* buffer) {
     spin_lock(state->net_queue_lock);
     list_add(state->net_queue, buffer);
     spin_unlock(state->net_queue_lock);
@@ -94,16 +99,15 @@ static void dequeue_packet_task(void* data) {
     }
 
     list_node_t* n = list_dequeue(state->net_queue);
-    void* value = n->value;
+    e1000_netbuf_t* value = n->value;
     free(n);
     spin_unlock(state->net_queue_lock);
 
     network_iface_t* iface = net->iface;
-    int_disable();
     if (iface->handle_receive != NULL) {
-        iface->handle_receive(iface, (uint8_t*) value);
+        iface->handle_receive(iface, value->buffer, value->size);
     }
-    int_enable();
+    free(value);
 }
 
 #define E1000_REG_CTRL 0x0000
@@ -242,7 +246,10 @@ static int e1000_device_interrupt(e1000_iface_t* iface) {
 
                 state->rx[state->rx_index].status = 0;
 
-                enqueue_packet(state, packet);
+                e1000_netbuf_t* buf = zalloc(sizeof(e1000_netbuf_t));
+                buf->buffer = packet;
+                buf->size = plen;
+                enqueue_packet(state, buf);
 
                 write_command(state, E1000_REG_RXDESCTAIL, (uint32_t) state->rx_index);
             } else {
@@ -257,17 +264,17 @@ static int e1000_device_interrupt(e1000_iface_t* iface) {
 static int e1000_irq_handler(cpu_registers_t* r) {
     unused(r);
 
-    bool handled = false;
     list_for_each(node, e1000_list) {
         e1000_iface_t* iface = node->value;
-        if (e1000_device_interrupt(iface) == 1) {
-            handled = true;
-        }
+        e1000_device_interrupt(iface);
     }
-    return handled ? 1 : 0;
+    return 0;
 }
 
-static network_iface_error_t send_packet(network_iface_t* iface, uint8_t* payload, size_t payload_size) {
+static network_iface_error_t send_packet(
+    network_iface_t* iface,
+    uint8_t* payload,
+    size_t payload_size) {
     e1000_iface_t* net = iface->data;
     e1000_state_t* state = net->state;
     state->tx_index = read_command(state, E1000_REG_TXDESCTAIL);
@@ -304,7 +311,6 @@ static void init_rx(e1000_state_t* state) {
 }
 
 static void init_tx(e1000_state_t* state) {
-
     write_command(state, E1000_REG_TXDESCLO, state->tx_phys);
     write_command(state, E1000_REG_TXDESCHI, 0);
 
@@ -469,7 +475,10 @@ static void find_e1000(uint32_t device, uint16_t vid, uint16_t did,
     unused(extra);
 
     if ((vid == 0x8086) &&
-        (did == 0x100e || did == 0x1004 || did == 0x100f)) {
+        (did == 0x100e ||
+            did == 0x1004 ||
+            did == 0x100f) ||
+            did == 0x15b8) {
         e1000_device_init(device);
     }
 }

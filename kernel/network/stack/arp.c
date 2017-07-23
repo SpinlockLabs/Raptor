@@ -22,7 +22,7 @@ static arp_state_t* get_state(network_iface_t* iface) {
     if (iface == NULL) {
         return NULL;
     }
-    return hashmap_get(iface->stack, "arp");
+    return hashmap_get(iface->manager_data, "arp");
 }
 
 typedef struct arp_entry {
@@ -133,7 +133,7 @@ static void handle_config_change(void* event, void* extra) {
     unused(extra);
 
     network_iface_t* iface = event;
-    uint32_t gw = (uint32_t) hashmap_get(iface->stack, "gateway");
+    uint32_t gw = (uint32_t) hashmap_get(iface->manager_data, "gateway");
 
     if (gw == 0) {
         return;
@@ -197,14 +197,14 @@ static void handle_interface_up(void* event, void* extra) {
     network_iface_t* iface = event;
     arp_state_t* state = zalloc(sizeof(arp_state_t));
     state->table = hashmap_create_int(2);
-    hashmap_set(iface->stack, "arp", state);
+    hashmap_set(iface->manager_data, "arp", state);
 }
 
 static void handle_interface_down(void* event, void* extra) {
     unused(extra);
 
     network_iface_t* iface = event;
-    hashmap_remove(iface->stack, "arp");
+    hashmap_remove(iface->manager_data, "arp");
 }
 
 void network_stack_arp_init(void) {

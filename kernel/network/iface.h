@@ -48,7 +48,7 @@ typedef network_iface_error_t (*network_iface_op_func_t)(network_iface_t*);
 typedef network_iface_error_t (*network_iface_send_func_t)(network_iface_t*, uint8_t*, size_t);
 
 /* Kernel-consumable handler for receiving data from a network interface. */
-typedef void (*network_iface_handle_receive_t)(network_iface_t*, uint8_t*);
+typedef network_iface_error_t (*network_iface_handle_receive_t)(network_iface_t*, uint8_t*, size_t);
 
 /*
   Generic handler for consuming a potential error from an interface operation.
@@ -73,25 +73,36 @@ typedef int (*network_iface_handle_ioctl_t)(network_iface_t*, ulong, void*);
 struct network_iface_flags {
     /* Indicates that this network interface is internal-only. */
     bool internal : 1;
+
+    /* Indicates that this network interface is stackless. */
+    bool stackless : 1;
+
+    /* Indicates that this network interface is a stub. */
+    bool stub : 1;
 };
 
 /* Network interface class types. */
 typedef enum network_iface_class_type {
-    /*
-      Unknown network interface class.
-      This can indicate a virtual network interface.
-    */
+    /**
+     * Unknown network interface class.
+     * This can indicate a virtual network interface.
+     */
     IFACE_CLASS_UNKNOWN = 0,
 
-    /*
-      Ethernet (wired) network interface class.
-    */
+    /**
+     * Ethernet (wired) network interface class.
+     */
     IFACE_CLASS_ETHERNET,
 
-    /*
-      Wireless 802.11 network interface class.
-    */
-    IFACE_CLASS_WIRELESS_80211
+    /**
+     * Wireless 802.11 network interface class.
+     */
+    IFACE_CLASS_WIRELESS_80211,
+
+    /**
+     * A virtual network interface.
+     */
+    IFACE_CLASS_VIRTUAL
 } network_iface_class_type_t;
 
 struct network_iface {
@@ -131,8 +142,11 @@ struct network_iface {
     /* Interface-provided user data. */
     void* data;
 
-    /* Pointer to network stack private data. */
-    void* stack;
+    /* Manager ID. */
+    char* manager;
+
+    /* Pointer to the manager's private data. */
+    void* manager_data;
 };
 
 /*

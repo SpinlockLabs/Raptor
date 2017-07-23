@@ -8,11 +8,11 @@ netconf_t* netconf_get(network_iface_t* iface) {
         return NULL;
     }
 
-    if (iface->stack == NULL) {
+    if (iface->manager_data == NULL) {
         return NULL;
     }
 
-    return hashmap_get(iface->stack, "config");
+    return hashmap_get(iface->manager_data, "config");
 }
 
 void netconf_lock(netconf_t* conf) {
@@ -29,7 +29,7 @@ static void handle_interface_up(void* event, void* extra) {
     network_iface_t* iface = event;
     netconf_t* conf = zalloc(sizeof(netconf_t));
     spin_init(conf->lock);
-    hashmap_set(iface->stack, "config", conf);
+    hashmap_set(iface->manager_data, "config", conf);
 }
 
 static void handle_interface_down(void* event, void* extra) {

@@ -48,6 +48,11 @@ typedef struct pcnet_network_iface {
     pcnet_state_t* state;
 } pcnet_network_iface_t;
 
+typedef struct pcnet_netbuf {
+    uint8_t* buffer;
+    size_t size;
+} packed pcnet_netbuf_t;
+
 static void write_rap32(pcnet_state_t* state, uint32_t value) {
     outl((uint16_t) (state->io_base + 0x14), value);
 }
@@ -115,7 +120,7 @@ static void init_descriptor(pcnet_state_t* state, int index, int is_tx) {
     }
 }
 
-static void enqueue_packet(pcnet_state_t* state, void* buffer) {
+static void enqueue_packet(pcnet_state_t* state, pcnet_netbuf_t* buffer) {
     spin_lock(state->net_queue_lock);
     list_add(state->net_queue, buffer);
     spin_unlock(state->net_queue_lock);
@@ -132,13 +137,19 @@ static void dequeue_packet_task(void* extra) {
 
     spin_lock(state->net_queue_lock);
     list_node_t* n = list_dequeue(state->net_queue);
-    void* value = n->value;
+    pcnet_netbuf_t* value = n->value;
     free(n);
     spin_unlock(state->net_queue_lock);
 
     if (iface->handle_receive != NULL) {
-        iface->handle_receive(iface, value);
+        iface->handle_receive(
+            iface,
+            value->buffer,
+            value->size
+        );
     }
+
+    free(value);
 }
 
 static network_iface_error_t pcnet_send_packet(
@@ -181,10 +192,9 @@ static network_iface_error_t pcnet_send_packet(
 static network_iface_t* pcnet_iface = NULL;
 static list_t* pcnet_list = NULL;
 
-static int pcnet_interrupt(pcnet_network_iface_t* iface) {
+static void pcnet_interrupt(pcnet_network_iface_t* iface) {
     pcnet_state_t* state = iface->state;
     write_csr32(state, 0, read_csr32(state, 0) | 0x0400);
-    irq_ack(state->irq);
 
     while (driver_owns(state->rx_de_start, state->rx_buffer_id)) {
         uint16_t plen = *(uint16_t*) &state->rx_de_start[state->rx_buffer_id * PCNET_DE_SIZE + 8];
@@ -195,12 +205,13 @@ static int pcnet_interrupt(pcnet_network_iface_t* iface) {
         memcpy(packet, pbuf, plen);
         state->rx_de_start[state->rx_buffer_id * PCNET_DE_SIZE + 7] = 0x80;
 
-        enqueue_packet(state, packet);
+        pcnet_netbuf_t* buf = zalloc(sizeof(pcnet_netbuf_t));
+        buf->buffer = packet;
+        buf->size = plen;
+        enqueue_packet(state, buf);
 
         state->rx_buffer_id = next_rx_index(state->rx_buffer_id);
     }
-
-    return 1;
 }
 
 static int pcnet_irq_handler(cpu_registers_t* r) {
@@ -209,11 +220,9 @@ static int pcnet_irq_handler(cpu_registers_t* r) {
     bool handled = false;
     list_for_each(node, pcnet_list) {
         pcnet_network_iface_t* iface = node->value;
-        if (pcnet_interrupt(iface) == 1) {
-            handled = true;
-        }
+        pcnet_interrupt(iface);
     }
-    return handled ? 1 : 0;
+    return 0;
 }
 
 static uint8_t* pcnet_get_iface_mac(network_iface_t* iface) {

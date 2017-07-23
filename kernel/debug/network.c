@@ -1,9 +1,12 @@
 #include "console.h"
 
 #include <kernel/network/iface.h>
+#include <kernel/network/ip.h>
+
 #include <kernel/network/stack/dhcp.h>
 #include <kernel/network/stack/arp.h>
-#include <kernel/network/ip.h>
+
+#include <kernel/network/ifhub/ifhub.h>
 #include <liblox/string.h>
 
 static void debug_network_iface_list(tty_t* tty, const char* input) {
@@ -90,8 +93,6 @@ static void debug_arp_known(tty_t* tty, const char* input) {
 
 static void debug_arp_ask(tty_t* tty, const char* input) {
     char* rest = (char*) input;
-    uint idx = 0;
-
     char* iface_name = NULL;
     char* addr_str = NULL;
 
@@ -120,10 +121,60 @@ static void debug_arp_ask(tty_t* tty, const char* input) {
     arp_ask(iface, addr);
 }
 
+static void debug_ifhub_create(tty_t* tty, const char* input) {
+    char* rest = (char*) input;
+    char* iface_name = NULL;
+    char* left_name = NULL;
+    char* right_name = NULL;
+
+    char* token = NULL;
+    while ((token = strtok(rest, " ", &rest)) != NULL) {
+        if (iface_name == NULL) {
+            iface_name = token;
+        } else if (left_name == NULL) {
+            left_name = token;
+        } else {
+            right_name = token;
+            break;
+        }
+    }
+
+    if (iface_name == NULL ||
+        left_name == NULL ||
+        right_name == NULL) {
+        tty_printf(tty, "Usage: ifhub-create <name> <left> <right>\n");
+        return;
+    }
+
+    network_iface_t* left = network_iface_get(left_name);
+    if (left == NULL) {
+        tty_printf(tty, "Network interface %s was not found.\n", left_name);
+        return;
+    }
+
+    network_iface_t* right = network_iface_get(right_name);
+    if (right == NULL) {
+        tty_printf(tty, "Network interface %s was not found.\n", right_name);
+        return;
+    }
+
+    network_iface_t* iface = ifhub_create(iface_name, left, right);
+
+    if (iface == NULL) {
+        tty_printf(tty, "Failed to create ifhub interface.\n");
+        return;
+    }
+
+    tty_printf(tty, "Created.\n");
+}
+
 void debug_network_init(void) {
     debug_console_register_command("net-iface-list", debug_network_iface_list);
     debug_console_register_command("net-iface-destroy", debug_network_iface_destroy);
     debug_console_register_command("dhcp-send-request", debug_network_dhcp_send_request);
+
     debug_console_register_command("arp-known", debug_arp_known);
     debug_console_register_command("arp-ask", debug_arp_ask);
+
+    debug_console_register_command("ifhub-create", debug_ifhub_create);
 }

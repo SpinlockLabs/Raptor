@@ -18,7 +18,7 @@ static dhcp_internal_state_t* get_state(network_iface_t* iface) {
     if (iface == NULL) {
         return NULL;
     }
-    return hashmap_get(iface->stack, "dhcp");
+    return hashmap_get(iface->manager_data, "dhcp");
 }
 
 static ipv4_address_t dhcp_request_src = {{0, 0, 0, 0}};
@@ -57,7 +57,7 @@ static void dhcp_handle_interface_up(void* event, void* extra) {
     network_iface_t* iface = event;
 
     dhcp_internal_state_t* state = zalloc(sizeof(dhcp_internal_state_t));
-    hashmap_set(iface->stack, "dhcp", state);
+    hashmap_set(iface->manager_data, "dhcp", state);
 
     dhcp_send_request(iface);
 }
