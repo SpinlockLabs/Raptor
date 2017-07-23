@@ -8,7 +8,7 @@ function(arch ARCH SRC_DIR)
   )
 
   add_executable(kernel ${ARCH_SRC} ${KERNEL_COMMON_SRC})
-  target_link_libraries(kernel lox-kernel)
+  target_link_libraries(kernel gcc lox-kernel)
   set_target_properties(kernel PROPERTIES OUTPUT_NAME "kernel.elf")
 endfunction()
 
@@ -23,10 +23,7 @@ function(kernel_cflags)
   endforeach()
   set(KERNEL_C_FLAGS "${KERNEL_C_FLAGS} ${ARGLIST}" PARENT_SCOPE)
   set(KERNEL_ASM_FLAGS "${KERNEL_ASM_FLAGS} ${ARGLIST}" PARENT_SCOPE)
-
-  if(NOT RAPTOR_CLANG_WIN)
-    set(KERNEL_LD_FLAGS "${KERNEL_LD_FLAGS} ${ARGLIST}" PARENT_SCOPE)
-  endif()
+  set(KERNEL_LD_FLAGS "${KERNEL_LD_FLAGS} ${ARGLIST}" PARENT_SCOPE)
 endfunction()
 
 function(kernel_ldscript LDSCRIPT)

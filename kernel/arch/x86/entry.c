@@ -23,7 +23,9 @@
 #include "devices/serial/serial.h"
 #include "devices/pcnet/pcnet.h"
 #include "devices/e1000/e1000.h"
-#include "kernel/arch/x86/devices/ata/ata.h"
+#include "devices/ata/ata.h"
+
+#include "acpi/raptor/init.h"
 
 const uint32_t kProcessorIdIntel = 0x756e6547;
 const uint32_t kProcessorIdAMD = 0x68747541;
@@ -177,6 +179,8 @@ used void kernel_main(multiboot_t *_mboot, uint32_t mboot_hdr, uintptr_t esp) {
         puts(DEBUG "Jumping to userspace...\n");
         userspace_jump(NULL, 0xB0000000);
     }
+
+    acpi_raptor_init();
 
     kernel_init();
 }

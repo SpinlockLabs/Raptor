@@ -2,7 +2,7 @@
 
 #include <kernel/pm/pm.h>
 
-static void poweroff(tty_t* tty, const char* input) {
+static void debug_poweroff(tty_t* tty, const char* input) {
     unused(tty);
     unused(input);
 
@@ -10,5 +10,5 @@ static void poweroff(tty_t* tty, const char* input) {
 }
 
 void debug_power_init(void) {
-    debug_console_register_command("poweroff", poweroff);
+    debug_console_register_command("poweroff", debug_poweroff);
 }
