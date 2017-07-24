@@ -537,6 +537,7 @@ static void find_e1000(uint32_t device, uint16_t vid, uint16_t did,
         (did == 0x100e ||
             did == 0x1004 ||
             did == 0x100f ||
+            did == 0x10d3 ||
             did == 0x15b8)) {
         e1000_device_init(device);
     }
