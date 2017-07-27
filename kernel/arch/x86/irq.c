@@ -33,12 +33,13 @@ static volatile int sync_depth = 0;
 
 void int_disable(void) {
     uint32_t flags;
-    asm volatile("pushf\n\t"
-                 "pop %%eax\n\t"
-                 "movl %%eax, %0\n\t"
-                 : "=r"(flags)
-                 :
-                 : "%eax");
+    asm volatile(
+        "pushf\n\t"
+        "pop %%eax\n\t"
+        "movl %%eax, %0\n\t"
+        : "=r"(flags)
+        :: "eax"
+    );
 
     cli();
 
@@ -164,6 +165,10 @@ void irq_ack(size_t irq) {
         outb(PIC2_CMD, 0x20);
     }
     outb(PIC1_CMD, 0x20);
+}
+
+void irq_wait(void) {
+    asm("hlt;");
 }
 
 used void irq_handler(cpu_registers_t *r) {

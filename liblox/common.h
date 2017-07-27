@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stddef.h>
+#include <stdbool.h>
 
 // Specifies that a struct should be packed.
 #define packed __attribute__((packed))

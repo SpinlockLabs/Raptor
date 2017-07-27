@@ -142,10 +142,11 @@ void paging_install(uintptr_t memsize) {
 }
 
 void paging_invalidate_tables(void) {
-    asm volatile (
-    "movl %%cr3, %%eax\n"
+    asm volatile(
+        "movl %%cr3, %%eax\n"
         "movl %%eax, %%cr3\n"
-    :: : "%eax"
+        ::
+        : "eax"
     );
 }
 
@@ -315,13 +316,13 @@ void paging_finalize(void) {
 void paging_switch_directory(page_directory_t* dir) {
     current_directory = dir;
 
-    asm volatile (
-    "mov %0, %%cr3\n"
+    asm volatile(
+        "mov %0, %%cr3\n"
         "mov %%cr0, %%eax\n"
         "orl $0x80000000, %%eax\n"
         "mov %%eax, %%cr0\n"
         ::"r"(dir->physicalAddr)
-        : "%eax"
+        : "eax"
     );
 }
 

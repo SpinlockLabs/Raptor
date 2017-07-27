@@ -1,47 +1,34 @@
+#include <liblox/atomic.h>
+
 #include <liblox/io.h>
 
 #include <kernel/spin.h>
-#include <kernel/cpu/task.h>
 #include <kernel/entry.h>
 
-static inline int arch_atomic_swap(volatile int* x, int v) {
-    asm("xchg %0, %1" : "=r"(v), "=m"(*x) : "0"(v) : "memory");
-    return v;
-}
-
-static inline void arch_atomic_store(volatile int* p, int x) {
-    asm("movl %1, %0" : "=m"(*p) : "r"(x) : "memory");
-}
-
-static inline void arch_atomic_inc(volatile int* x) {
-    asm("lock; incl %0" : "=m"(*x) : "m"(*x) : "memory");
-}
-
-static inline void arch_atomic_dec(volatile int* x) {
-    asm("lock; decl %0" : "=m"(*x) : "m"(*x) : "memory");
-}
+#include <kernel/cpu/task.h>
+#include <kernel/interupt.h>
 
 void spin_wait(volatile int* addr, volatile int* waiters) {
     if (waiters) {
-        arch_atomic_inc(waiters);
+        atomic_fetch_add(waiters, 1);
     }
 
     while (*addr) {
         if (kernel_initialized) {
             ktask_queue_flush();
         } else {
-            asm("hlt");
+            irq_wait();
         }
     }
 
     if (waiters) {
-        arch_atomic_dec(waiters);
+        atomic_fetch_sub(waiters, 1);
     }
 }
 
 void spin_lock(spin_lock_t lock) {
     bool warned = false;
-    while (arch_atomic_swap(lock, 1)) {
+    while (atomic_exchange(lock, 1)) {
         if (!warned) {
             warned = true;
             printf(WARN "Waiting for lock...\n");
@@ -57,7 +44,7 @@ void spin_init(spin_lock_t lock) {
 
 void spin_unlock(spin_lock_t lock) {
     if (lock[0]) {
-        arch_atomic_store(lock, 0);
+        atomic_store(lock, 0);
         if (lock[1] && kernel_initialized) {
             ktask_queue_flush();
         }
