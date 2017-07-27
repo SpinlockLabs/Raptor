@@ -8,7 +8,7 @@
 #define atomic_fetch_add(a, b) (*(a) = *(a) + (b))
 #define atomic_fetch_sub(a, b) (*(a) = *(a) - (b))
 
-#if defined(__COMPCERT__)
+#if !defined(__COMPCERT__)
 #define atomic_exchange(a, b) \
   __extension__({ \
     unsigned int ___tmp = *(a); *(a) = (b); ___tmp; \
