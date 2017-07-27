@@ -33,7 +33,7 @@ function(kernel_cflags)
 endfunction()
 
 function(kernel_ldscript LDSCRIPT)
-  set(KERNEL_LD_FLAGS "${KERNEL_LD_FLAGS} -T\"${LDSCRIPT}\"" PARENT_SCOPE)
+  set(KERNEL_LD_FLAGS "${KERNEL_LD_FLAGS} -Wl,-T\"${LDSCRIPT}\"" PARENT_SCOPE)
   set_source_files_properties(
     kernel/entry.c
     PROPERTIES
