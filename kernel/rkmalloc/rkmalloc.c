@@ -50,8 +50,8 @@ static list_node_t* get_pointer_entry(rkmalloc_heap* heap, void* ptr, rkmalloc_e
 #ifndef RKMALLOC_DISABLE_MAGIC
     unused(heap);
 
-    rkmalloc_entry* entry = (rkmalloc_entry*) (ptr - sizeof(rkmalloc_entry));
-    list_node_t* node = (list_node_t*) (entry - sizeof(list_node_t));
+    rkmalloc_entry* entry = (rkmalloc_entry*) ((uintptr_t) ptr - sizeof(rkmalloc_entry));
+    list_node_t* node = (list_node_t*) ((uintptr_t) entry - sizeof(list_node_t));
 
     if (entry->magic != rkmagic((uintptr_t) ptr)) {
         *eout = NULL;
@@ -185,12 +185,12 @@ void* rkmalloc_allocate(rkmalloc_heap* heap, size_t size) {
     list_init_node(node);
     node->list = &heap->index;
 
-    rkmalloc_entry* entry = (rkmalloc_entry*) ((void*) node + sizeof(list_node_t));
+    rkmalloc_entry* entry = (rkmalloc_entry*) ((uintptr_t) node + sizeof(list_node_t));
 
     entry->free = false;
     entry->block_size = block_size;
     entry->used_size = size;
-    entry->ptr = ((void*) entry + sizeof(rkmalloc_entry));
+    entry->ptr = (void*) ((uintptr_t) entry + sizeof(rkmalloc_entry));
 
 #ifndef RKMALLOC_DISABLE_MAGIC
     entry->magic = rkmagic((uintptr_t) entry->ptr);
