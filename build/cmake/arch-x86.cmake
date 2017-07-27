@@ -6,9 +6,9 @@ cflags(
   -DARCH_X86
 )
 
-if(ENABLE_X64)
+if(ENABLE_X64 AND NOT COMPCERT)
   cflags(-m64)
-else()
+elseif(NOT COMPCERT)
   cflags(-m32)
 endif()
 
