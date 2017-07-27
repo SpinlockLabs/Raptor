@@ -9,10 +9,9 @@
 #define VFS_PATH_SEP '/'
 
 typedef struct fs_node fs_node_t;
-typedef enum fs_error fs_error_t;
 typedef fs_node_t* (*vfs_filesystem_mounter_t)(block_device_t*);
 
-enum fs_error {
+typedef enum fs_error {
     FS_ERROR_UNKNOWN = 0,
     FS_ERROR_OK,
     FS_ERROR_DOES_NOT_EXIST,
@@ -24,7 +23,7 @@ enum fs_error {
     FS_ERROR_BAD_CALL,
     FS_ERROR_NOT_IMPLEMENTED,
     FS_ERROR_BAD_TYPE
-};
+} fs_error_t;
 
 typedef enum fs_node_type {
     FS_TYPE_UNKNOWN,
