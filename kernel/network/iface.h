@@ -114,7 +114,7 @@ struct network_iface {
     /*
       Network interface flags.
     */
-    union {
+    union network_iface_flag_view {
         uint32_t _flags;
         network_iface_flags_t flags;
     };

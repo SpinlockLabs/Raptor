@@ -1,7 +1,7 @@
 #include "commands.h"
 
 #define GROUP(n) \
-    extern void debug_## n ##_init(); \
+    extern void debug_## n ##_init(void); \
     debug_## n ##_init()
 
 #define CMD(f, n) \

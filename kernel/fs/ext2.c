@@ -449,7 +449,7 @@ static fs_error_t list_ext2(fs_node_t* node, fs_list_entry_t** eout) {
     return FS_ERROR_OK;
 }
 
-static fs_error_t read_ext2(fs_node_t* node, uint32_t offset, uint8_t* buffer, uint32_t size) {
+static fs_error_t read_ext2(fs_node_t* node, size_t offset, uint8_t* buffer, uint32_t size) {
     ext2_fs_t* this = node->internal.owner;
     ext2_inodetable_t* inode = read_inode(this, (uint32_t) node->internal.tag);
     uint32_t end;
