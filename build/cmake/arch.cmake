@@ -61,10 +61,13 @@ function(arch_post_init)
   )
 endfunction()
 
+kernel_cflags(
+  -nostdlib
+  -nostartfiles
+)
+
 if(NOT COMPCERT)
   kernel_cflags(
-    -nostdlib
-    -nostartfiles
     -ffreestanding
     -fno-lto
   )

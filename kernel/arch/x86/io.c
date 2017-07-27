@@ -1,6 +1,6 @@
 #include "io.h"
 
-#if !defined(__COMPCERT__)
+#if defined(__COMPCERT__)
 #define DEFIO(prefix, type, prefix_el) \
     void out ## prefix(uint16_t port, type value) { \
         asm volatile("out" #prefix "%" #prefix_el"0, %w1" :: "a"(value) : "Nd"(port)); \
@@ -13,11 +13,11 @@
 #else
 #define DEFIO(prefix, type, prefix_el) \
     void out ## prefix(uint16_t port, type value) { \
-        asm volatile("out" #prefix "%" #prefix_el"0, %w1" :: "rm"(value) : "rm"(port)); \
+        asm volatile("out" #prefix "%" #prefix_el"0, %w1" :: "r"(value) : "r"(port)); \
     } \
     type in ## prefix(uint16_t port) { \
         type ret;\
-        asm volatile("in" #prefix " %w1, %" #prefix_el "0" : "=rm"(ret) : "rm"(port)); \
+        asm volatile("in" #prefix " %w1, %" #prefix_el "0" : "=r"(ret) : "r"(port)); \
         return ret; \
     }
 #endif
