@@ -1,19 +1,35 @@
 #include "io.h"
 
 #if !defined(__COMPCERT__)
-#define DEFINE_IO(prefix, type, prefix_el) \
-    void out ## prefix(uint16_t port, type value) { \
-        asm volatile("out" #prefix "%" #prefix_el"0, %w1" :: "a"(value) : "Nd"(port)); \
-    } \
-    type in ## prefix(uint16_t port) { \
-        type ret;\
-        asm volatile("in" #prefix " %w1, %" #prefix_el "0" : "=a"(ret) : "Nd"(port)); \
-        return ret; \
-    }
+inline void outb(uint16_t port, uint8_t value) {
+    asm volatile ("outb %1, %0" : : "dN" (port), "a" (value));
+}
 
-DEFINE_IO(b, uint8_t, b)
-DEFINE_IO(s, uint16_t, s)
-DEFINE_IO(l, uint32_t,)
+inline uint8_t inb(uint16_t port) {
+    uint8_t ret;
+    asm volatile ("inb %1, %0" : "=a" (ret) : "dN" (port));
+    return ret;
+}
+
+inline uint32_t inl(uint16_t port) {
+    uint32_t ret;
+    asm volatile ("inl %%dx, %%eax" : "=a" (ret) : "dN" (port));
+    return ret;
+}
+
+inline void outl(uint16_t port, uint32_t value) {
+    asm volatile ("outl %%eax, %%dx" : : "dN" (port), "a" (value));
+}
+
+inline void outs(uint16_t port, uint16_t value) {
+    asm volatile ("inw %1, %0" : "=a" (value) : "dN" (port));
+}
+
+inline uint16_t ins(uint16_t port) {
+    uint16_t ret;
+    asm volatile ("inw %1, %0" : "=a" (ret) : "dN" (port));
+    return ret;
+}
 #else
 void outb(uint16_t port, uint8_t value) {
 }
