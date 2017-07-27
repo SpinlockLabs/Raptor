@@ -9,21 +9,30 @@ set(RAPTOR_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 include(build/cmake/common.cmake)
 include(build/cmake/filesystem.cmake)
 
-cflags(
-  -Wall
-  -Wextra
-  -std=gnu11
-  -pipe
-)
+if(NOT COMPCERT)
+  cflags(
+    -Wall
+    -Wextra
+    -std=gnu11
+    -pipe
+  )
+else()
+  cflags(
+    -Wall
+    -fall
+  )
+endif()
 
 if(CMAKEBUILD_TYPE STREQUAL "Debug")
   cflags(-g)
 endif()
 
 if(CLANG)
-  cflags(-Wno-unused-command-line-argument -O0)
-
-  cflags(-fno-integrated-as)
+  cflags(
+    -Wno-unused-command-line-argument
+    -O0
+    -fno-integrated-as
+  )
 endif()
 
 include_directories(${RAPTOR_DIR})

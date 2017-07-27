@@ -17,17 +17,19 @@ if(CLANG)
 endif()
 
 if(OPTIMIZE_NATIVE)
-    cflags(-march=native)
-else()
-    cflags(-mtune=generic)
+  cflags(-march=native)
+elseif(NOT COMPCERT)
+  cflags(-mtune=generic)
 endif()
 
-kernel_cflags(
-  -fno-stack-protector
-  -fno-pic
-)
+if(NOT COMPCERT)
+  kernel_cflags(
+    -fno-stack-protector
+    -fno-pic
+  )
+endif()
 
-if(NOT CLANG)
+if(GCC)
   kernel_cflags(-no-pie)
 endif()
 

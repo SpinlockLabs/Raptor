@@ -401,13 +401,11 @@ static void pcnet_init(uint32_t device_pci) {
 
     write_csr32(state, 0, read_csr32(state, 0) | (1 << 0) | (1 << 6)); /* do it */
 
-    uint64_t start_time;
-    asm volatile (".byte 0x0f, 0x31" : "=A" (start_time));
+    uint64_t start_time = arch_x86_get_timestamp();
 
     uint32_t status;
     while (((status = read_csr32(state, 0)) & (1 << 8)) == 0) {
-        uint64_t now_time;
-        asm volatile (".byte 0x0f, 0x31" : "=A" (now_time));
+        uint64_t now_time = arch_x86_get_timestamp();
         if (now_time - start_time > 0x10000) {
             printf(ERROR "Could not initialize PCNet card, status is 0x%4x\n", status);
             return;

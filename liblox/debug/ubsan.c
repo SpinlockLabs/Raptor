@@ -2,6 +2,7 @@
 
 #include "../io.h"
 
+#ifdef _UBSAN
 void ubsan_debug(struct SourceLocation *location) {
     printf("[UBSAN] %s:%d:%dc - ", location->file_name,
             location->line, location->column);
@@ -95,3 +96,4 @@ void __ubsan_handle_load_invalid_value(struct InvalidValueData *data,
     ubsan_debug(&data->location);
     printf("Invalid load of value at %d for the type %s: %d\n", val, data->type->type_name);
 }
+#endif

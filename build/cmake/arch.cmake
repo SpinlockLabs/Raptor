@@ -8,7 +8,7 @@ function(arch ARCH SRC_DIR)
   )
 
   add_executable(kernel ${ARCH_SRC} ${KERNEL_COMMON_SRC})
-  if(NOT CLANG)
+  if(GCC)
     target_link_libraries(kernel gcc)
   endif()
   target_link_libraries(kernel lox-kernel)
@@ -61,21 +61,24 @@ function(arch_post_init)
   )
 endfunction()
 
-kernel_cflags(
-  -nostdlib
-  -nostartfiles
-  -ffreestanding
-  -fno-lto
-)
+if(NOT COMPCERT)
+  kernel_cflags(
+    -nostdlib
+    -nostartfiles
+    -ffreestanding
+    -fno-lto
+  )
+endif()
 
-if(NOT CLANG)
+if(GCC)
   kernel_cflags(
     -fno-use-linker-plugin
   )
 endif()
 
 if(UBSAN)
-  kernel_cflags(
+  cflags(
+    -D_UBSAN=1
     -fsanitize=undefined
   )
 endif()
