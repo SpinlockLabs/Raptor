@@ -8,6 +8,7 @@
 #include <kernel/cmdline.h>
 #include <kernel/timer.h>
 
+#include "cpuid.h"
 #include "cmdline.h"
 #include "gdt.h"
 #include "paging.h"
@@ -24,9 +25,6 @@
 #include "devices/pcnet/pcnet.h"
 #include "devices/e1000/e1000.h"
 #include "kernel/arch/x86/devices/ata/ata.h"
-
-const uint32_t kProcessorIdIntel = 0x756e6547;
-const uint32_t kProcessorIdAMD = 0x68747541;
 
 void lox_output_char_ebl(char c) {
     outb(0x3F8, (uint8_t) c);
@@ -56,7 +54,7 @@ void lox_output_char_vga(char c) {
     lox_output_char_ebl(c);
 }
 
-used void arch_panic_handler(nullable char *msg) {
+used void arch_panic_handler(nullable char* msg) {
     asm("cli;");
 
     if (msg != NULL) {
@@ -105,6 +103,8 @@ void paging_init(void) {
     paging_finalize();
 }
 
+extern void _init(void);
+
 void kernel_setup_devices(void) {
     vga_pty = tty_create("vga");
     vga_pty->write = vga_pty_write;
@@ -119,6 +119,11 @@ void kernel_setup_devices(void) {
     serial_port_a->tty->flags.write_kernel_log = true;
     tty_register(serial_port_a->tty);
 
+    /**
+     * Calls functions marked as a constructor in the C runtime.
+     */
+    _init();
+
     ata_setup();
     pcnet_setup();
     e1000_setup();
@@ -128,7 +133,7 @@ void kernel_setup_devices(void) {
 /* Initial kernel stack pointer. */
 used uintptr_t initial_esp = 0;
 
-used void kernel_main(multiboot_t *_mboot, uint32_t mboot_hdr, uintptr_t esp) {
+used void kernel_main(multiboot_t* _mboot, uint32_t mboot_hdr, uintptr_t esp) {
     initial_esp = esp;
 
     if (mboot_hdr != MULTIBOOT_EAX_MAGIC) {
@@ -136,7 +141,6 @@ used void kernel_main(multiboot_t *_mboot, uint32_t mboot_hdr, uintptr_t esp) {
     }
 
     mboot = _mboot;
-
     init_cmdline(mboot);
 
     vga_init();
@@ -146,11 +150,10 @@ used void kernel_main(multiboot_t *_mboot, uint32_t mboot_hdr, uintptr_t esp) {
         lox_output_char_provider = lox_output_char_vga;
     }
 
-    uint32_t ebx = 0;
-    get_cpuid(0, 0, &ebx, 0, 0);
-    if (ebx == kProcessorIdIntel) {
+    uint processor_type = cpuid_get_processor_type();
+    if (processor_type == PROCESSOR_TYPE_INTEL) {
         puts(INFO "Processor Type: Intel\n");
-    } else if (ebx == kProcessorIdAMD) {
+    } else if (processor_type == PROCESSOR_TYPE_AMD) {
         puts(INFO "Processor Type: AMD\n");
     } else {
         puts(INFO "Processor Type: Unknown\n");
