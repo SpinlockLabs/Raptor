@@ -12,7 +12,7 @@
 #define IP_PROTOCOL_ICMP 1
 
 typedef union ipv4_address {
-    struct ipv4_address_components {
+    struct {
         uint8_t a;
         uint8_t b;
         uint8_t c;
@@ -41,7 +41,7 @@ typedef struct ipv4_packet {
 } packed ipv4_packet_t;
 
 typedef struct ip_packet_moving {
-    union ip_packet_moving_packets {
+    union {
         ipv4_packet_t ipv4;
     };
     char* iface;
