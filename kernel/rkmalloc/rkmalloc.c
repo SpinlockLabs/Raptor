@@ -241,7 +241,11 @@ void* rkmalloc_resize(rkmalloc_heap* heap, void* ptr, size_t new_size) {
 
     void* out = rkmalloc_allocate(heap, new_size);
     if (entry->used_size < new_size) {
-        memset(out + entry->used_size, 0, new_size - entry->used_size);
+        memset(
+            (void*) ((uintptr_t) out + entry->used_size),
+            0,
+            new_size - entry->used_size
+        );
     }
     memcpy(out, ptr, entry->used_size);
     rkmalloc_free(heap, ptr);
