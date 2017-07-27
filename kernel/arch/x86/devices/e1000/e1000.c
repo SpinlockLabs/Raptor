@@ -428,7 +428,9 @@ static void e1000_device_init(uint32_t device_pci) {
 
     for (int i = 0; i < E1000_NUM_RX_DESC; ++i) {
         state->rx_virt[i] = (void*) kpmalloc_ap(
-            8192 + 16, (uint32_t*) &state->rx[i].addr);
+            8192 + 16,
+            (uintptr_t*) &state->rx[i].addr
+        );
         state->rx[i].status = 0;
     }
 
@@ -439,7 +441,7 @@ static void e1000_device_init(uint32_t device_pci) {
     for (int i = 0; i < E1000_NUM_TX_DESC; ++i) {
         state->tx_virt[i] = (void*) kpmalloc_ap(
             8192 + 16,
-            (uint32_t*) &state->tx[i].addr
+            (uintptr_t*) &state->tx[i].addr
         );
         state->tx[i].status = 0;
         state->tx[i].cmd = (1 << 0);

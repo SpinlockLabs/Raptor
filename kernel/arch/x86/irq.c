@@ -106,7 +106,7 @@ void irq_remove_handler(size_t irq) {
     }
 }
 
-static void irq_remap() {
+static void irq_remap(void) {
     // Cascade init.
     outb(PIC1_CMD, ICW1_INIT + ICW1_ICW4);
     io_wait();

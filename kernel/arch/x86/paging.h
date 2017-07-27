@@ -7,7 +7,7 @@
 /**
  * Allocates the page table.
  */
-void paging_install(uint32_t);
+void paging_install(uintptr_t);
 
 /**
  * Enables the page table.
@@ -17,7 +17,7 @@ void paging_finalize(void);
 /**
  * Marks a page as a system page.
  */
-void paging_mark_system(uint64_t);
+void paging_mark_system(uintptr_t);
 
 /**
  * Invalidate the page tables.
@@ -32,13 +32,13 @@ void paging_switch_directory(page_directory_t*);
 /**
  * Retrieves a pointer to the given page.
  */
-page_t* paging_get_page(uint32_t, int, page_directory_t*);
+page_t* paging_get_page(uintptr_t, int, page_directory_t*);
 
 /**
  * Expand the kernel heap into the given address.
  * The page tables must be manually invalidated.
  */
-bool paging_heap_expand_into(uint32_t);
+bool paging_heap_expand_into(uintptr_t);
 
 /**
  * Allocates a large aligned page for use with some devices.

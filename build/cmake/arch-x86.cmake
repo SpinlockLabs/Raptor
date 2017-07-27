@@ -106,11 +106,11 @@ add_custom_target(
 if(RAPTOR_WINDOWS)
     add_custom_target(qemu-windows
       COMMAND "C:/Program Files/qemu/qemu-system-i386.exe"
-            -net user
-            -net nic,model=e1000
+            -netdev user,id=net0
+            -device e1000,netdev=net0
             -cpu core2duo
             -m 256
             -kernel "${CMAKE_BINARY_DIR}/kernel.elf"
-      DEPENDS kernel diskimg
+      DEPENDS kernel
     )
 endif()

@@ -133,7 +133,10 @@ static void handle_config_change(void* event, void* extra) {
     unused(extra);
 
     network_iface_t* iface = event;
-    uint32_t gw = (uint32_t) hashmap_get(iface->manager_data, "gateway");
+    netconf_t* conf = netconf_get(iface);
+    netconf_lock(conf);
+    uint32_t gw = conf->ipv4.gateway;
+    netconf_unlock(conf);
 
     if (gw == 0) {
         return;
