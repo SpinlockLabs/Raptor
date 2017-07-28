@@ -10,9 +10,8 @@ function(test NAME)
     set_target_properties(
       ${NAME}
       PROPERTIES
-      COMPILE_FLAGS "-fno-builtin"
+      COMPILE_FLAGS "-fno-builtin -static"
     )
-    set_target_properties(${NAME} PROPERTIES LINK_FLAGS "-static")
   endif()
   target_include_directories(${NAME} PRIVATE ${RAPTOR_DIR})
   set(EXE $<TARGET_FILE:${NAME}>)
