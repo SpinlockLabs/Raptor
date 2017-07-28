@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.6)
+cmake_minimum_required(VERSION 3.5)
 project(raptor C)
 
 enable_language(ASM)
@@ -23,7 +23,7 @@ else()
   )
 endif()
 
-if(CMAKEBUILD_TYPE STREQUAL "Debug")
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   cflags(-g)
 endif()
 

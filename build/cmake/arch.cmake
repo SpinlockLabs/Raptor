@@ -1,4 +1,5 @@
 function(arch ARCH SRC_DIR)
+  set(ARCH "${ARCH}" PARENT_SCOPE)
   file(GLOB_RECURSE ARCH_SRC
     "${KERNEL_DIR}/${SRC_DIR}/*.c"
     "${KERNEL_DIR}/${SRC_DIR}/*.h"

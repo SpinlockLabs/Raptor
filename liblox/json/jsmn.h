@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stddef.h>
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -19,16 +20,16 @@ typedef enum {
     JSMN_ARRAY = 2,
     JSMN_STRING = 3,
     JSMN_PRIMITIVE = 4
-} jsmntype_t;
+} jsmn_type_t;
 
-enum jsmnerr {
+typedef enum jsmn_error {
     /* Not enough tokens were provided */
-        JSMN_ERROR_NOMEM = -1,
+    JSMN_ERROR_NOMEM = -1,
     /* Invalid character inside JSON string */
-        JSMN_ERROR_INVAL = -2,
+    JSMN_ERROR_INVAL = -2,
     /* The string is not a full JSON packet, more bytes expected */
-        JSMN_ERROR_PART = -3
-};
+    JSMN_ERROR_PART = -3
+} jsmn_error_t;
 
 /**
  * JSON token description.
@@ -37,23 +38,25 @@ enum jsmnerr {
  * end		end position in JSON data string
  */
 typedef struct {
-    jsmntype_t type;
+    jsmn_type_t type;
     int start;
     int end;
     int size;
-#ifdef JSMN_PARENT_LINKS
     int parent;
-#endif
-} jsmntok_t;
+} jsmn_token;
 
 /**
  * JSON parser. Contains an array of token blocks available. Also stores
  * the string being parsed now and current position in that string
  */
 typedef struct {
-    size_t pos; /* offset in the JSON string */
-    size_t toknext; /* next token to allocate */
-    int toksuper; /* superior token node, e.g parent object or array */
+    struct {
+        bool initialized;
+        bool strict;
+    } flags;
+    size_t position; /* offset in the JSON string */
+    size_t next; /* next token to allocate */
+    int root; /* superior token node, e.g parent object or array */
 } jsmn_parser;
 
 /**
@@ -65,8 +68,16 @@ void jsmn_init(jsmn_parser* parser);
  * Run JSON parser. It parses a JSON data string into and array of tokens, each describing
  * a single JSON object.
  */
+int jsmn_parse_stage(jsmn_parser* parser, const char* js, size_t len,
+                     jsmn_token* tokens, unsigned int num_tokens);
+
+/**
+ * Run JSON parser. It parses a JSON data string into and array of tokens, each describing
+ * a single JSON object.
+ */
 int jsmn_parse(jsmn_parser* parser, const char* js, size_t len,
-               jsmntok_t* tokens, unsigned int num_tokens);
+               jsmn_token** tokens);
+
 
 #ifdef __cplusplus
 }

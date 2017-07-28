@@ -2,7 +2,6 @@
 
 #include <liblox/list.h>
 #include <liblox/string.h>
-#include <liblox/io.h>
 
 int main() {
     list_t* list = list_create();
