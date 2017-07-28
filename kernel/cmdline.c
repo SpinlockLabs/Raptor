@@ -2,7 +2,6 @@
 #include <liblox/string.h>
 #include <liblox/printf.h>
 #include <liblox/memory.h>
-#include <liblox/io.h>
 
 #include "cmdline.h"
 

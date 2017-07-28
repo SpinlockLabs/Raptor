@@ -29,3 +29,5 @@ char* strchr(const char* s, int c);
 char* strstr(const char* h, const char* n);
 
 long strtol(const char* nptr, char** endptr, register int base);
+
+char* strncpy(char* restrict d, const char* restrict s, size_t n);
