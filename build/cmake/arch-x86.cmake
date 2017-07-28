@@ -1,6 +1,9 @@
 arch("x86" "arch/x86")
-option(OPTIMIZE_NATIVE "Optimize for the native machine." OFF)
 option(ENABLE_X64 "Enable x86_64 mode." OFF)
+
+set(OPTIMIZE_FOR "generic" CACHE STRING "CPU to Optimize For")
+set(QEMU_CPU "core2duo" CACHE STRING "QEMU CPU")
+set(QEMU_NIC "e1000" CACHE STRING "QEMU NIC Model")
 
 cflags(
   -DARCH_X86
@@ -16,13 +19,9 @@ if(CLANG)
   cflags(-target i686-pc-elf)
 endif()
 
-if(OPTIMIZE_NATIVE)
-  cflags(-march=native)
-elseif(NOT COMPCERT)
-  cflags(-mtune=generic)
-endif()
-
 if(NOT COMPCERT)
+  cflags(-march=${OPTIMIZE_FOR})
+
   kernel_cflags(
     -fno-stack-protector
     -fno-pic
@@ -41,9 +40,9 @@ kernel_ldscript("${KERNEL_DIR}/arch/x86/linker.ld")
 
 set(QEMU_CMD_BASE
   qemu-system-i386
-    -cpu core2duo
+    -cpu ${QEMU_CPU}
     -m 256
-    -net nic,model=e1000
+    -net nic,model=${QEMU_NIC}
     -drive "file=${CMAKE_BINARY_DIR}/raptor.img,format=raw,if=ide,media=disk"
 )
 
@@ -109,8 +108,8 @@ if(RAPTOR_WINDOWS)
     add_custom_target(qemu-windows
       COMMAND "C:/Program Files/qemu/qemu-system-i386.exe"
             -netdev user,id=net0
-            -device e1000,netdev=net0
-            -cpu core2duo
+            -device ${QEMU_NIC},netdev=net0
+            -cpu ${QEMU_CPU}
             -m 256
             -kernel "${CMAKE_BINARY_DIR}/kernel.elf"
       DEPENDS kernel
