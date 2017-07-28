@@ -20,7 +20,11 @@ if(CLANG)
 endif()
 
 if(NOT COMPCERT)
-  cflags(-march=${OPTIMIZE_FOR})
+  if(OPTIMIZE_FOR STREQUAL "generic")
+    cflags(-mtune=${OPTIMIZE_FOR})
+  else()
+    cflags(-march=${OPTIMIZE_FOR})
+  endif()
 
   kernel_cflags(
     -fno-stack-protector
