@@ -37,7 +37,6 @@ endif()
 
 include_directories(${RAPTOR_DIR})
 
-include(${RAPTOR_DIR}/build/cmake/liblox.cmake)
 include(${RAPTOR_DIR}/build/cmake/kernel.cmake)
 include(${RAPTOR_DIR}/build/cmake/arch.cmake)
 
@@ -49,6 +48,9 @@ if(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm")
 else()
   include(${RAPTOR_DIR}/build/cmake/arch-x86.cmake)
 endif()
+
+include(${RAPTOR_DIR}/build/cmake/liblox.cmake)
+
 arch_post_init()
 
 add_subdirectory(userspace)
