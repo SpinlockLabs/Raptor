@@ -1,0 +1,71 @@
+#include "registry.h"
+
+#include <liblox/string.h>
+#include <kernel/spin.h>
+
+static list_t* device_registry = NULL;
+static spin_lock_t lock = {0};
+
+device_entry_t* device_register(
+    char* name,
+    uint classifier,
+    void* device
+) {
+    device_entry_t* entry = zalloc(sizeof(device_entry_t));
+    entry->name = name;
+    entry->classifier = classifier;
+    entry->device = device;
+
+    list_add(device_registry, entry);
+
+    return entry;
+}
+
+void device_unregister(
+    device_entry_t* device
+) {
+    spin_lock(lock);
+    list_node_t* node = list_find(device_registry, device);
+    if (node != NULL) {
+        list_remove(node);
+        free(node->value);
+        free(node);
+    }
+    spin_unlock(lock);
+}
+
+list_t* device_query(uint classifier) {
+    list_t* list = list_create();
+
+    spin_lock(lock);
+    list_for_each(node, device_registry) {
+        device_entry_t* dev = node->value;
+
+        if (dev->classifier == classifier) {
+            list_add(list, dev);
+        }
+    }
+
+    spin_unlock(lock);
+
+    return list;
+}
+
+device_entry_t* device_lookup(char* name, uint classifier) {
+    spin_lock(lock);
+    list_for_each(node, device_registry) {
+        device_entry_t* dev = node->value;
+
+        if (dev->classifier == classifier && strcmp(name, dev->name) == 0) {
+            spin_unlock(lock);
+            return dev;
+        }
+    }
+    spin_unlock(lock);
+    return NULL;
+}
+
+void device_registry_init(void) {
+    device_registry = list_create();
+    spin_init(lock);
+}

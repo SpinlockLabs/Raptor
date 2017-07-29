@@ -2,10 +2,6 @@
 
 #include <liblox/string.h>
 
-#include <kernel/rkmalloc/rkmalloc.h>
-#include <kernel/heap.h>
-#include <kernel/time.h>
-
 #include "commands.h"
 
 #define CONSOLE_BUFFER_SIZE 1024

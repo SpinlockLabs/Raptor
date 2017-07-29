@@ -15,6 +15,8 @@
 #include <kernel/network/iface.h>
 #include <kernel/network/stack/stack.h>
 
+#include <kernel/device/registry.h>
+
 #include <kernel/dispatch/events.h>
 #include <kernel/cpu/task.h>
 
@@ -39,6 +41,7 @@ void kernel_init(void) {
     heap_init();
     puts(DEBUG "Heap initialized.\n");
 
+    device_registry_init();
     events_subsystem_init();
     tty_subsystem_init();
     vfs_subsystem_init();

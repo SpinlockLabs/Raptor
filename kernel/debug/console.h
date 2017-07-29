@@ -4,7 +4,6 @@
 
 typedef void (*debug_console_command_t)(tty_t* tty, const char* input);
 
-void debug_console_register_tty(tty_t* tty);
 void debug_console_register_command(char* name, debug_console_command_t cmd);
 void debug_console_init(void);
 void debug_console_start(void);

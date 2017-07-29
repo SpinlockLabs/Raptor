@@ -7,6 +7,7 @@
 #include <kernel/spin.h>
 
 #include <kernel/dispatch/events.h>
+#include <kernel/device/registry.h>
 
 static spin_lock_t network_subsystem_lock = {0};
 static hashmap_t* network_iface_subsystem_registry = NULL;
@@ -24,6 +25,7 @@ void network_iface_register(network_iface_t* iface) {
     spin_unlock(network_subsystem_lock);
 
     event_dispatch("network:iface:registered", iface->name);
+    device_register(iface->name, DEVICE_CLASS_NETWORK, iface);
 }
 
 list_t* network_iface_get_all(void) {
@@ -43,6 +45,11 @@ network_iface_error_t network_iface_destroy(network_iface_t* iface) {
     spin_lock(network_subsystem_lock);
 
     event_dispatch("network:iface:destroying", iface);
+
+    device_unregister(device_lookup(
+        iface->name,
+        DEVICE_CLASS_NETWORK
+    ));
 
     network_iface_error_t error = IFACE_ERR_OK;
 

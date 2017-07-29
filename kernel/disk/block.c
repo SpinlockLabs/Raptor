@@ -7,6 +7,7 @@
 #include <kernel/panic.h>
 
 #include <kernel/dispatch/events.h>
+#include <kernel/device/registry.h>
 
 #include "mbr.h"
 
@@ -62,6 +63,8 @@ block_device_error_t block_device_register(block_device_t* device) {
     hashmap_set(registry, device->name, device);
     spin_unlock(lock);
 
+    device_register(device->name, DEVICE_CLASS_BLOCK, device);
+
     event_dispatch_async(
         "block-device:initialized",
         device
@@ -80,6 +83,11 @@ block_device_error_t block_device_destroy(block_device_t* device) {
         "block-device:destroying",
         device
     );
+
+    device_unregister(device_lookup(
+        device->name,
+        DEVICE_CLASS_BLOCK
+    ));
 
     if (device->ops.destroy != NULL) {
         error = device->ops.destroy(device);
