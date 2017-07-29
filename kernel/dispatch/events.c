@@ -22,11 +22,11 @@ void events_subsystem_init(void) {
         panic("Failed to create the events subsystem registry.");
     }
 
-    spin_init(registry_lock);
+    spin_init(&registry_lock);
 }
 
 void event_add_handler(char* type, event_handler_t handler, void* extra) {
-    spin_lock(registry_lock);
+    spin_lock(&registry_lock);
     list_t* list = NULL;
     if (!hashmap_has(registry, type)) {
         list = list_create();
@@ -41,13 +41,13 @@ void event_add_handler(char* type, event_handler_t handler, void* extra) {
 
     list_add(list, info);
 
-    spin_unlock(registry_lock);
+    spin_unlock(&registry_lock);
 }
 
 void event_remove_handler(char* type, event_handler_t handler) {
-    spin_lock(registry_lock);
+    spin_lock(&registry_lock);
     if (!hashmap_has(registry, type)) {
-        spin_unlock(registry_lock);
+        spin_unlock(&registry_lock);
         return;
     }
 
@@ -62,29 +62,29 @@ void event_remove_handler(char* type, event_handler_t handler) {
         list_remove(node);
         free(node);
         free(info);
-        spin_unlock(registry_lock);
+        spin_unlock(&registry_lock);
         return;
     }
 
-    spin_unlock(registry_lock);
+    spin_unlock(&registry_lock);
 }
 
 void event_dispatch(char* type, void* event) {
-    spin_lock(registry_lock);
+    spin_lock(&registry_lock);
 
     if (!hashmap_has(registry, type)) {
-        spin_unlock(registry_lock);
+        spin_unlock(&registry_lock);
         return;
     }
 
     list_t* list = hashmap_get(registry, type);
 
     if (list == NULL) {
-        spin_unlock(registry_lock);
+        spin_unlock(&registry_lock);
         return;
     }
 
-    spin_unlock(registry_lock);
+    spin_unlock(&registry_lock);
 
     list_for_each(node, list) {
         event_dispatch_info_t* info = node->value;

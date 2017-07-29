@@ -93,7 +93,7 @@ fs_error_t vfs_mount_node(char* path, fs_node_t* node) {
         return FS_ERROR_BAD_STATE;
     }
 
-    spin_lock(lock);
+    spin_lock(&lock);
     tree_node_t* tnode = NULL;
 
     char* p = strdup(path);
@@ -115,7 +115,7 @@ fs_error_t vfs_mount_node(char* path, fs_node_t* node) {
         r->fs = node;
         fs_root = node;
         free(p);
-        spin_unlock(lock);
+        spin_unlock(&lock);
         return FS_ERROR_OK;
     }
 
@@ -159,7 +159,7 @@ fs_error_t vfs_mount_node(char* path, fs_node_t* node) {
     entry->fs = node;
 
     free(p);
-    spin_unlock(lock);
+    spin_unlock(&lock);
     return FS_ERROR_OK;
 }
 

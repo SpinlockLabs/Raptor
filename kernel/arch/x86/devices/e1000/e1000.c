@@ -83,25 +83,25 @@ static uint32_t read_command(e1000_state_t* state, uint16_t addr) {
 }
 
 static void enqueue_packet(e1000_state_t* state, e1000_netbuf_t* buffer) {
-    spin_lock(state->net_queue_lock);
+    spin_lock(&state->net_queue_lock);
     list_add(state->net_queue, buffer);
-    spin_unlock(state->net_queue_lock);
+    spin_unlock(&state->net_queue_lock);
 }
 
 static void dequeue_packet_task(void* data) {
     e1000_iface_t* net = data;
     e1000_state_t* state = net->state;
 
-    spin_lock(state->net_queue_lock);
+    spin_lock(&state->net_queue_lock);
     if (state->net_queue->size == 0) {
-        spin_unlock(state->net_queue_lock);
+        spin_unlock(&state->net_queue_lock);
         return;
     }
 
     list_node_t* n = list_dequeue(state->net_queue);
     e1000_netbuf_t* value = n->value;
     free(n);
-    spin_unlock(state->net_queue_lock);
+    spin_unlock(&state->net_queue_lock);
 
     network_iface_t* iface = net->iface;
     if (iface->handle_receive != NULL) {

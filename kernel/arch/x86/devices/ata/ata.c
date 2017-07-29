@@ -140,7 +140,7 @@ static block_device_error_t ata_block_read_sector(
     uint16_t bus = ata->io_base;
     uint8_t slave = (uint8_t) ata->slave;
 
-    spin_lock(ata_lock);
+    spin_lock(&ata_lock);
 
     ata_wait(ata, 0);
     outb(ata->bar4, 0x00);
@@ -195,7 +195,7 @@ static block_device_error_t ata_block_read_sector(
     memcpy(buffer, ata->dma_start, 512);
     ata_outb(ata->bar4, 0x2, (uint8_t) (inb((uint16_t) (ata->bar4 + 0x02)) | 0x04 | 0x02));
 
-    spin_unlock(ata_lock);
+    spin_unlock(&ata_lock);
 
     return BLOCK_DEVICE_ERROR_OK;
 }

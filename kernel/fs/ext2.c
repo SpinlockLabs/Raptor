@@ -54,7 +54,7 @@ static fs_error_t read_block(ext2_fs_t* this, uint block_id, uint8_t* buffer) {
         return FS_ERROR_BAD_CALL;
     }
 
-    spin_lock(this->lock);
+    spin_lock(&this->lock);
     if (this->disk_cache == NULL) {
         block_device_error_t error = block_device_read(
             this->device,
@@ -63,7 +63,7 @@ static fs_error_t read_block(ext2_fs_t* this, uint block_id, uint8_t* buffer) {
             this->block_size
         );
 
-        spin_unlock(this->lock);
+        spin_unlock(&this->lock);
 
         if (error != BLOCK_DEVICE_ERROR_OK) {
             return FS_ERROR_IO_FAILED;
@@ -79,7 +79,7 @@ static fs_error_t read_block(ext2_fs_t* this, uint block_id, uint8_t* buffer) {
         if (this->disk_cache[i].block_no == block_id) {
             this->disk_cache[i].last_use = get_cache_time(this);
             memcpy(buffer, this->disk_cache[i].block, this->block_size);
-            spin_unlock(this->lock);
+            spin_unlock(&this->lock);
             return FS_ERROR_OK;
         }
 
@@ -101,7 +101,7 @@ static fs_error_t read_block(ext2_fs_t* this, uint block_id, uint8_t* buffer) {
     );
 
     if (error != BLOCK_DEVICE_ERROR_OK) {
-        spin_unlock(this->lock);
+        spin_unlock(&this->lock);
         return FS_ERROR_IO_FAILED;
     }
 
@@ -111,7 +111,7 @@ static fs_error_t read_block(ext2_fs_t* this, uint block_id, uint8_t* buffer) {
     this->disk_cache[oldest].last_use = get_cache_time(this);
     this->disk_cache[oldest].dirty = 0;
 
-    spin_unlock(this->lock);
+    spin_unlock(&this->lock);
 
     return FS_ERROR_OK;
 }

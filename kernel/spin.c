@@ -24,34 +24,34 @@ void spin_wait(atomic_int* addr, atomic_int* waiters) {
     }
 }
 
-void spin_lock(spin_lock_t lock) {
+void spin_lock(spin_lock_t* lock) {
 #ifdef ARCH_NO_SPINLOCK
     return;
 #endif
 
     bool warned = false;
-    while (atomic_exchange(&lock.addr, 1)) {
+    while (atomic_exchange(&lock->addr, 1)) {
         if (!warned) {
             warned = true;
             printf(WARN "Waiting for lock...\n");
         }
-        spin_wait(&lock.addr, &lock.waiters);
+        spin_wait(&lock->addr, &lock->waiters);
     }
 }
 
-void spin_init(spin_lock_t lock) {
-    lock.addr = 0;
-    lock.waiters = 0;
+void spin_init(spin_lock_t* lock) {
+    lock->addr = 0;
+    lock->waiters = 0;
 }
 
-void spin_unlock(spin_lock_t lock) {
+void spin_unlock(spin_lock_t* lock) {
 #ifdef ARCH_NO_SPINLOCK
     return;
 #endif
 
-    if (lock.addr) {
-        atomic_store(&lock.addr, 0);
-        if (lock.waiters && kernel_initialized) {
+    if (lock->addr) {
+        atomic_store(&lock->addr, 0);
+        if (lock->waiters && kernel_initialized) {
             ktask_queue_flush();
         }
     }

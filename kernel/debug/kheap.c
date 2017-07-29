@@ -7,7 +7,7 @@ static void debug_kheap_stats(tty_t* tty, const char* input) {
     unused(input);
 
     rkmalloc_heap* heap = heap_get();
-    spin_lock(heap->lock);
+    spin_lock(&heap->lock);
 
     tty_printf(tty, "Used Object Allocations: %d bytes\n", heap->total_allocated_used_size);
     tty_printf(tty, "Used Block Allocations: %d bytes\n", heap->total_allocated_blocks_size);
@@ -28,7 +28,7 @@ static void debug_kheap_stats(tty_t* tty, const char* input) {
         }
     }
 
-    spin_unlock(heap->lock);
+    spin_unlock(&heap->lock);
 
     tty_printf(tty, "Reclaimable Entries: %d\n", reclaimable_entries);
     tty_printf(tty, "Reclaimable Block Allocations: %d bytes\n", reclaimable_block_total);

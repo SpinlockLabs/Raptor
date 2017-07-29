@@ -92,14 +92,14 @@ static bool first_frame(uintptr_t* val) {
 static bool alloc_frame(page_t* page, int is_kernel, int is_writable) {
     bool made = false;
     if (page->frame == 0) {
-        spin_lock(frame_alloc_lock);
+        spin_lock(&frame_alloc_lock);
         uintptr_t index = 0;
         if (!first_frame(&index)) {
             panic("Out of paging frames.");
         }
         set_frame(index * 0x1000);
         page->frame = index;
-        spin_unlock(frame_alloc_lock);
+        spin_unlock(&frame_alloc_lock);
         made = true;
     }
 
@@ -212,10 +212,10 @@ uintptr_t paging_allocate_aligned_large(uintptr_t address, size_t size, uintptr_
         clear_frame(map_to_physical(i));
     }
 
-    spin_lock(frame_alloc_lock);
+    spin_lock(&frame_alloc_lock);
     uintptr_t index = first_n_frames((size + 0xFFF) / 0x1000);
     if (index == 0xFFFFFFFF) {
-        spin_unlock(frame_alloc_lock);
+        spin_unlock(&frame_alloc_lock);
         return 0;
     }
 
@@ -236,7 +236,7 @@ uintptr_t paging_allocate_aligned_large(uintptr_t address, size_t size, uintptr_
         page->dirty = 1;
     }
 
-    spin_unlock(frame_alloc_lock);
+    spin_unlock(&frame_alloc_lock);
     *phys = map_to_physical(address);
     return address;
 }

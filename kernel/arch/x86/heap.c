@@ -34,12 +34,12 @@ static uintptr_t _kpmalloc_int(size_t size, int align, uintptr_t* phys) {
         uintptr_t address = 0;
 
         if (align) {
-            spin_lock(kheap_lock);
+            spin_lock(&kheap_lock);
             address = kheap_end;
             address &= 0xFFFFF000;
             address += 0x1000;
             kheap_end = address + size;
-            spin_unlock(kheap_lock);
+            spin_unlock(&kheap_lock);
         } else {
             address = (uintptr_t) kheap_allocate(size);
         }
@@ -90,7 +90,7 @@ void kpmalloc_start_at(uintptr_t addr) {
 }
 
 void* kpmalloc_kheap_expand(size_t size) {
-    spin_lock(kheap_lock);
+    spin_lock(&kheap_lock);
     uintptr_t address = kheap_end;
 
     if (kheap_end + size > KERNEL_HEAP_END - 1) {
@@ -116,7 +116,7 @@ void* kpmalloc_kheap_expand(size_t size) {
     }
 
     kheap_end += size;
-    spin_unlock(kheap_lock);
+    spin_unlock(&kheap_lock);
     memset((void*) address, 0, size);
     return (void*) address;
 }

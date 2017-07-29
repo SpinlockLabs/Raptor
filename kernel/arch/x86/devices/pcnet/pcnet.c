@@ -158,9 +158,9 @@ static void init_descriptor(pcnet_state_t* state, int index, int is_tx) {
 }
 
 static void enqueue_packet(pcnet_state_t* state, pcnet_netbuf_t* buffer) {
-    spin_lock(state->net_queue_lock);
+    spin_lock(&state->net_queue_lock);
     list_add(state->net_queue, buffer);
-    spin_unlock(state->net_queue_lock);
+    spin_unlock(&state->net_queue_lock);
 }
 
 static void dequeue_packet_task(void* extra) {
@@ -172,11 +172,11 @@ static void dequeue_packet_task(void* extra) {
         return;
     }
 
-    spin_lock(state->net_queue_lock);
+    spin_lock(&state->net_queue_lock);
     list_node_t* n = list_dequeue(state->net_queue);
     pcnet_netbuf_t* value = n->value;
     free(n);
-    spin_unlock(state->net_queue_lock);
+    spin_unlock(&state->net_queue_lock);
 
     if (iface->handle_receive != NULL) {
         iface->handle_receive(

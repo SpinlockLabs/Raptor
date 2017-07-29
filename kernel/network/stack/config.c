@@ -16,11 +16,11 @@ netconf_t* netconf_get(network_iface_t* iface) {
 }
 
 void netconf_lock(netconf_t* conf) {
-    spin_lock(conf->lock);
+    spin_lock(&conf->lock);
 }
 
 void netconf_unlock(netconf_t* conf) {
-    spin_unlock(conf->lock);
+    spin_unlock(&conf->lock);
 }
 
 static void handle_interface_up(void* event, void* extra) {
@@ -28,7 +28,7 @@ static void handle_interface_up(void* event, void* extra) {
 
     network_iface_t* iface = event;
     netconf_t* conf = zalloc(sizeof(netconf_t));
-    spin_init(conf->lock);
+    spin_init(&conf->lock);
     hashmap_set(iface->manager_data, "config", conf);
 }
 

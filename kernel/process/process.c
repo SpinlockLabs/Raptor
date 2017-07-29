@@ -15,7 +15,7 @@ static volatile process_t* current_process = NULL;
 static spin_lock_t tree_lock;
 
 static process_t* create_kidle(void) {
-    spin_lock(tree_lock);
+    spin_lock(&tree_lock);
     process_t* proc = zalloc(sizeof(process_t));
     proc->name = "[kernel]";
     proc->pid = 0;
@@ -25,7 +25,7 @@ static process_t* create_kidle(void) {
 }
 
 void process_tree_init(void) {
-    spin_init(tree_lock);
+    spin_init(&tree_lock);
     process_tree = tree_create();
     process_list = list_create();
     wait_queue = list_create();
@@ -38,7 +38,7 @@ process_t* process_get_current(void) {
 }
 
 pid_t process_get_next_pid(void) {
-    return (pid_t) next_pid++;
+    return next_pid++;
 }
 
 list_t* process_get_all(void) {

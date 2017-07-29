@@ -16,7 +16,7 @@
  */
 static list_t* tables = NULL;
 
-static spin_lock_t tables_lock = {0};
+static spin_lock_t tables_lock;
 
 static void init_root_tables(void) {
     route_table_t* table = route_table_create("");
@@ -40,23 +40,23 @@ route_table_t* route_table_create(char* name) {
 
     route_table_t* table = zalloc(sizeof(route_table_t));
     memcpy(table->name, name, name_size);
-    spin_init(table->lock);
+    spin_init(&table->lock);
     return table;
 }
 
 route_table_t* route_table_get(char* name) {
-    spin_lock(tables_lock);
+    spin_lock(&tables_lock);
 
     list_for_each(node, tables) {
         route_table_t* table = node->value;
 
         if (strcmp(table->name, name) == 0) {
-            spin_unlock(tables_lock);
+            spin_unlock(&tables_lock);
             return table;
         }
     }
 
-    spin_unlock(tables_lock);
+    spin_unlock(&tables_lock);
     return NULL;
 }
 
@@ -66,9 +66,9 @@ route_error_t route_table_add(route_table_t* table) {
         return ROUTE_ERROR_EXISTS;
     }
 
-    spin_lock(tables_lock);
+    spin_lock(&tables_lock);
     list_add(tables, table);
-    spin_unlock(tables_lock);
+    spin_unlock(&tables_lock);
 
     return ROUTE_ERROR_OK;
 }
@@ -79,20 +79,20 @@ route_error_t route_table_remove(route_table_t* table) {
         return ROUTE_ERROR_DOES_NOT_EXIST;
     }
 
-    spin_lock(tables_lock);
+    spin_lock(&tables_lock);
     list_remove(list_find(tables, existing));
-    spin_unlock(tables_lock);
+    spin_unlock(&tables_lock);
 
     return ROUTE_ERROR_OK;
 }
 
 list_t* route_table_get_all(void) {
-    spin_lock(tables_lock);
+    spin_lock(&tables_lock);
     list_t* list = list_create();
     list_for_each(node, tables) {
         list_add(list, node->value);
     }
-    spin_unlock(tables_lock);
+    spin_unlock(&tables_lock);
     return list;
 }
 
@@ -130,12 +130,12 @@ static void apply_attribute(route_attribute_t* attr, ip_packet_moving_t* packet)
 route_error_t route_packet(ip_packet_moving_t* packet) {
     unused(packet);
 
-    spin_lock(tables_lock);
+    spin_lock(&tables_lock);
 
     list_for_each(tnode, tables) {
         route_table_t* table = tnode->value;
 
-        spin_lock(table->lock);
+        spin_lock(&table->lock);
         list_for_each(node, table->entries) {
             route_table_entry_t* entry = node->value;
 
@@ -165,10 +165,10 @@ route_error_t route_packet(ip_packet_moving_t* packet) {
                 }
             }
         }
-        spin_unlock(table->lock);
+        spin_unlock(&table->lock);
     }
 
-    spin_unlock(tables_lock);
+    spin_unlock(&tables_lock);
 
     return ROUTE_ERROR_OK;
 }

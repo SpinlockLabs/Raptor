@@ -37,9 +37,9 @@ block_device_t* block_device_create(char* name) {
 }
 
 block_device_t* block_device_get(char* name) {
-    spin_lock(lock);
+    spin_lock(&lock);
     block_device_t* device = hashmap_get(registry, name);
-    spin_unlock(lock);
+    spin_unlock(&lock);
     return device;
 }
 
@@ -48,7 +48,7 @@ list_t* block_device_get_all(void) {
 }
 
 block_device_error_t block_device_register(block_device_t* device) {
-    spin_lock(lock);
+    spin_lock(&lock);
 
     if (hashmap_has(registry, device->name)) {
         printf(
@@ -56,12 +56,12 @@ block_device_error_t block_device_register(block_device_t* device) {
                  "device already exists!\n"
         );
 
-        spin_unlock(lock);
+        spin_unlock(&lock);
         return BLOCK_DEVICE_ERROR_EXISTS;
     }
 
     hashmap_set(registry, device->name, device);
-    spin_unlock(lock);
+    spin_unlock(&lock);
 
     device_register(device->name, DEVICE_CLASS_BLOCK, device);
 
@@ -74,7 +74,7 @@ block_device_error_t block_device_register(block_device_t* device) {
 }
 
 block_device_error_t block_device_destroy(block_device_t* device) {
-    spin_lock(lock);
+    spin_lock(&lock);
 
     char* name = device->name;
     block_device_error_t error = BLOCK_DEVICE_ERROR_OK;
@@ -99,7 +99,7 @@ block_device_error_t block_device_destroy(block_device_t* device) {
         name
     );
 
-    spin_unlock(lock);
+    spin_unlock(&lock);
 
     return error;
 }

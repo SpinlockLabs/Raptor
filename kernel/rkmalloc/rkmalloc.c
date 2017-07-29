@@ -28,7 +28,7 @@ void rkmalloc_init_heap(rkmalloc_heap* heap) {
     heap->error_code = RKMALLOC_ERROR_NONE;
     heap->total_allocated_blocks_size = 0;
     heap->total_allocated_used_size = 0;
-    spin_init(heap->lock);
+    spin_init(&heap->lock);
 
     list_init(&heap->index);
 
@@ -59,7 +59,7 @@ static list_node_t* get_pointer_entry(rkmalloc_heap* heap, void* ptr, rkmalloc_e
     }
     *eout = entry;
 #else
-    spin_lock(heap->lock);
+    spin_lock(&heap->lock);
     list_node_t* node = heap->index.head;
     rkmalloc_entry* entry = NULL;
     while (node != NULL) {
@@ -70,7 +70,7 @@ static list_node_t* get_pointer_entry(rkmalloc_heap* heap, void* ptr, rkmalloc_e
 
         node = node->next;
     }
-    spin_unlock(heap->lock);
+    spin_unlock(&heap->lock);
     *eout = entry;
 #endif
 
@@ -146,7 +146,7 @@ void* rkmalloc_allocate(rkmalloc_heap* heap, size_t size) {
         return NULL;
     }
 
-    spin_lock(heap->lock);
+    spin_lock(&heap->lock);
 
     size_t block_size = get_block_size(heap->types, size);
     list_node_t* node = heap->index.head;
@@ -165,7 +165,7 @@ void* rkmalloc_allocate(rkmalloc_heap* heap, size_t size) {
         heap->total_allocated_blocks_size += entry->block_size;
         heap->total_allocated_used_size += size;
 
-        spin_unlock(heap->lock);
+        spin_unlock(&heap->lock);
 
         return entry->ptr;
     }
@@ -178,7 +178,7 @@ void* rkmalloc_allocate(rkmalloc_heap* heap, size_t size) {
     node = heap->expand(header_and_size);
 
     if (node == NULL) {
-        spin_unlock(heap->lock);
+        spin_unlock(&heap->lock);
         return NULL;
     }
 
@@ -203,7 +203,7 @@ void* rkmalloc_allocate(rkmalloc_heap* heap, size_t size) {
 
     list_add_node(&heap->index, node);
 
-    spin_unlock(heap->lock);
+    spin_unlock(&heap->lock);
 
     return entry->ptr;
 }
