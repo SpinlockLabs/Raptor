@@ -1,4 +1,5 @@
 arch("arm-rpi" "arch/arm/rpi")
+arch_include_src("${KERNEL_DIR}/arch/arm/common")
 
 option(RPI_BOOT_PART "Raspberry Pi Boot Partition" "")
 
@@ -8,6 +9,9 @@ cflags(
   -fpic
   -mfloat-abi=hard
   --specs=nosys.specs
+)
+
+add_definitions(
   -DARCH_ARM
   -DARCH_ARM_RPI
 )

@@ -30,6 +30,6 @@ elseif(CMAKE_C_COMPILER_ID MATCHES "CompCert")
   set(COMPCERT ON)
 endif()
 
-cflags(-DRAPTOR)
+add_definitions(-DRAPTOR)
 
 include(${RAPTOR_DIR}/build/cmake/config.cmake)

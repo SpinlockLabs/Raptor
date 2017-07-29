@@ -41,7 +41,7 @@ void framebuffer_init(uint32_t w, uint32_t h) {
 
     bcm_mailbox_write(1, (uint32_t) pi_fb_mbox_ptr);
     delay(5000);
-    putint_phexl(DEBUG "Framebuffer Mbox: ", (int) bcm_mailbox_read(1));
+    printf(DEBUG "Framebuffer Mbox: 0x%x\n", bcm_mailbox_read(1));
 
     fb_mbox_init_t *init = ((fb_mbox_init_t*) pi_fb_mbox_ptr);
 
@@ -53,10 +53,10 @@ void framebuffer_init(uint32_t w, uint32_t h) {
         .b = 0
     });
 
-    putint_phexl(DEBUG "Framebuffer Structure: ", (int) pi_fb_mbox_ptr);
-    putint_phexl(DEBUG "Framebuffer Location: ", (int) init->buffer);
-    putint_phexl(DEBUG "Framebuffer Size: ", (int) init->size);
-    putint_phexl(DEBUG "Framebuffer Pitch: ", (int) init->pitch);
+    printf(DEBUG "Framebuffer Structure: 0x%x\n", pi_fb_mbox_ptr);
+    printf(DEBUG "Framebuffer Location: 0x%x\n", init->buffer);
+    printf(DEBUG "Framebuffer Size: 0x%x\n", init->size);
+    printf(DEBUG "Framebuffer Pitch: 0x%x\n", init->pitch);
 }
 
 void framebuffer_clear(fb_pixel_t spec) {

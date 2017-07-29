@@ -27,6 +27,10 @@ void spin_wait(volatile int* addr, volatile int* waiters) {
 }
 
 void spin_lock(spin_lock_t lock) {
+#ifdef ARCH_NO_SPINLOCK
+    return;
+#endif
+
     bool warned = false;
     while (atomic_exchange(lock, 1)) {
         if (!warned) {
@@ -43,6 +47,10 @@ void spin_init(spin_lock_t lock) {
 }
 
 void spin_unlock(spin_lock_t lock) {
+#ifdef ARCH_NO_SPINLOCK
+    return;
+#endif
+
     if (lock[0]) {
         atomic_store(lock, 0);
         if (lock[1] && kernel_initialized) {

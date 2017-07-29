@@ -16,6 +16,18 @@ function(arch ARCH SRC_DIR)
   set_target_properties(kernel PROPERTIES OUTPUT_NAME "kernel.elf")
 endfunction()
 
+function(arch_include_src DIR)
+  file(GLOB_RECURSE EXTRA_SRC
+    "${DIR}/*.c"
+    "${DIR}/*.h"
+    "${DIR}/*.s"
+    "${DIR}/*.cpp"
+    "${DIR}/*.hpp"
+  )
+
+  target_sources(kernel PUBLIC ${EXTRA_SRC})
+endfunction()
+
 set(KERNEL_C_FLAGS "${CMAKE_C_FLAGS}")
 set(KERNEL_ASM_FLAGS "${CMAKE_ASM_FLAGS}")
 set(KERNEL_LD_FLAGS "${CMAKE_C_FLAGS}")

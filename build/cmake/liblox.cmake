@@ -44,6 +44,13 @@ foreach(F ${LIBLOX_SRC})
   endif()
 endforeach()
 
+if(EXISTS ${LIBLOX_SRC_DIR}/env/env.c)
+  set_source_files_properties(
+    ${LIBLOX_SRC_DIR}/env/env.c
+    PROPERTIES
+    COMPILE_DEFINITIONS "ARCH_NAME=${ARCH}")
+endif()
+
 add_library(lox STATIC ${LIBLOX_SRC})
 if(NOT COMPCERT)
   target_compile_options(lox PRIVATE "-fno-builtin")
