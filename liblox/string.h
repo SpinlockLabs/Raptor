@@ -46,3 +46,5 @@ char* strcat(char* restrict dest, const char* restrict src);
 void* memccpy(void* restrict dest, const void* restrict src, int c, size_t n);
 
 void* memmove(void* dest, const void* src, size_t n);
+
+char* strcpy(char* restrict dest, const char* restrict src);
