@@ -281,7 +281,8 @@ int jsmn_parse_stage(jsmn_parser* parser, const char* js, size_t len,
                         }
                     }
                 }
-                /* In non-strict mode every unquoted value is a primitive */
+
+                /* Falls through. */
             default:
                 if (parser->flags.strict) {
                     return JSMN_ERROR_INVAL;
