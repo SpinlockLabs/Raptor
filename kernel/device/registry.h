@@ -37,7 +37,7 @@ typedef struct device_entry {
  * @param name name of the device.
  * @param classifier device classifier.
  * @param device device pointer.
- * @return
+ * @return the device entry, if it was created.
  */
 device_entry_t* device_register(
     char* name,
@@ -48,8 +48,9 @@ device_entry_t* device_register(
 /**
  * Unregister a device.
  * @param device device entry.
+ * @return if the device was unregistered.
  */
-void device_unregister(
+bool device_unregister(
     device_entry_t* device
 );
 

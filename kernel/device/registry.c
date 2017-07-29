@@ -2,6 +2,7 @@
 
 #include <liblox/string.h>
 #include <kernel/spin.h>
+#include <kernel/dispatch/events.h>
 
 static list_t* device_registry = NULL;
 static spin_lock_t lock = {0};
@@ -11,27 +12,48 @@ device_entry_t* device_register(
     uint classifier,
     void* device
 ) {
+    if (name == NULL || device == NULL) {
+        return NULL;
+    }
+
+    device_entry_t* existing = device_lookup(name, classifier);
+    if (existing != NULL) {
+        return NULL;
+    }
+
     device_entry_t* entry = zalloc(sizeof(device_entry_t));
     entry->name = name;
     entry->classifier = classifier;
     entry->device = device;
 
+    spin_lock(lock);
     list_add(device_registry, entry);
+    spin_unlock(lock);
+
+    event_dispatch_async("device:registered", entry);
 
     return entry;
 }
 
-void device_unregister(
+bool device_unregister(
     device_entry_t* device
 ) {
-    spin_lock(lock);
+    if (device == NULL) {
+        return false;
+    }
+
     list_node_t* node = list_find(device_registry, device);
     if (node != NULL) {
+        event_dispatch("device:unregistered", node->value);
+
+        spin_lock(lock);
         list_remove(node);
         free(node->value);
         free(node);
+        spin_unlock(lock);
     }
-    spin_unlock(lock);
+
+    return node != NULL;
 }
 
 list_t* device_query(uint classifier) {

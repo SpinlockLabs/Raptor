@@ -11,6 +11,10 @@ typedef struct mailbox_handler_entry {
 } mailbox_handler_entry_t;
 
 void mailbox_add_handler(mailbox_t* box, mailbox_handler_t handler, void* extra) {
+    if (box == NULL) {
+        return;
+    }
+
     spin_lock(box->lock);
     list_t* list = box->internal;
 
@@ -24,6 +28,10 @@ void mailbox_add_handler(mailbox_t* box, mailbox_handler_t handler, void* extra)
 }
 
 void mailbox_remove_handler(mailbox_t* box, mailbox_handler_t handler) {
+    if (box == NULL) {
+        return;
+    }
+
     spin_lock(box->lock);
 
     list_t* list = box->internal;
@@ -45,6 +53,10 @@ void mailbox_remove_handler(mailbox_t* box, mailbox_handler_t handler) {
 }
 
 void mailbox_deliver(mailbox_t* box, void* event) {
+    if (box == NULL) {
+        return;
+    }
+
     spin_lock(box->lock);
     list_t* list = box->internal;
 
@@ -68,6 +80,10 @@ static void mailbox_deliver_async_task(void* data) {
 }
 
 void mailbox_deliver_async(mailbox_t* box, void* event) {
+    if (box == NULL) {
+        return;
+    }
+
     mailbox_deliver_async_data_t* data = zalloc(
         sizeof(mailbox_deliver_async_data_t)
     );
@@ -87,6 +103,10 @@ mailbox_t* mailbox_create(void) {
 }
 
 void mailbox_destroy(mailbox_t* box) {
+    if (box == NULL) {
+        return;
+    }
+
     spin_lock(box->lock);
     list_t* list = box->internal;
     list_free(list);
