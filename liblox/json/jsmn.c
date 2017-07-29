@@ -181,14 +181,18 @@ int jsmn_parse_stage(jsmn_parser* parser, const char* js, size_t len,
                 if (tokens == NULL) {
                     break;
                 }
+
                 token = jsmn_alloc_token(parser, tokens, num_tokens);
+
                 if (token == NULL) {
                     return JSMN_ERROR_NOMEM;
                 }
+
                 if (parser->root != -1) {
                     tokens[parser->root].size++;
                     token->parent = parser->root;
                 }
+
                 token->type = (c == '{' ? JSMN_OBJECT : JSMN_ARRAY);
                 token->start = parser->position;
                 parser->root = parser->next - 1;
@@ -198,10 +202,13 @@ int jsmn_parse_stage(jsmn_parser* parser, const char* js, size_t len,
                 if (tokens == NULL) {
                     break;
                 }
+
                 type = (c == '}' ? JSMN_OBJECT : JSMN_ARRAY);
+
                 if (parser->next < 1) {
                     return JSMN_ERROR_INVAL;
                 }
+
                 token = &tokens[parser->next - 1];
                 for (;;) {
                     if (token->start != -1 && token->end == -1) {
@@ -212,6 +219,7 @@ int jsmn_parse_stage(jsmn_parser* parser, const char* js, size_t len,
                         parser->root = token->parent;
                         break;
                     }
+
                     if (token->parent == -1) {
                         if (token->type != type || parser->root == -1) {
                             return JSMN_ERROR_INVAL;
@@ -220,35 +228,15 @@ int jsmn_parse_stage(jsmn_parser* parser, const char* js, size_t len,
                     }
                     token = &tokens[token->parent];
                 }
-                for (i = parser->next - 1; i >= 0; i--) {
-                    token = &tokens[i];
-                    if (token->start != -1 && token->end == -1) {
-                        if (token->type != type) {
-                            return JSMN_ERROR_INVAL;
-                        }
-                        parser->root = -1;
-                        token->end = parser->position + 1;
-                        break;
-                    }
-                }
-                /* Error if unmatched closing bracket */
-                if (i == -1) {
-                    return JSMN_ERROR_INVAL;
-                }
-                for (; i >= 0; i--) {
-                    token = &tokens[i];
-                    if (token->start != -1 && token->end == -1) {
-                        parser->root = i;
-                        break;
-                    }
-                }
                 break;
             case '\"':
                 r = jsmn_parse_string(parser, js, len, tokens, num_tokens);
                 if (r < 0) {
                     return r;
                 }
+
                 count++;
+
                 if (parser->root != -1 && tokens != NULL) {
                     tokens[parser->root].size++;
                 }

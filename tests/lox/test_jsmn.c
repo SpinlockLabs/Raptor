@@ -1,13 +1,14 @@
+#include <assert.h>
+
 #include <liblox/string.h>
 #include <liblox/json/jsmn.h>
-#include <liblox/io.h>
 #include <liblox/memory.h>
 
 int main() {
     jsmn_parser parser = {0};
     jsmn_init(&parser);
 
-    const char* json = "{\"a\": 2}";
+    const char* json = "{\"a\": \"b\", \"c\": 3000}";
 
     jsmn_token* tokens = NULL;
 
@@ -18,7 +19,7 @@ int main() {
         &tokens
     );
 
-    printf("%s\nresult: %d\n", json, result);
+    assert(result == 5);
 
     free(tokens);
     return 0;
