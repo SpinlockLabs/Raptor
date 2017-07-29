@@ -7,6 +7,10 @@
 #include <kernel/interupt.h>
 
 void spin_wait(atomic_int* addr, atomic_int* waiters) {
+    if (addr == NULL) {
+        return;
+    }
+
     if (waiters) {
         atomic_fetch_add(waiters, 1);
     }
