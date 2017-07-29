@@ -280,6 +280,16 @@ int jsmn_parse_stage(jsmn_parser* parser, const char* js, size_t len,
                             return JSMN_ERROR_INVAL;
                         }
                     }
+
+                    r = jsmn_parse_primitive(parser, js, len, tokens, num_tokens);
+                    if (r < 0) {
+                        return r;
+                    }
+                    count++;
+                    if (parser->root != -1 && tokens != NULL) {
+                        tokens[parser->root].size++;
+                    }
+                    break;
                 }
 
                 /* Falls through. */
