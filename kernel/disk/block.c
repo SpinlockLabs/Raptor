@@ -12,7 +12,7 @@
 #include "mbr.h"
 
 static hashmap_t* registry = NULL;
-static spin_lock_t lock = {0};
+static spin_lock_t lock;
 
 void block_device_subsystem_init(void) {
     registry = hashmap_create(5);

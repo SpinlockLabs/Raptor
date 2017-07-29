@@ -7,7 +7,7 @@ static rkmalloc_heap* kheap = NULL;
 
 extern char __link_mem_end;
 
-static spin_lock_t kheap_lock = {0};
+static spin_lock_t kheap_lock;
 
 uintptr_t kp_placement_pointer = (uintptr_t) &__link_mem_end;
 volatile uintptr_t kheap_end = (uintptr_t) NULL;

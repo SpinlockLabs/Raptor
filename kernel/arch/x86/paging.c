@@ -11,7 +11,7 @@
 #define INDEX_FROM_BIT(a) ((a) / (8 * 4))
 #define OFFSET_FROM_BIT(a) ((a) % (8 * 4))
 
-static spin_lock_t frame_alloc_lock = {0};
+static spin_lock_t frame_alloc_lock;
 
 static uintptr_t* frames;
 static uintptr_t frame_count;

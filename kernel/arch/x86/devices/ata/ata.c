@@ -19,7 +19,7 @@
 static char ata_drive_char = 'a';
 static uint32_t ata_pci = 0x00000000;
 
-static spin_lock_t ata_lock = {0};
+static spin_lock_t ata_lock;
 
 static ata_device_t ata_primary_master = {
     .io_base = 0x1F0,

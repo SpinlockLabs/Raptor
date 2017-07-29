@@ -139,7 +139,7 @@ route_error_t route_packet(ip_packet_moving_t* packet) {
         list_for_each(node, table->entries) {
             route_table_entry_t* entry = node->value;
 
-            bitset_t match_set = {0};
+            bitset_t match_set = {.data = NULL, .size = 0};
             bitset_init(&match_set, entry->criteria_size);
 
             for (size_t x = 0; x < entry->criteria_size; x++) {

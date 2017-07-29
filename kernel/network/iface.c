@@ -9,7 +9,7 @@
 #include <kernel/dispatch/events.h>
 #include <kernel/device/registry.h>
 
-static spin_lock_t network_subsystem_lock = {0};
+static spin_lock_t network_subsystem_lock;
 static hashmap_t* network_iface_subsystem_registry = NULL;
 
 static inline void ensure_subsystem(void) {

@@ -12,7 +12,7 @@
 static fs_node_t* fs_root;
 static vfs_entry_t* vfs_root;
 static tree_t* tree = NULL;
-static spin_lock_t lock = {0};
+static spin_lock_t lock;
 static hashmap_t* filesystems;
 
 static void vfs_dump(tree_node_t* c, uint level) {

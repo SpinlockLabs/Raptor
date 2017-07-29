@@ -13,7 +13,7 @@ typedef struct event_dispatch_info {
 } event_dispatch_info_t;
 
 static hashmap_t* registry = NULL;
-static spin_lock_t registry_lock = {0};
+static spin_lock_t registry_lock;
 
 void events_subsystem_init(void) {
     registry = hashmap_create(10);

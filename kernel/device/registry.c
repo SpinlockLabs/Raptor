@@ -5,7 +5,7 @@
 #include <kernel/dispatch/events.h>
 
 static list_t* device_registry = NULL;
-static spin_lock_t lock = {0};
+static spin_lock_t lock;
 
 device_entry_t* device_register(
     char* name,

@@ -1,6 +1,6 @@
-#include "process.h"
-
 #include <liblox/tree.h>
+
+#include "process.h"
 
 #include <kernel/spin.h>
 
@@ -12,7 +12,7 @@ static process_t* kidle_process = NULL;
 static volatile pid_t next_pid = 0;
 static volatile process_t* current_process = NULL;
 
-static spin_lock_t tree_lock = {0};
+static spin_lock_t tree_lock;
 
 static process_t* create_kidle(void) {
     spin_lock(tree_lock);
