@@ -40,3 +40,9 @@ void* memmem(const void* h0, size_t k, const void* n0, size_t l);
 size_t strnlen(const char* s, size_t n);
 
 int memcmp(const void* vl, const void* vr, size_t n);
+
+char* strcat(char* restrict dest, const char* restrict src);
+
+void* memccpy(void* restrict dest, const void* restrict src, int c, size_t n);
+
+void* memmove(void* dest, const void* src, size_t n);
