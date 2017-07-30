@@ -24,8 +24,10 @@ typedef int (*ini_handler)(void* user, const char* section,
                            const char* name, const char* value,
                            int lineno);
 #else
+
 typedef int (*ini_handler)(void* user, const char* section,
-                           const char* name, const char* value);
+                            const char* name, const char* value);
+
 #endif
 
 /* Typedef for prototype of fgets-style reader function. */

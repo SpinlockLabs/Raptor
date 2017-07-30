@@ -1,3 +1,5 @@
+#pragma once
+
 #include <stdint.h>
 
 /* Loop <count> times in a way that the compiler won't optimize away. */

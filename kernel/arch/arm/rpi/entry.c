@@ -3,8 +3,10 @@
 #include <liblox/lox-internal.h>
 
 #include <kernel/entry.h>
-#include <kernel/cpu/task.h>
 #include <kernel/tty.h>
+#include <kernel/timer.h>
+
+#include <kernel/cpu/task.h>
 
 #include "gpio.h"
 #include "uart.h"
@@ -16,10 +18,6 @@ void lox_output_string_uart(char *str) {
 
 void lox_output_char_uart(char c) {
     uart_putc((unsigned char) c);
-}
-
-ulong timer_get_ticks(void) {
-    return 0;
 }
 
 used void arch_panic_handler(char *str) {
@@ -53,7 +51,7 @@ static void uart_tty_write(tty_t* tty, const uint8_t* buf, size_t size) {
     uart_write(buf, size);
 }
 
-static void uart_poll_read(void* extra) {
+static void uart_poll_read_task(void* extra) {
     unused(extra);
 
     if (uart_poll()) {
@@ -64,7 +62,7 @@ static void uart_poll_read(void* extra) {
         }
     }
 
-    ktask_queue(uart_poll_read, NULL);
+    ktask_queue(uart_poll_read_task, NULL);
 }
 
 void kernel_setup_devices(void) {
@@ -74,7 +72,7 @@ void kernel_setup_devices(void) {
     uart_tty->flags.write_kernel_log = true;
     tty_register(uart_tty);
 
-    ktask_queue(uart_poll_read, NULL);
+    ktask_queue(uart_poll_read_task, NULL);
 
     printf(INFO "Device setup complete.\n");
 }
@@ -90,6 +88,9 @@ used noreturn void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags) {
 
     gpio_init();
     puts(DEBUG "GPIO initialized.\n");
+
+    timer_init(1000);
+    puts(DEBUG "Timer initialized.\n");
 
     framebuffer_init(640, 480);
     puts(DEBUG "Framebuffer initialized.\n");

@@ -1,6 +1,7 @@
 #include "console.h"
 
 #include <kernel/time.h>
+#include <kernel/timer.h>
 
 static void debug_time(tty_t* tty, const char* input) {
     unused(input);
@@ -17,6 +18,14 @@ static void debug_time(tty_t* tty, const char* input) {
                time->second);
 }
 
+static void debug_ticks(tty_t* tty, const char* input) {
+    unused(input);
+
+    ulong ticks = timer_get_ticks();
+    tty_printf(tty, "%d\n", ticks);
+}
+
 void debug_time_init(void) {
     debug_console_register_command("time", debug_time);
+    debug_console_register_command("ticks", debug_ticks);
 }

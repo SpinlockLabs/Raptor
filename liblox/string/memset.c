@@ -1,4 +1,5 @@
-#include "liblox/string.h"
+#include "../string.h"
+#include "../alias.h"
 
 void* memset(void* bufptr, int value, size_t size) {
     unsigned char* buf = (unsigned char*) bufptr;
@@ -7,3 +8,5 @@ void* memset(void* bufptr, int value, size_t size) {
     }
     return bufptr;
 }
+
+weak_alias(memset, __memset);

@@ -2,20 +2,24 @@
 
 #include <liblox/alias.h>
 
+extern void __memset(void* dest, size_t n, size_t c);
+extern void __memmove(void* dest, const void* src, size_t n);
+extern void __memcpy(void* restrict dest, const void* restrict src, size_t n);
+
 void __aeabi_memclr(void* dest, size_t n) {
-    memset(dest, 0, n);
+    __memset(dest, 0, n);
 }
 
 void __aeabi_memcpy(void* restrict dest, const void* restrict src, size_t n) {
-    memcpy(dest, src, n);
+    __memcpy(dest, src, n);
 }
 
 void __aeabi_memmove(void* dest, const void* src, size_t n) {
-    memmove(dest, src, n);
+    __memmove(dest, src, n);
 }
 
 void __aeabi_memset(void* dest, size_t n, size_t c) {
-    memset(dest, n, c);
+    __memset(dest, n, c);
 }
 
 weak_alias(__aeabi_memclr, __aeabi_memclr4);

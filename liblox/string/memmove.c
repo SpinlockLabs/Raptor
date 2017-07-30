@@ -1,4 +1,5 @@
 #include "../string.h"
+#include "../alias.h"
 
 #include <stdint.h>
 
@@ -54,3 +55,5 @@ void* memmove(void* dest, const void* src, size_t n) {
 
     return dest;
 }
+
+weak_alias(memmove, __memmove);

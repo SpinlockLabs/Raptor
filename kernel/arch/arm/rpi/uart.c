@@ -1,7 +1,7 @@
 #include <liblox/string.h>
 
-#include "delay.h"
 #include "gpio.h"
+#include "delay.h"
 #include "mmio.h"
 #include "uart.h"
 
@@ -63,7 +63,7 @@ unsigned char uart_getc(void) {
     return uart_poll_getc();
 }
 
-void uart_write(const unsigned char *buffer, size_t size) {
+void uart_write(const unsigned char* buffer, size_t size) {
     for (size_t i = 0; i < size; i++) {
         unsigned char c = buffer[i];
         if (c == (unsigned char) '\n') {
@@ -73,6 +73,6 @@ void uart_write(const unsigned char *buffer, size_t size) {
     }
 }
 
-void uart_puts(const char *str) {
+void uart_puts(const char* str) {
     uart_write((const unsigned char*) str, strlen(str));
 }

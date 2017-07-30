@@ -4,72 +4,67 @@
 
 #include "fb.h"
 #include "mailbox.h"
-#include "delay.h"
+#include "mmio.h"
+#include "board.h"
 
-typedef struct fb_mbox_init_t {
-    uint32_t w;
-    uint32_t h;
-    uint32_t vw;
-    uint32_t vh;
-    uint32_t pitch;
-    uint32_t depth;
-    uint32_t x;
-    uint32_t y;
-    uint32_t buffer;
-    uint32_t size;
-} packed fb_mbox_init_t;
-
-void *pi_fb_mbox_ptr = (void*) 0x40040000;
-static uint8_t *pi_framebuffer;
+static uint8_t* pi_framebuffer;
+static uint32_t fb_w = 640;
+static uint32_t fb_h = 480;
+static uint32_t fb_pitch = 3;
 
 static uint32_t fb_get_pixel_addr(uint32_t x, uint32_t y) {
-    uint32_t offset = ((y * ((fb_mbox_init_t*) pi_fb_mbox_ptr)->pitch) + (x * 3));
-    return (uint32_t) (pi_framebuffer + offset);
+    uint32_t offset = ((y * fb_pitch) + (x * 3));
+    return (uint32_t) ((uint32_t) pi_framebuffer + offset);
 }
 
 void framebuffer_init(uint32_t w, uint32_t h) {
-    mmio_write(0x40040000, w);
-    mmio_write(0x40040004, h);
-    mmio_write(0x40040008, w);
-    mmio_write(0x4004000C, h);
-    mmio_write(0x40040010, 0);
-    mmio_write(0x40040014, 32);
-    mmio_write(0x40040018, 0);
-    mmio_write(0x4004001C, 0);
-    mmio_write(0x40040020, 0);
-    mmio_write(0x40040024, 0);
+    fb_w = w;
+    fb_h = h;
 
-    bcm_mailbox_write(1, (uint32_t) pi_fb_mbox_ptr);
-    delay(5000);
-    printf(DEBUG "Framebuffer Mbox: 0x%x\n", bcm_mailbox_read(1));
+    mmio_write(PI_FIRMWARE_FRAMEBUFFER + 0x00, w);
+    mmio_write(PI_FIRMWARE_FRAMEBUFFER + 0x04, h);
+    mmio_write(PI_FIRMWARE_FRAMEBUFFER + 0x08, w);
+    mmio_write(PI_FIRMWARE_FRAMEBUFFER + 0x0C, h);
+    mmio_write(PI_FIRMWARE_FRAMEBUFFER + 0x10, 0); // Pitch
+    mmio_write(PI_FIRMWARE_FRAMEBUFFER + 0x14, 32); // Depth
+    mmio_write(PI_FIRMWARE_FRAMEBUFFER + 0x18, 0); // X
+    mmio_write(PI_FIRMWARE_FRAMEBUFFER + 0x1C, 0); // Y
+    mmio_write(PI_FIRMWARE_FRAMEBUFFER + 0x20, 0); // Buffer
+    mmio_write(PI_FIRMWARE_FRAMEBUFFER + 0x24, 0); // Size
 
-    fb_mbox_init_t *init = ((fb_mbox_init_t*) pi_fb_mbox_ptr);
+    bcm_mailbox_write(1, PI_FIRMWARE_FRAMEBUFFER);
+    uint32_t result = bcm_mailbox_read(1);
+    printf(DEBUG "Framebuffer Result: 0x%x\n", result);
 
-    pi_framebuffer = (uint8_t*) init->buffer;
+    for (uint i = 0; i < 10; i++) {
+        uint32_t addr = (PI_FIRMWARE_FRAMEBUFFER) + (i * 4);
+        uint32_t value = mmio_read(addr);
+        printf(DEBUG "Framebuffer Info: 0x%x = 0x%x (%d)\n", addr, value, value);
+    }
 
-    framebuffer_clear((fb_pixel_t) {
-        .r = 255,
-        .g = 0,
-        .b = 0
-    });
+    pi_framebuffer = (uint8_t*) mmio_read(PI_FIRMWARE_FRAMEBUFFER + 0x20);
 
-    printf(DEBUG "Framebuffer Structure: 0x%x\n", pi_fb_mbox_ptr);
-    printf(DEBUG "Framebuffer Location: 0x%x\n", init->buffer);
-    printf(DEBUG "Framebuffer Size: 0x%x\n", init->size);
-    printf(DEBUG "Framebuffer Pitch: 0x%x\n", init->pitch);
+    framebuffer_clear(255, 0, 0);
+
+    uint32_t size = mmio_read(PI_FIRMWARE_FRAMEBUFFER + 0x24);
+    uint32_t pitch = mmio_read(PI_FIRMWARE_FRAMEBUFFER + 0x10);
+
+    printf(DEBUG "Framebuffer Location: 0x%x\n", pi_framebuffer);
+    printf(DEBUG "Framebuffer Size: 0x%x\n", size);
+    printf(DEBUG "Framebuffer Pitch: 0x%x\n", pitch);
 }
 
-void framebuffer_clear(fb_pixel_t spec) {
-    fb_mbox_init_t *init = ((fb_mbox_init_t*) pi_fb_mbox_ptr);
+void framebuffer_clear(uint8_t r, uint8_t g, uint8_t b) {
+    uint32_t w = fb_w;
+    uint32_t h = fb_h;
 
-    for (uint32_t x = 0; x < init->w; x++) {
-        for (uint32_t y = 0; y < init->h; y++) {
+    for (uint32_t x = 0; x < w; x++) {
+        for (uint32_t y = 0; y < h; y++) {
             uint32_t addr = fb_get_pixel_addr(x, y);
-            uint8_t *pix = (uint8_t*) addr;
 
-            *(pix + 0) = spec.r;
-            *(pix + 1) = spec.g;
-            *(pix + 2) = spec.b;
+            mmio_write(addr + 0, r);
+            mmio_write(addr + 1, g);
+            mmio_write(addr + 3, b);
         }
     }
 }
