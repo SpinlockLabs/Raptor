@@ -4,12 +4,20 @@ arch_include_src("${KERNEL_DIR}/arch/arm/common")
 option(RPI_BOOT_PART "Raspberry Pi Boot Partition" "")
 
 cflags(
+  -march=armv6zk
   -mcpu=arm1176jzf-s
-  -O2
-  -fpic
+  -mfpu=vfp
   -mfloat-abi=hard
   --specs=nosys.specs
+  -O2
+  -fpic
 )
+
+if(CLANG)
+  cflags(
+    -target arm-none-eabi
+  )
+endif()
 
 add_definitions(
   -DARCH_ARM
@@ -17,10 +25,7 @@ add_definitions(
 )
 
 kernel_ldscript("${KERNEL_DIR}/arch/arm/rpi/linker.ld")
-
-if(NOT CLANG)
-  target_link_libraries(kernel gcc)
-endif()
+target_link_libraries(kernel gcc)
 
 set(QEMU_FLAGS
   qemu-system-arm

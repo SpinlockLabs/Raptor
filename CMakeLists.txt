@@ -30,8 +30,7 @@ endif()
 if(CLANG)
   cflags(
     -Wno-unused-command-line-argument
-    -O0
-    -fno-integrated-as
+    -no-integrated-as
   )
 endif()
 

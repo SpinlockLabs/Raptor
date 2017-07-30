@@ -10,6 +10,8 @@ set(LIBLOX_ARCH_DIR "generic")
 
 if(EXISTS "${LIBLOX_SRC_DIR}/arch/${ARCH}")
   set(LIBLOX_ARCH_DIR "${ARCH}")
+elseif(ARCH MATCHES "^arm.*")
+  set(LIBLOX_ARCH_DIR "arm")
 endif()
 
 foreach(DIR ${LIBLOX_DIRS})
