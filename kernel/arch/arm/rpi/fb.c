@@ -5,13 +5,7 @@
 
 #include "fb.h"
 #include "mailbox.h"
-#include "mmio.h"
 #include "board.h"
-
-#define COLOR32(red, green, blue, alpha)  (((red) & 0xFF) \
-					| ((green) & 0xFF) << 8  \
-					| ((blue) & 0xFF) << 16  \
-					| ((alpha) & 0xFF) << 24)
 
 typedef struct fb_mbox_init {
     uint32_t w;
@@ -70,16 +64,35 @@ void framebuffer_init(uint32_t w, uint32_t h) {
     );
 
     framebuffer_clear(255, 255, 255, 255);
+
+    extern void draw_spinlock_logo(void);
+    draw_spinlock_logo();
 }
 
 void framebuffer_clear(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
     uint32_t w = pi_fbinfo->w;
     uint32_t h = pi_fbinfo->h;
 
-    for (uint32_t x = 0; x < w; x++) {
-        for (uint32_t y = 0; y < h; y++) {
+    for (uint32_t y = 0; y < h; y++) {
+        for (uint32_t x = 0; x < w; x++) {
             uint32_t offset = fb_offset(x, y);
-            pi_framebuffer[offset] = (uint32_t) COLOR32(r, g, b, a);
+            pi_framebuffer[offset] = (uint32_t) FB_PIXEL(r, g, b, a);
         }
     }
+}
+
+void framebuffer_set(
+    uint32_t x,
+    uint32_t y,
+    uint8_t r,
+    uint8_t g,
+    uint8_t b,
+    uint8_t a) {
+    uint32_t offset = fb_offset(x, y);
+    pi_framebuffer[offset] = (uint32_t) FB_PIXEL(r, g, b, a);
+}
+
+void framebuffer_get_size(uint32_t* w, uint32_t* h) {
+    *w = pi_fbinfo->w;
+    *h = pi_fbinfo->h;
 }
