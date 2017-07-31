@@ -279,3 +279,32 @@ list_node_t* list_dequeue(list_t* list) {
     list_remove(out);
     return out;
 }
+
+void list_swap(list_node_t* left, list_node_t* right) {
+    void* tmp = left->value;
+    left->value = right->value;
+    right->value = tmp;
+}
+
+static void list_bubble_sort(list_t* list, list_compare_t compare) {
+    size_t size = list->size;
+    bool swapped;
+
+    do {
+        swapped = false;
+
+        for (size_t index = 1; index < size - 1; index++) {
+            list_node_t* left = list_get_at(list, index - 1);
+            list_node_t* right = list_get_at(list, index);
+
+            if (compare(left->value, right->value) > 0) {
+                list_swap(left, right);
+                swapped = true;
+            }
+        }
+    } while (swapped);
+}
+
+void list_sort(list_t* list, list_compare_t compare) {
+    list_bubble_sort(list, compare);
+}
