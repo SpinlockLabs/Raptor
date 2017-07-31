@@ -20,7 +20,13 @@ typedef struct rkmalloc_entry {
 #ifndef RKMALLOC_DISABLE_MAGIC
     uintptr_t magic;
 #endif
-    bool free;
+    union {
+        struct {
+            bool free : 1;
+        };
+
+        uint32_t flags;
+    };
     size_t used_size;
     size_t block_size;
     void* ptr;
@@ -58,7 +64,7 @@ typedef struct rkmalloc_heap {
     spin_lock_t lock;
 } rkmalloc_heap;
 
-void rkmalloc_init_heap(rkmalloc_heap *heap);
-void* rkmalloc_allocate(rkmalloc_heap *heap, size_t size);
-void rkmalloc_free(rkmalloc_heap *heap, void *ptr);
+void rkmalloc_init_heap(rkmalloc_heap* heap);
+void* rkmalloc_allocate(rkmalloc_heap* heap, size_t size);
 void* rkmalloc_resize(rkmalloc_heap* heap, void* ptr, size_t new_size);
+void rkmalloc_free(rkmalloc_heap* heap, void* ptr);

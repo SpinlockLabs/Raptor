@@ -20,7 +20,6 @@ static uint32_t _kpmalloc_int(uint32_t size, int align, uint32_t *phys) {
 
     kheap_placement_address += size;
 
-    memset((void*) addr, 0, size);
     return addr;
 }
 
@@ -41,8 +40,7 @@ uint32_t kpmalloc(uint32_t size) {
 }
 
 void* rkpmalloc(size_t size) {
-    uint32_t p = 0;
-    return (void*) kpmalloc_ap(size, &p);
+    return (void*) kpmalloc(size);
 }
 
 void heap_init(void) {

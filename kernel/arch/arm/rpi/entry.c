@@ -1,5 +1,6 @@
 #include <liblox/common.h>
 #include <liblox/io.h>
+#include <liblox/sleep.h>
 #include <liblox/lox-internal.h>
 
 #include <kernel/entry.h>
@@ -7,10 +8,12 @@
 #include <kernel/timer.h>
 
 #include <kernel/cpu/task.h>
+#include <liblox/string.h>
 
 #include "gpio.h"
 #include "uart.h"
 #include "fb.h"
+#include "delay.h"
 
 void lox_output_string_uart(char *str) {
     uart_puts(str);
@@ -21,7 +24,7 @@ void lox_output_char_uart(char c) {
 }
 
 used void arch_panic_handler(char *str) {
-    lox_output_string_uart("[PANIC]");
+    lox_output_string_uart("[PANIC] ");
 
     if (str != NULL) {
         lox_output_string_uart(str);
@@ -42,6 +45,7 @@ void paging_init(void) {}
 char* (*arch_get_cmdline)(void) = arch_arm_rpi_get_cmdline;
 void (*lox_output_string_provider)(char*) = lox_output_string_uart;
 void (*lox_output_char_provider)(char) = lox_output_char_uart;
+void (*lox_sleep_provider)(ulong) = delay;
 
 static tty_t* uart_tty = NULL;
 
@@ -57,12 +61,21 @@ static void uart_poll_read_task(void* extra) {
     if (uart_poll()) {
         unsigned char c = uart_poll_getc();
 
+        if (c == '\r') {
+            c = '\n';
+            uart_putc('\r');
+        }
+
+        if (c == 127) {
+            c = '\b';
+        }
+
+        uart_putc(c);
+
         if (uart_tty->handle_read != NULL) {
             uart_tty->handle_read(uart_tty, &c, 1);
         }
     }
-
-    ktask_queue(uart_poll_read_task, NULL);
 }
 
 void kernel_setup_devices(void) {
@@ -72,15 +85,19 @@ void kernel_setup_devices(void) {
     uart_tty->flags.write_kernel_log = true;
     tty_register(uart_tty);
 
-    ktask_queue(uart_poll_read_task, NULL);
+    ktask_repeat(1, uart_poll_read_task, NULL);
 
-    printf(INFO "Device setup complete.\n");
+    framebuffer_init(640, 480);
 }
 
 used noreturn void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags) {
     (void) r0;
     (void) r1;
     (void) atags;
+
+    extern unsigned char __bss_start;
+    extern unsigned char __end;
+    memset(&__bss_start, 0, &__end - &__bss_start);
 
     uart_init();
     puts("\n");
@@ -92,14 +109,15 @@ used noreturn void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags) {
     timer_init(1000);
     puts(DEBUG "Timer initialized.\n");
 
-    framebuffer_init(640, 480);
-    puts(DEBUG "Framebuffer initialized.\n");
-
     kernel_init();
 }
 
+extern ulong ticks;
+
 void cpu_run_idle(void) {
     while (true) {
+        ticks++;
         ktask_queue_flush();
+        sleep(100000);
     }
 }

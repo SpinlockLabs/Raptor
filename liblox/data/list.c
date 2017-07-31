@@ -23,7 +23,7 @@ list_node_t* list_create_node(void) {
 }
 
 list_t* list_create(void) {
-    list_t* val = (list_t*) zalloc(sizeof(list_t));
+    list_t* val = zalloc(sizeof(list_t));
 
     ensure_allocated(val);
 

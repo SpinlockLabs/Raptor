@@ -9,8 +9,8 @@
 
 typedef struct debug_console {
     size_t cursor;
-    char buff[CONSOLE_BUFFER_SIZE];
     hashmap_t* commands;
+    char buff[CONSOLE_BUFFER_SIZE];
 } debug_console_t;
 
 static debug_console_t* console = NULL;
@@ -94,7 +94,7 @@ static void debug_console_handle_data(tty_t* tty, const uint8_t* buffer, size_t 
         tty_write_string(tty, "> ");
 
         console->cursor = 0;
-        console->buff[0] = '\0';
+        *console->buff = '\0';
     }
 }
 

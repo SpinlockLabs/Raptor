@@ -18,10 +18,6 @@ static spin_lock_t registry_lock;
 void events_subsystem_init(void) {
     registry = hashmap_create(10);
 
-    if (registry == NULL) {
-        panic("Failed to create the events subsystem registry.");
-    }
-
     spin_init(&registry_lock);
 }
 

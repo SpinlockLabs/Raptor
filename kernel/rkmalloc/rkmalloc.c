@@ -166,7 +166,6 @@ void* rkmalloc_allocate(rkmalloc_heap* heap, size_t size) {
         heap->total_allocated_used_size += size;
 
         spin_unlock(&heap->lock);
-
         return entry->ptr;
     }
 

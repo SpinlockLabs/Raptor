@@ -4,6 +4,8 @@
 #include "mmio.h"
 #include "board.h"
 
+ulong ticks = 0;
+
 void timer_init(uint32_t freq) {
     unused(freq);
 
@@ -12,5 +14,6 @@ void timer_init(uint32_t freq) {
 }
 
 ulong timer_get_ticks(void) {
-    return mmio_read(BOARD_TIMER_CNT);
+    return ticks;
+    // return mmio_read(BOARD_TIMER_CNT);
 }

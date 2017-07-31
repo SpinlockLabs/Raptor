@@ -14,6 +14,12 @@ enum {
 };
 
 enum {
+#if 0
     PI_FIRMWARE_BASE = 0x40000000,
+#else
+    PI_FIRMWARE_BASE = 0xC0000000,
+#endif
     PI_FIRMWARE_FRAMEBUFFER = (PI_FIRMWARE_BASE + 0x00040000)
 };
+
+#define BOARD_BUS_ADDRESS(phys) (((phys) & ~0xC0000000) | PI_FIRMWARE_BASE)
