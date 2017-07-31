@@ -98,6 +98,7 @@ mailbox_t* mailbox_create(void) {
     list_t* list = list_create();
     list->free_values = true;
     box->internal = list;
+
     spin_init(&box->lock);
     return box;
 }

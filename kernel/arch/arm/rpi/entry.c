@@ -10,6 +10,7 @@
 #include <kernel/cpu/task.h>
 #include <liblox/string.h>
 
+#include "irq.h"
 #include "gpio.h"
 #include "uart.h"
 #include "fb.h"
@@ -100,24 +101,23 @@ used noreturn void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags) {
     memset(&__bss_start, 0, &__end - &__bss_start);
 
     uart_init();
-    puts("\n");
-    puts(DEBUG "UART initialized.\n");
+    printf("\n");
+    printf(DEBUG "UART initialized.\n");
 
     gpio_init();
-    puts(DEBUG "GPIO initialized.\n");
+    printf(DEBUG "GPIO initialized.\n");
+
+    irq_init();
+    printf(DEBUG "IRQ initialized.\n");
 
     timer_init(1000);
-    puts(DEBUG "Timer initialized.\n");
+    printf(DEBUG "Timer initialized.\n");
 
     kernel_init();
 }
 
-extern ulong ticks;
-
 void cpu_run_idle(void) {
     while (true) {
-        ticks++;
         ktask_queue_flush();
-        sleep(100000);
     }
 }

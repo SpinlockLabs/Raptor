@@ -22,7 +22,6 @@ endif()
 add_definitions(
   -DARCH_ARM
   -DARCH_ARM_RPI
-  -DARCH_NO_SPINLOCK
 )
 
 kernel_ldscript("${KERNEL_DIR}/arch/arm/rpi/linker.ld")

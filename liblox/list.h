@@ -2,6 +2,7 @@
 
 #include <stddef.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 #include "memory.h"
 
@@ -16,7 +17,12 @@ typedef struct list {
     list_node_t* head;
     list_node_t* tail;
     size_t size;
-    bool free_values;
+    union {
+        struct {
+            bool free_values : 1;
+        };
+        uint32_t flags;
+    };
 } list_t;
 
 typedef int (*list_compare_t)(void* a, void* b);

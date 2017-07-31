@@ -15,5 +15,4 @@ void timer_init(uint32_t freq) {
 
 ulong timer_get_ticks(void) {
     return ticks;
-    // return mmio_read(BOARD_TIMER_CNT);
 }

@@ -1,3 +1,4 @@
+#include <liblox/io.h>
 #include "../list.h"
 #include "../hashmap.h"
 #include "../string.h"
@@ -56,11 +57,12 @@ hashmap_t* hashmap_create(size_t size) {
 hashmap_t* hashmap_create_int(size_t size) {
     hashmap_t* map = zalloc(sizeof(hashmap_t));
 
-    map->hash = &hashmap_int_hash;
-    map->compare = &hashmap_int_comp;
-    map->key_duplicate = &hashmap_int_duplicate;
-    map->key_free = &hashmap_int_free;
-    map->value_free = &free;
+    printf("Allocated hashmap\n");
+    map->hash = hashmap_int_hash;
+    map->compare = hashmap_int_comp;
+    map->key_duplicate = hashmap_int_duplicate;
+    map->key_free = hashmap_int_free;
+    map->value_free = free;
 
     map->size = size;
     map->entries = zalloc(sizeof(hashmap_entry_t*) * size);
