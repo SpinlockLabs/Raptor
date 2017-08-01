@@ -247,6 +247,7 @@ void* rkmalloc_allocate(rkmalloc_heap* heap, size_t size) {
     list_insert_node_before(heap->index.head, &blk->node);
 
     spin_unlock(&heap->lock);
+
     return entry->ptr;
 }
 
