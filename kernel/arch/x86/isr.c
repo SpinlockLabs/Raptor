@@ -60,6 +60,7 @@ used void fault_handler(cpu_registers_t* r) {
         handler(r);
     } else {
         puts("[PANIC] Unhandled exception: ");
+
         puts(exceptions[i]);
         putc('\n');
 
@@ -70,7 +71,7 @@ used void fault_handler(cpu_registers_t* r) {
 }
 
 void print_registers(cpu_registers_t* r) {
-    char buf[64];
+    char buf[64] = {0};
 
 #define _PUTRV(name, reg) \
         puts(name " = 0x"); \

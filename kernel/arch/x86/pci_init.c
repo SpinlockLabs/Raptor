@@ -12,13 +12,13 @@ static void found_pci_device(uint32_t loc, uint16_t vid, uint16_t did, void* ext
     const char* dev = pci_device_lookup(vid, did);
 
     printf(DEBUG "Found PCI Device: ");
-    if (vendor != NULL) {
+    if (*vendor) {
         printf("Vendor: %s", vendor);
     } else {
         printf("Vendor ID: %x", vid);
     }
 
-    if (dev != NULL) {
+    if (*dev) {
         printf(", Device: %s", dev);
     } else {
         printf(", Device ID: %x", did);

@@ -114,7 +114,9 @@ if(RAPTOR_WINDOWS)
             -netdev user,id=net0
             -device ${QEMU_NIC},netdev=net0
             -cpu ${QEMU_CPU}
-            -m 256
+            -m 1024
+            -M q35
+            -serial file:kernel.log
             -kernel "${CMAKE_BINARY_DIR}/kernel.elf"
       DEPENDS kernel
     )
