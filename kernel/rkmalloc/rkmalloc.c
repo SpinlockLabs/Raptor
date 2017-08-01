@@ -5,7 +5,7 @@
 #include "rkmalloc.h"
 
 #ifndef RKMALLOC_DISABLE_MAGIC
-static uintptr_t rkmagic(uintptr_t x) {
+uintptr_t rkmagic(uintptr_t x) {
     x = ((x >> 16) ^ x) * 0x45d9f3b;
     x = ((x >> 16) ^ x) * 0x45d9f3b;
     x = (x >> 16) ^ x;
@@ -44,6 +44,12 @@ void rkmalloc_init_heap(rkmalloc_heap* heap) {
     CHKSIZE(heap->types.fair)
     CHKSIZE(heap->types.large)
     CHKSIZE(heap->types.huge)
+
+    void* stub = rkmalloc_allocate(heap, 64);
+    if (stub == NULL) {
+        heap->error_code = RKMALLOC_ERROR_FAILED_TO_ALLOCATE;
+        return;
+    }
 }
 
 static list_node_t* get_pointer_entry(rkmalloc_heap* heap, void* ptr, rkmalloc_entry** eout) {
@@ -75,6 +81,28 @@ static list_node_t* get_pointer_entry(rkmalloc_heap* heap, void* ptr, rkmalloc_e
 #endif
 
     return node;
+}
+
+static void insert_sitter(rkmalloc_heap* heap, rkmalloc_entry* entry) {
+    for (uint i = 0; i < RKMALLOC_SITTER_COUNT; i++) {
+        if (heap->sitters[i] == NULL) {
+            heap->sitters[i] = entry;
+            entry->sitting = true;
+            return;
+        }
+    }
+
+    heap->sitters[0] = entry;
+}
+
+static void drop_sitter(rkmalloc_heap* heap, rkmalloc_entry* entry) {
+    for (uint i = 0; i < RKMALLOC_SITTER_COUNT; i++) {
+        if (heap->sitters[i] == entry) {
+            heap->sitters[i] = NULL;
+            entry->sitting = false;
+            return;
+        }
+    }
 }
 
 static size_t get_block_size(rkmalloc_heap_types types, size_t size) {
@@ -149,17 +177,34 @@ void* rkmalloc_allocate(rkmalloc_heap* heap, size_t size) {
     spin_lock(&heap->lock);
 
     size_t block_size = get_block_size(heap->types, size);
-    list_node_t* node = heap->index.head;
 
-    while (node != NULL && !is_block_usable(node->value, block_size)) {
-        node = node->next;
+    rkmalloc_entry* entry = NULL;
+
+    for (uint i = 0; i < RKMALLOC_SITTER_COUNT; i++) {
+        rkmalloc_entry* candidate = heap->sitters[i];
+        if (candidate != NULL && is_block_usable(candidate, block_size)) {
+            entry = candidate;
+            break;
+        }
+    }
+
+    if (entry == NULL) {
+        list_node_t* node = heap->index.head;
+
+        while (node != NULL && !is_block_usable(node->value, block_size)) {
+            node = node->next;
+        }
+
+        if (node != NULL) {
+            entry = node->value;
+        }
     }
 
     /*
      * Our best case is that we find a node in the index that can fit the size.
      */
-    if (node != NULL) {
-        rkmalloc_entry* entry = node->value;
+    if (entry != NULL) {
+        drop_sitter(heap, entry);
         entry->free = false;
         entry->used_size = size;
         heap->total_allocated_blocks_size += entry->block_size;
@@ -171,25 +216,24 @@ void* rkmalloc_allocate(rkmalloc_heap* heap, size_t size) {
 
     /* TODO(kaendfinger): Implement combining blocks. */
 
-    size_t header_and_size =
-        sizeof(list_node_t) + sizeof(rkmalloc_entry) + block_size;
+    size_t header_and_size = sizeof(rkmalloc_index_entry) + block_size;
 
-    node = heap->expand(header_and_size);
+    rkmalloc_index_entry* blk = heap->expand(header_and_size);
 
-    if (node == NULL) {
+    if (blk == NULL) {
         spin_unlock(&heap->lock);
         return NULL;
     }
 
-    list_init_node(node);
-    node->list = &heap->index;
+    list_init_node(&blk->node);
+    blk->node.list = &heap->index;
 
-    rkmalloc_entry* entry = (rkmalloc_entry*) ((uintptr_t) node + sizeof(list_node_t));
+    entry = &blk->entry;
 
     entry->free = false;
     entry->block_size = block_size;
     entry->used_size = size;
-    entry->ptr = (void*) ((uintptr_t) entry + sizeof(rkmalloc_entry));
+    entry->ptr = blk->ptr;
 
 #ifndef RKMALLOC_DISABLE_MAGIC
     entry->magic = rkmagic((uintptr_t) entry->ptr);
@@ -198,12 +242,11 @@ void* rkmalloc_allocate(rkmalloc_heap* heap, size_t size) {
     heap->total_allocated_blocks_size += block_size;
     heap->total_allocated_used_size += size;
 
-    node->value = entry;
+    blk->node.value = entry;
 
-    list_add_node(&heap->index, node);
+    list_insert_node_before(heap->index.head, &blk->node);
 
     spin_unlock(&heap->lock);
-
     return entry->ptr;
 }
 
@@ -269,6 +312,7 @@ void rkmalloc_free(rkmalloc_heap* heap, void* ptr) {
         puts(")\n");
     } else {
         entry->free = true;
+        insert_sitter(heap, entry);
         heap->total_allocated_blocks_size -= entry->block_size;
         heap->total_allocated_used_size -= entry->used_size;
     }

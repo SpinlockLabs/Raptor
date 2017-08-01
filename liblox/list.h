@@ -7,9 +7,9 @@
 #include "memory.h"
 
 typedef struct list_node {
+    struct list* list;
     struct list_node* prev;
     struct list_node* next;
-    struct list* list;
     void* value;
 } list_node_t;
 

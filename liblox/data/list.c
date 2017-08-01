@@ -83,6 +83,10 @@ list_node_t* list_insert_node_before(list_node_t* node, list_node_t* entry) {
     entry->prev = tmp;
     entry->next = node;
 
+    if (node == entry->list->head) {
+        entry->list->head = entry;
+    }
+
     if (node->list != NULL) {
         node->list->size++;
     }

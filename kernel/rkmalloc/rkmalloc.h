@@ -10,6 +10,10 @@
 #include <kernel/spin.h>
 #include <kernel/panic.h>
 
+#ifndef RKMALLOC_SITTER_COUNT
+#define RKMALLOC_SITTER_COUNT 16
+#endif
+
 typedef void* (*rkmalloc_expand_func_t)(size_t);
 
 /**
@@ -23,6 +27,7 @@ typedef struct rkmalloc_entry {
     union {
         struct {
             bool free : 1;
+            bool sitting : 1;
         };
 
         uint32_t flags;
@@ -31,6 +36,15 @@ typedef struct rkmalloc_entry {
     size_t block_size;
     void* ptr;
 } packed rkmalloc_entry;
+
+/**
+ * A heap index entry.
+ */
+typedef struct rkmalloc_index_entry {
+    list_node_t node;
+    rkmalloc_entry entry;
+    uint8_t ptr[0];
+} packed rkmalloc_index_entry;
 
 typedef struct {
     size_t atomic;
@@ -62,9 +76,14 @@ typedef struct rkmalloc_heap {
     list_t index;
     rkmalloc_heap_types types;
     spin_lock_t lock;
+    rkmalloc_entry* sitters[RKMALLOC_SITTER_COUNT];
 } rkmalloc_heap;
 
 void rkmalloc_init_heap(rkmalloc_heap* heap);
 void* rkmalloc_allocate(rkmalloc_heap* heap, size_t size);
 void* rkmalloc_resize(rkmalloc_heap* heap, void* ptr, size_t new_size);
 void rkmalloc_free(rkmalloc_heap* heap, void* ptr);
+
+#ifndef RKMALLOC_DISABLE_MAGIC
+uintptr_t rkmagic(uintptr_t x);
+#endif
