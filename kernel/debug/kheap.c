@@ -63,7 +63,7 @@ static void debug_kheap_map(tty_t* tty, const char* input) {
         rkmalloc_entry* entry = &index->entry;
 
 #ifndef RKMALLOC_DISABLE_MAGIC
-        uintptr_t expected_magic = rkmagic((uintptr_t) entry->ptr);
+        uintptr_t expected_magic = rkmagic((uintptr_t) &index->ptr);
         if (expected_magic != entry->magic) {
             tty_printf(tty, "Bad Magic!\n");
             return;
@@ -96,12 +96,13 @@ static void debug_kheap_dump(tty_t* tty, const char* input) {
     size_t index = 0;
     list_for_each(node, list) {
         rkmalloc_entry* entry = node->value;
+        rkmalloc_index_entry* id = (void*) entry - sizeof(rkmalloc_entry);
         tty_printf(tty,
                    "%d[block = %d bytes, used = %d bytes, location = 0x%x, status = %s]\n",
                    index,
                    entry->block_size,
                    entry->used_size,
-                   entry->ptr,
+                   &id->ptr,
                    entry->free ? (entry->sitting ? "free (sitting)" : "free") : "used"
         );
         index++;

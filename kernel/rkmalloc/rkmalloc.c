@@ -44,12 +44,6 @@ void rkmalloc_init_heap(rkmalloc_heap* heap) {
     CHKSIZE(heap->types.fair)
     CHKSIZE(heap->types.large)
     CHKSIZE(heap->types.huge)
-
-    void* stub = rkmalloc_allocate(heap, 64);
-    if (stub == NULL) {
-        heap->error_code = RKMALLOC_ERROR_FAILED_TO_ALLOCATE;
-        return;
-    }
 }
 
 static list_node_t* get_pointer_entry(rkmalloc_heap* heap, void* ptr, rkmalloc_entry** eout) {
@@ -70,7 +64,8 @@ static list_node_t* get_pointer_entry(rkmalloc_heap* heap, void* ptr, rkmalloc_e
     rkmalloc_entry* entry = NULL;
     while (node != NULL) {
         entry = node->value;
-        if (entry->ptr == ptr) {
+        rkmalloc_index_entry* index = (rkmalloc_index_entry*) node;
+        if (&index->ptr == ptr) {
             break;
         }
 
@@ -205,13 +200,15 @@ void* rkmalloc_allocate(rkmalloc_heap* heap, size_t size) {
      */
     if (entry != NULL) {
         drop_sitter(heap, entry);
+        rkmalloc_index_entry* index = (rkmalloc_index_entry*) ((uintptr_t) entry - sizeof(list_node_t));
         entry->free = false;
         entry->used_size = size;
         heap->total_allocated_blocks_size += entry->block_size;
         heap->total_allocated_used_size += size;
+        void* ptr = &index->ptr;
 
         spin_unlock(&heap->lock);
-        return entry->ptr;
+        return ptr;
     }
 
     /* TODO(kaendfinger): Implement combining blocks. */
@@ -221,6 +218,7 @@ void* rkmalloc_allocate(rkmalloc_heap* heap, size_t size) {
     rkmalloc_index_entry* blk = heap->expand(header_and_size);
 
     if (blk == NULL) {
+        printf(ERROR "[rkmalloc] Failed to allocate %d bytes\n", size);
         spin_unlock(&heap->lock);
         return NULL;
     }
@@ -233,10 +231,9 @@ void* rkmalloc_allocate(rkmalloc_heap* heap, size_t size) {
     entry->free = false;
     entry->block_size = block_size;
     entry->used_size = size;
-    entry->ptr = blk->ptr;
 
 #ifndef RKMALLOC_DISABLE_MAGIC
-    entry->magic = rkmagic((uintptr_t) entry->ptr);
+    entry->magic = rkmagic((uintptr_t) &blk->ptr);
 #endif
 
     heap->total_allocated_blocks_size += block_size;
@@ -246,8 +243,9 @@ void* rkmalloc_allocate(rkmalloc_heap* heap, size_t size) {
 
     list_insert_node_before(heap->index.head, &blk->node);
 
+    void* ptr = &blk->ptr;
     spin_unlock(&heap->lock);
-    return entry->ptr;
+    return ptr;
 }
 
 void* rkmalloc_resize(rkmalloc_heap* heap, void* ptr, size_t new_size) {

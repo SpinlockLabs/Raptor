@@ -3,7 +3,6 @@
 #include <liblox/common.h>
 #include <liblox/hashmap.h>
 
-#include <kernel/panic.h>
 #include <kernel/spin.h>
 #include <kernel/cpu/task.h>
 

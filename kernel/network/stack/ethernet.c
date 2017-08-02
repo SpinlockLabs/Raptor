@@ -54,8 +54,6 @@ static void handle_ethernet_packet_received(void* event, void* extra) {
     }
     ethernet_packet_t* eth = (ethernet_packet_t*) buffer;
 
-    dbg("Received an ethernet packet.\n");
-
     if (!is_ours(iface, eth)) {
         return;
     }

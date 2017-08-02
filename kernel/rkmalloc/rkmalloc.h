@@ -34,7 +34,6 @@ typedef struct rkmalloc_entry {
     };
     size_t used_size;
     size_t block_size;
-    void* ptr;
 } packed rkmalloc_entry;
 
 /**
