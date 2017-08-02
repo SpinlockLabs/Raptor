@@ -13,19 +13,16 @@ uintptr_t rkmagic(uintptr_t x) {
 }
 #endif
 
-void rkmalloc_init_heap(rkmalloc_heap* heap) {
+rkmalloc_error rkmalloc_init_heap(rkmalloc_heap* heap) {
 #define CHKSIZE(size) \
     if ((size) == 0) { \
-        heap->error_code = RKMALLOC_ERROR_TYPE_TOO_SMALL; \
-        return; \
+        return RKMALLOC_ERROR_TYPE_TOO_SMALL; \
     }
 
     if (heap->expand == NULL) {
-        heap->error_code = RKMALLOC_ERROR_INVALID_POINTER;
-        return;
+        return RKMALLOC_ERROR_INVALID_POINTER;
     }
 
-    heap->error_code = RKMALLOC_ERROR_NONE;
     heap->total_allocated_blocks_size = 0;
     heap->total_allocated_used_size = 0;
     spin_init(&heap->lock);
@@ -44,6 +41,8 @@ void rkmalloc_init_heap(rkmalloc_heap* heap) {
     CHKSIZE(heap->types.fair)
     CHKSIZE(heap->types.large)
     CHKSIZE(heap->types.huge)
+
+    return RKMALLOC_ERROR_NONE;
 }
 
 static list_node_t* get_pointer_entry(rkmalloc_heap* heap, void* ptr, rkmalloc_entry** eout) {

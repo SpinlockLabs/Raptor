@@ -45,11 +45,6 @@ static uintptr_t _kpmalloc_int(size_t size, int align, uintptr_t* phys) {
         }
 
         if (phys) {
-            if (align && size >= 0x3000) {
-                address = paging_allocate_aligned_large(address, address, phys);
-            } else {
-                *phys = paging_get_physical_address(address);
-            }
             *phys = paging_get_physical_address(address);
         }
 
@@ -147,9 +142,9 @@ void heap_init(void) {
     kheap->types.large = 1024 * 1024; // 1 mb
     kheap->types.huge = 5 * 1024 * 1024; // 5 mb
 
-    rkmalloc_init_heap(kheap);
+    rkmalloc_error error = rkmalloc_init_heap(kheap);
 
-    if (kheap->error_code != RKMALLOC_ERROR_NONE) {
+    if (error != RKMALLOC_ERROR_NONE) {
         panic("rkmalloc failed to initialize the kernel heap.");
     }
 }
