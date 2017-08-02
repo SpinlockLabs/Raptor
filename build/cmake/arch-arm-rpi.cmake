@@ -30,7 +30,7 @@ target_link_libraries(kernel gcc)
 set(QEMU_FLAGS
   qemu-system-arm
     -kernel "${CMAKE_BINARY_DIR}/kernel.elf"
-    -m 256
+    -m 1024
     -M raspi2
     -serial stdio
 )

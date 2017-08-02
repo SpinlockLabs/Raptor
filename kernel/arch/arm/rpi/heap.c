@@ -68,6 +68,9 @@ rkmalloc_heap* heap_get(void) {
 }
 
 void* kheap_allocate(size_t size) {
+    if (size == 0) {
+        return (void*) kheap_placement_address;
+    }
     return rkmalloc_allocate(kheap, size);
 }
 
