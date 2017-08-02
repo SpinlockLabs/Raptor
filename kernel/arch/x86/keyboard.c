@@ -1,4 +1,6 @@
 #include <liblox/common.h>
+#include <kernel/input/input.h>
+#include <kernel/input/events.h>
 
 #include "io.h"
 #include "irq.h"
@@ -8,6 +10,8 @@
 #define N 0x01 // Normal
 #define S 0x02 // Special
 #define F 0x03 // Function
+
+static input_device_t* kbd;
 
 static bool shift = false;
 
@@ -85,17 +89,30 @@ static int keyboard_callback(cpu_registers_t* regs) {
 
     unsigned int idx = (unsigned int) c;
     char kt = key_types[idx];
+
+    if (kbd != NULL && kbd->events != NULL) {
+        input_event_key_state_t event = {
+            .event.type = up ? INPUT_EVENT_TYPE_KEY_UP : INPUT_EVENT_TYPE_KEY_DOWN,
+            .event.data_size = sizeof(input_event_key_state_t) - sizeof(input_event_t),
+            .key = idx
+        };
+        mailbox_deliver(kbd->events, &event);
+    }
+
     switch (kt) {
         case N:
             if (!up) {
                 uint8_t cc = (uint8_t) (shift ? kb_usu[idx] : kb_usl[idx]);
 
-                vga_putchar(cc);
+                if (vga_pty != NULL) {
+                    vga_putchar(cc);
 
-                if (vga_pty != NULL && vga_pty->handle_read != NULL) {
-                    vga_pty->handle_read(vga_pty, &cc, 1);
+                    if (vga_pty != NULL && vga_pty->handle_read != NULL) {
+                        vga_pty->handle_read(vga_pty, &cc, 1);
+                    }
                 }
             }
+
             break;
         case S:
             switch (idx) {
@@ -113,5 +130,8 @@ static int keyboard_callback(cpu_registers_t* regs) {
 }
 
 void keyboard_init(void) {
+    kbd = input_device_create("ps2-keyboard", INPUT_DEV_CLASS_KEYBOARD);
+    input_device_register(kbd);
+
     irq_add_handler(IRQ1, &keyboard_callback);
 }

@@ -39,9 +39,21 @@ input_device_t* input_device_get(char* name) {
     return NULL;
 }
 
+input_device_t* input_device_create(char* name, input_device_class_t type) {
+    input_device_t* device = zalloc(sizeof(input_device_t));
+    device->name = name;
+    device->events = mailbox_create();
+    device->type = type;
+    return device;
+}
+
 bool input_device_register(input_device_t* device) {
     if (device == NULL) {
         return false;
+    }
+
+    if (device->events == NULL) {
+        device->events = mailbox_create();
     }
 
     device_entry_t* entry = device_register(

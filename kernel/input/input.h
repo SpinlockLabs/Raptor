@@ -150,6 +150,14 @@ list_t* input_device_find(input_device_class_t type);
 input_device_t* input_device_get(char* name);
 
 /**
+ * Creates an input device.
+ * @param name input device name.
+ * @param type input device class.
+ * @return an unregistered input device.
+ */
+input_device_t* input_device_create(char* name, input_device_class_t type);
+
+/**
  * Registers an input device.
  * @param device an input device.
  * @return whether the input device was registered.
