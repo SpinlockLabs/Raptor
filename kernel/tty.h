@@ -17,6 +17,7 @@ typedef struct tty_flags {
             bool write_kernel_log : 1;
             bool allow_debug_console : 1;
             bool echo : 1;
+            bool raw : 1;
         };
         uint32_t value;
     };

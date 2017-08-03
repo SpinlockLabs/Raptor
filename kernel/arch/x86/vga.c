@@ -127,6 +127,10 @@ void vga_putchar(char c) {
 static void vga_handle_ansi(const char* data, size_t size) {
     unused(size);
 
+    if (vga_pty == NULL) {
+        return;
+    }
+
     size_t col = vga_column;
     size_t row = vga_row;
 

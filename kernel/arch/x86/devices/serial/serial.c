@@ -9,7 +9,7 @@ static const uint16_t serial_io_ports[4] = {
     0x2E8
 };
 
-static uint8_t convert(uint8_t in) {
+static uint8_t convert_recv(uint8_t in) {
     switch (in) {
         case 0x7F:
             return 0x08;
@@ -69,16 +69,8 @@ static void serial_poll(void* data) {
     if (serial_rcvd(serial->port) != 0) {
         uint8_t c = inb(serial->port);
 
-        if (serial->tty->flags.echo) {
-            c = convert(c);
-
-            if (c == 0x08 || c == 0x7F) {
-                serial_send(serial->port, 0x08);
-                serial_send(serial->port, ' ');
-                c = 0x08;
-            }
-
-            serial_send(serial->port, c);
+        if (!tty->flags.raw) {
+            c = convert_recv(c);
         }
 
         if (tty->handle_read != NULL) {
