@@ -42,7 +42,7 @@ typedef struct rkmalloc_entry {
 typedef struct rkmalloc_index_entry {
     list_node_t node;
     rkmalloc_entry entry;
-    uint8_t ptr[0];
+    uint8_t ptr[];
 } packed rkmalloc_index_entry;
 
 typedef struct {

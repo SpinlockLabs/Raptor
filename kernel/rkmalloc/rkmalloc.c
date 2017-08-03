@@ -41,7 +41,6 @@ rkmalloc_error rkmalloc_init_heap(rkmalloc_heap* heap) {
     CHKSIZE(heap->types.fair)
     CHKSIZE(heap->types.large)
     CHKSIZE(heap->types.huge)
-
     return RKMALLOC_ERROR_NONE;
 }
 

@@ -4,7 +4,6 @@
 #include "mmio.h"
 #include "board.h"
 #include "irq.h"
-#include "delay.h"
 
 void timer_init(uint32_t freq) {
     irq_unmask(BOARD_IRQ_TIMER3);
@@ -15,8 +14,6 @@ void timer_init(uint32_t freq) {
         mmio_read(BOARD_SYS_TIMER_CLO)
           + freq / 100
     );
-
-    delay(50000);
 }
 
 ulong timer_get_ticks(void) {
