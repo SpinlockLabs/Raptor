@@ -141,9 +141,9 @@ static void debug_fs_stat(tty_t* tty, const char* input) {
 }
 
 void debug_fs_init(void) {
-    debug_console_register_command("fs-resolve", debug_fs_resolve);
-    debug_console_register_command("fs-stat", debug_fs_stat);
-    debug_console_register_command("fs-mount", debug_fs_mount);
-    debug_console_register_command("fs-cat", debug_fs_cat);
-    debug_console_register_command("fs-list", debug_fs_list);
+    debug_register_command("fs-resolve", debug_fs_resolve);
+    debug_register_command("fs-stat", debug_fs_stat);
+    debug_register_command("fs-mount", debug_fs_mount);
+    debug_register_command("fs-cat", debug_fs_cat);
+    debug_register_command("fs-list", debug_fs_list);
 }

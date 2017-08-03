@@ -1,27 +1,24 @@
 #include "console.h"
 
 #include <liblox/string.h>
+#include <liblox/strbuf/strbuf.h>
 
 #include "commands.h"
 
 #define CONSOLE_BUFFER_SIZE 1024
 #define CONSOLE_CMD_MAX_SIZE 64
 
+static hashmap_t* console_commands;
+
 typedef struct debug_console {
-    size_t cursor;
-    hashmap_t* commands;
-    char buff[CONSOLE_BUFFER_SIZE];
+    strbuf_t buffer;
 } debug_console_t;
 
-static debug_console_t* console = NULL;
-
-static void debug_console_trigger(tty_t* tty) {
+static void debug_console_trigger(tty_t* tty, char* str) {
     char cmd[CONSOLE_CMD_MAX_SIZE];
     memset(cmd, 0, CONSOLE_CMD_MAX_SIZE);
     char args[CONSOLE_BUFFER_SIZE];
     memset(args, 0, CONSOLE_BUFFER_SIZE);
-
-    char* str = console->buff;
 
     while (*str == ' ') {
         str++;
@@ -49,12 +46,12 @@ static void debug_console_trigger(tty_t* tty) {
         return;
     }
 
-    if (!hashmap_has(console->commands, cmd)) {
+    if (!hashmap_has(console_commands, cmd)) {
         tty_printf(tty, "Unknown Command: %s\n", cmd);
         return;
     }
 
-    debug_console_command_t handle = hashmap_get(console->commands, cmd);
+    debug_console_command_t handle = hashmap_get(console_commands, cmd);
     handle(tty, args);
 }
 
@@ -65,36 +62,61 @@ static void debug_console_handle_data(tty_t* tty, const uint8_t* buffer, size_t 
         return;
     }
 
+    debug_console_t* console = tty->owner;
+
     if (size == 1 && buffer[0] == '\b') {
-        if (console->cursor > 0) {
-            console->cursor--;
-            console->buff[console->cursor] = '\0';
-        } else {
-            console->buff[0] = '\0';
+        if (strbuf_backspace(&console->buffer)) {
+            if (tty->flags.cursor_handoff) {
+                tty_write_string(tty, "\b");
+            }
         }
+
         return;
     }
 
-    if ((console->cursor + size + 1) > CONSOLE_BUFFER_SIZE) {
-        console->cursor = 0;
-        console->buff[0] = '\0';
-        return;
+    if (size >= 3 && buffer[0] == '\x1b' && buffer[1] == '[') {
+        char c = buffer[2];
+        if (c == 'D') {
+            if (strbuf_move_left(&console->buffer)) {
+                if (tty->flags.cursor_handoff) {
+                    tty_write_string(tty, "\x1b[D");
+                }
+            }
+            return;
+        }
+
+        if (c == 'C') {
+            if (strbuf_move_right(&console->buffer)) {
+                if (tty->flags.cursor_handoff) {
+                    tty_write_string(tty, "\x1b[C");
+                }
+            }
+            return;
+        }
     }
 
-    for (size_t index = 0; index < size; index++) {
-        console->buff[console->cursor] = buffer[index];
-        console->cursor++;
+    bool triggered = false;
+
+    for (uint i = 0; i < size; i++) {
+        char c = buffer[i];
+        if (c == '\n') {
+            triggered = true;
+            char* cmd = strbuf_read(&console->buffer);
+            tty->execute_post_write = false;
+            debug_console_trigger(tty, cmd);
+            tty->execute_post_write = true;
+            strbuf_clear(&console->buffer);
+        } else {
+            if (!strbuf_putc(&console->buffer, c)) {
+                tty_printf(tty, "Command buffer full. Resetting.\n");
+                strbuf_clear(&console->buffer);
+                return;
+            }
+        }
     }
 
-    if (console->buff[console->cursor - 1] == '\n') {
-        console->buff[console->cursor - 1] = '\0';
-        tty->execute_post_write = false;
-        debug_console_trigger(tty);
-        tty->execute_post_write = true;
+    if (triggered) {
         tty_write_string(tty, "> ");
-
-        console->cursor = 0;
-        *console->buff = '\0';
     }
 }
 
@@ -111,14 +133,13 @@ static void debug_console_post_write(tty_t* tty, const uint8_t* buffer, size_t s
 }
 
 void debug_console_init(void) {
-    console = zalloc(sizeof(debug_console_t));
-    console->commands = hashmap_create(10);
+    console_commands = hashmap_create(10);
 }
 
 static void debug_help(tty_t* tty, const char* input) {
     unused(input);
 
-    list_t* keys = hashmap_keys(console->commands);
+    list_t* keys = hashmap_keys(console_commands);
     list_for_each(node, keys) {
         tty_printf(tty, "- %s\n", node->value);
     }
@@ -134,8 +155,8 @@ static void debug_crash(tty_t* tty, const char* input) {
 
 void debug_console_start(void) {
     {
-        debug_console_register_command("help", debug_help);
-        debug_console_register_command("crash", debug_crash);
+        debug_register_command("help", debug_help);
+        debug_register_command("crash", debug_crash);
 
         debug_init_commands();
     }
@@ -144,6 +165,9 @@ void debug_console_start(void) {
     list_for_each(node, ttys) {
         tty_t* tty = node->value;
         if (tty->flags.allow_debug_console) {
+            debug_console_t* console = zalloc(sizeof(debug_console_t) + CONSOLE_BUFFER_SIZE + 1);
+            tty->owner = console;
+            strbuf_init(&console->buffer, CONSOLE_BUFFER_SIZE);
             tty->handle_read = debug_console_handle_data;
             tty->post_write = debug_console_post_write;
             tty_write_string(tty, "[[Raptor Debug Console Started]]\n> ");
@@ -152,10 +176,10 @@ void debug_console_start(void) {
     list_free(ttys);
 }
 
-void debug_console_register_command(char* name, debug_console_command_t cmd) {
-    if (console == NULL) {
+void debug_register_command(char* name, debug_console_command_t cmd) {
+    if (console_commands == NULL) {
         return;
     }
 
-    hashmap_set(console->commands, name, cmd);
+    hashmap_set(console_commands, name, cmd);
 }

@@ -110,6 +110,7 @@ void kernel_setup_devices(void) {
     vga_pty->write = vga_pty_write;
     vga_pty->flags.allow_debug_console = true;
     vga_pty->flags.write_kernel_log = true;
+    vga_pty->flags.cursor_handoff = true;
     keyboard_init();
     tty_register(vga_pty);
 

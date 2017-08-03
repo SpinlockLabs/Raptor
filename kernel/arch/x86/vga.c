@@ -1,4 +1,5 @@
 #include <liblox/string.h>
+#include <liblox/io.h>
 
 #include "io.h"
 #include "vga.h"
@@ -51,13 +52,37 @@ void vga_set_at(char c, uint8_t color, size_t x, size_t y) {
     vga_buffer[index] = vga_entry((unsigned char) c, color);
 }
 
+void vga_set_entry_at(uint16_t value, size_t x, size_t y) {
+    size_t index = y * VGA_WIDTH + x;
+    vga_buffer[index] = value;
+}
+
+uint16_t vga_read_entry_at(size_t col, size_t row) {
+    size_t index = row * VGA_WIDTH + col;
+    return vga_buffer[index];
+}
+
 void vga_cursor(size_t col, size_t row) {
+    vga_column = col;
+    vga_row = row;
+
     uint16_t pos = (uint16_t) ((row * VGA_WIDTH) + col);
 
     outb(0x3D4, 0x0F);
-    outb(0x3D5, (uint8_t)(pos & 0xFF));
+    outb(0x3D5, (uint8_t) (pos & 0xFF));
     outb(0x3D4, 0x0E);
-    outb(0x3D5, (uint8_t)((pos >> 8) & 0xFF));
+    outb(0x3D5, (uint8_t) ((pos >> 8) & 0xFF));
+}
+
+void vga_get_cursor(size_t* col, size_t* row) {
+    uint16_t offset;
+    outb(0x3D4, 14);
+    offset = inb(0x3D5) << 8;
+    outb(0x3D4, 15);
+    offset |= inb(0x3D5);
+
+    *row = (size_t) (offset / VGA_WIDTH);
+    *col = (size_t) (offset % VGA_WIDTH);
 }
 
 void vga_nextrow(void) {
@@ -69,14 +94,22 @@ void vga_nextrow(void) {
     vga_column = 0;
 }
 
-void vga_putchar(char c) {
+void vga_putchar_direct(char c, bool user) {
     if (c == '\n') {
         vga_nextrow();
     } else if (c == '\b') {
-        if (vga_column != 0) {
-            vga_column--;
-            vga_set_at(' ', vga_color, vga_column, vga_row);
-            vga_cursor(vga_column, vga_row);
+        if (!user) {
+            uint16_t after[VGA_WIDTH] = {0};
+            for (size_t i = vga_column; i < VGA_WIDTH; i++) {
+                after[i] = vga_read_entry_at(i, vga_row);
+            }
+
+            for (size_t i = vga_column - 1; i < VGA_WIDTH - 1; i++) {
+                vga_set_entry_at(after[i + 1], i, vga_row);
+            }
+            vga_set_at(' ', vga_color, VGA_WIDTH - 1, vga_row);
+
+            vga_column -= 1;
         }
     } else {
         vga_set_at(c, vga_color, vga_column, vga_row);
@@ -88,8 +121,40 @@ void vga_putchar(char c) {
     vga_cursor(vga_column, vga_row);
 }
 
+void vga_putchar(char c) {
+    vga_putchar_direct(c, false);
+}
+
+static void vga_handle_ansi(const char* data, size_t size) {
+    unused(size);
+
+    size_t col = vga_column;
+    size_t row = vga_row;
+
+    char c = data[2];
+
+    if (c == 'D') {
+        if (vga_column != 0) {
+            vga_cursor(col - 1, row);
+        }
+        return;
+    }
+
+    if (c == 'C') {
+        if (vga_column < VGA_WIDTH) {
+            vga_cursor(col + 1, row);
+        }
+        return;
+    }
+}
+
 void vga_write(const char* data, size_t size) {
     for (size_t i = 0; i < size; i++ ) {
+        if (i == 0 && data[i] == '\x1b' && size >= 3) {
+            vga_handle_ansi(data, size);
+            return;
+        }
+
         vga_putchar(data[i]);
     }
 }

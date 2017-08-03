@@ -96,9 +96,9 @@ static void debug_page_dump(tty_t* tty, const char* input) {
 }
 
 void debug_x86_init(void) {
-    debug_console_register_command("kpused", debug_kpused);
-    debug_console_register_command("pci-list", debug_pci_list);
-    debug_console_register_command("page-stats", debug_page_stats);
-    debug_console_register_command("page-dump", debug_page_dump);
-    debug_console_register_command("fake-event", debug_fake_event);
+    debug_register_command("kpused", debug_kpused);
+    debug_register_command("pci-list", debug_pci_list);
+    debug_register_command("page-stats", debug_page_stats);
+    debug_register_command("page-dump", debug_page_dump);
+    debug_register_command("fake-event", debug_fake_event);
 }

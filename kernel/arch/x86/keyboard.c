@@ -105,10 +105,12 @@ static int keyboard_callback(cpu_registers_t* regs) {
                 uint8_t cc = (uint8_t) (shift ? kb_usu[idx] : kb_usl[idx]);
 
                 if (vga_pty != NULL) {
-                    vga_putchar(cc);
+                    if (vga_pty->handle_read != NULL) {
+                        vga_putchar_direct(cc, true);
 
-                    if (vga_pty != NULL && vga_pty->handle_read != NULL) {
                         vga_pty->handle_read(vga_pty, &cc, 1);
+                    } else {
+                        vga_putchar_direct(cc, false);
                     }
                 }
             }
@@ -123,7 +125,16 @@ static int keyboard_callback(cpu_registers_t* regs) {
                 default: break;
             }
             break;
-        default: break;
+        default:
+            break;
+    }
+
+    if (!up && vga_pty != NULL && vga_pty->handle_read != NULL) {
+        if (c == 0x4b) {
+            vga_pty->handle_read(vga_pty, (const uint8_t*) "\x1b[D", 3);
+        } else if (c == 0x4d) {
+            vga_pty->handle_read(vga_pty, (const uint8_t*) "\x1b[C", 3);
+        }
     }
 
     return 1;

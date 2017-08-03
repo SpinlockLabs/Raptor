@@ -186,12 +186,12 @@ static void debug_ifhub_create(tty_t* tty, const char* input) {
 }
 
 void debug_network_init(void) {
-    debug_console_register_command("net-iface-list", debug_network_iface_list);
-    debug_console_register_command("net-iface-destroy", debug_network_iface_destroy);
-    debug_console_register_command("dhcp-send-request", debug_network_dhcp_send_request);
+    debug_register_command("net-iface-list", debug_network_iface_list);
+    debug_register_command("net-iface-destroy", debug_network_iface_destroy);
+    debug_register_command("dhcp-send-request", debug_network_dhcp_send_request);
 
-    debug_console_register_command("arp-known", debug_arp_known);
-    debug_console_register_command("arp-ask", debug_arp_ask);
+    debug_register_command("arp-known", debug_arp_known);
+    debug_register_command("arp-ask", debug_arp_ask);
 
-    debug_console_register_command("ifhub-create", debug_ifhub_create);
+    debug_register_command("ifhub-create", debug_ifhub_create);
 }

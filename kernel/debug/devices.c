@@ -29,5 +29,5 @@ static void debug_device_list(tty_t* tty, const char* input) {
 }
 
 void debug_devices_init(void) {
-    debug_console_register_command("device-list", debug_device_list);
+    debug_register_command("device-list", debug_device_list);
 }

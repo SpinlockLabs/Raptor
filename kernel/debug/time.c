@@ -26,6 +26,6 @@ static void debug_ticks(tty_t* tty, const char* input) {
 }
 
 void debug_time_init(void) {
-    debug_console_register_command("time", debug_time);
-    debug_console_register_command("ticks", debug_ticks);
+    debug_register_command("time", debug_time);
+    debug_register_command("ticks", debug_ticks);
 }

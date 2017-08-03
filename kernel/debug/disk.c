@@ -36,6 +36,6 @@ static void block_probe(tty_t* tty, const char* input) {
 }
 
 void debug_disk_init(void) {
-    debug_console_register_command("block-list", block_list);
-    debug_console_register_command("block-probe", block_probe);
+    debug_register_command("block-list", block_list);
+    debug_register_command("block-probe", block_probe);
 }

@@ -110,7 +110,7 @@ static void debug_kheap_dump(tty_t* tty, const char* input) {
 }
 
 void debug_kheap_init(void) {
-    debug_console_register_command("kheap-dump", debug_kheap_dump);
-    debug_console_register_command("kheap-stats", debug_kheap_stats);
-    debug_console_register_command("kheap-map", debug_kheap_map);
+    debug_register_command("kheap-dump", debug_kheap_dump);
+    debug_register_command("kheap-stats", debug_kheap_stats);
+    debug_register_command("kheap-map", debug_kheap_map);
 }
