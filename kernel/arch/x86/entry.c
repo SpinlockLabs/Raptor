@@ -110,12 +110,12 @@ void kernel_setup_devices(void) {
     vga_pty->write = vga_pty_write;
     vga_pty->flags.allow_debug_console = true;
     vga_pty->flags.write_kernel_log = true;
-    vga_pty->flags.cursor_handoff = true;
+    vga_pty->flags.echo = true;
     keyboard_init();
     tty_register(vga_pty);
 
     tty_serial_t* serial_port_a = tty_create_serial("serial-a", 0);
-    serial_port_a->echo = true;
+    serial_port_a->tty->flags.echo = true;
     serial_port_a->tty->flags.allow_debug_console = true;
     serial_port_a->tty->flags.write_kernel_log = true;
     tty_register(serial_port_a->tty);

@@ -45,7 +45,7 @@ static void serial_send(uint16_t device, uint8_t out) {
 }
 
 static void tty_serial_write(tty_t* tty, const uint8_t* buffer, size_t len) {
-    tty_serial_t* serial = tty->data;
+    tty_serial_t* serial = tty->internal.provider;
 
     for (size_t i = 0; i < len; i++) {
         uint8_t c = buffer[i];
@@ -55,21 +55,21 @@ static void tty_serial_write(tty_t* tty, const uint8_t* buffer, size_t len) {
 }
 
 static void tty_serial_destroy(tty_t* tty) {
-    tty_serial_t* serial = tty->data;
+    tty_serial_t* serial = tty->internal.provider;
     ktask_cancel(serial->poll_task);
 
-    free(tty->data);
+    free(tty->internal.provider);
     free(tty);
 }
 
 static void serial_poll(void* data) {
     tty_t* tty = data;
-    tty_serial_t* serial = tty->data;
+    tty_serial_t* serial = tty->internal.provider;
 
     if (serial_rcvd(serial->port) != 0) {
         uint8_t c = inb(serial->port);
 
-        if (serial->echo) {
+        if (serial->tty->flags.echo) {
             c = convert(c);
 
             if (c == 0x08 || c == 0x7F) {
@@ -91,12 +91,11 @@ tty_serial_t* tty_create_serial(char* name, uint index) {
     tty_t* tty = tty_create(name);
     tty_serial_t* serial = zalloc(sizeof(tty_serial_t));
     serial->port = serial_io_ports[index];
-    serial->echo = false;
     serial->tty = tty;
 
     serial_enable(serial->port);
 
-    tty->data = serial;
+    tty->internal.provider = serial;
     tty->write = tty_serial_write;
     tty->destroy = tty_serial_destroy;
     serial->poll_task = ktask_repeat(1, serial_poll, tty);

@@ -62,11 +62,11 @@ static void debug_console_handle_data(tty_t* tty, const uint8_t* buffer, size_t 
         return;
     }
 
-    debug_console_t* console = tty->owner;
+    debug_console_t* console = tty->internal.controller;
 
     if (size == 1 && buffer[0] == '\b') {
         if (strbuf_backspace(&console->buffer)) {
-            if (tty->flags.cursor_handoff) {
+            if (tty->flags.echo) {
                 tty_write_string(tty, "\b");
             }
         }
@@ -78,7 +78,7 @@ static void debug_console_handle_data(tty_t* tty, const uint8_t* buffer, size_t 
         char c = buffer[2];
         if (c == 'D') {
             if (strbuf_move_left(&console->buffer)) {
-                if (tty->flags.cursor_handoff) {
+                if (tty->flags.echo) {
                     tty_write_string(tty, "\x1b[D");
                 }
             }
@@ -87,7 +87,7 @@ static void debug_console_handle_data(tty_t* tty, const uint8_t* buffer, size_t 
 
         if (c == 'C') {
             if (strbuf_move_right(&console->buffer)) {
-                if (tty->flags.cursor_handoff) {
+                if (tty->flags.echo) {
                     tty_write_string(tty, "\x1b[C");
                 }
             }
@@ -99,12 +99,16 @@ static void debug_console_handle_data(tty_t* tty, const uint8_t* buffer, size_t 
 
     for (uint i = 0; i < size; i++) {
         char c = buffer[i];
+
+        tty->status.execute_post_write = false;
+        if (tty->flags.echo) {
+            tty_write(tty, (uint8_t*) buffer, size);
+        }
+
         if (c == '\n') {
             triggered = true;
             char* cmd = strbuf_read(&console->buffer);
-            tty->execute_post_write = false;
             debug_console_trigger(tty, cmd);
-            tty->execute_post_write = true;
             strbuf_clear(&console->buffer);
         } else {
             if (!strbuf_putc(&console->buffer, c)) {
@@ -113,6 +117,7 @@ static void debug_console_handle_data(tty_t* tty, const uint8_t* buffer, size_t 
                 return;
             }
         }
+        tty->status.execute_post_write = true;
     }
 
     if (triggered) {
@@ -166,7 +171,7 @@ void debug_console_start(void) {
         tty_t* tty = node->value;
         if (tty->flags.allow_debug_console) {
             debug_console_t* console = zalloc(sizeof(debug_console_t) + CONSOLE_BUFFER_SIZE + 1);
-            tty->owner = console;
+            tty->internal.controller = console;
             strbuf_init(&console->buffer, CONSOLE_BUFFER_SIZE);
             tty->handle_read = debug_console_handle_data;
             tty->post_write = debug_console_post_write;

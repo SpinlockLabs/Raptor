@@ -71,8 +71,6 @@ static void uart_poll_read_task(void* extra) {
             c = '\b';
         }
 
-        uart_putc(c);
-
         if (uart_tty->handle_read != NULL) {
             uart_tty->handle_read(uart_tty, &c, 1);
         }
@@ -84,6 +82,7 @@ void kernel_setup_devices(void) {
     uart_tty->write = uart_tty_write;
     uart_tty->flags.allow_debug_console = true;
     uart_tty->flags.write_kernel_log = true;
+    uart_tty->flags.echo = true;
     tty_register(uart_tty);
 
     ktask_repeat(1, uart_poll_read_task, NULL);

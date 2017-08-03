@@ -104,14 +104,8 @@ static int keyboard_callback(cpu_registers_t* regs) {
             if (!up) {
                 uint8_t cc = (uint8_t) (shift ? kb_usu[idx] : kb_usl[idx]);
 
-                if (vga_pty != NULL) {
-                    if (vga_pty->handle_read != NULL) {
-                        vga_putchar_direct(cc, true);
-
-                        vga_pty->handle_read(vga_pty, &cc, 1);
-                    } else {
-                        vga_putchar_direct(cc, false);
-                    }
+                if (vga_pty != NULL && vga_pty->handle_read != NULL) {
+                    vga_pty->handle_read(vga_pty, &cc, 1);
                 }
             }
 

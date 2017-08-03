@@ -9,7 +9,7 @@ static hashmap_t* tty_registry = NULL;
 void tty_init(tty_t* tty, char* name) {
     memset(tty, 0, sizeof(tty_t));
     tty->name = name;
-    tty->execute_post_write = true;
+    tty->status.execute_post_write = true;
 }
 
 tty_t* tty_create(char* name) {
@@ -31,10 +31,10 @@ void tty_write(tty_t* tty, uint8_t* buf, size_t size) {
         tty->write(tty, buf, size);
     }
 
-    if (tty->execute_post_write && tty->post_write != NULL) {
-        tty->execute_post_write = false;
+    if (tty->status.execute_post_write && tty->post_write != NULL) {
+        tty->status.execute_post_write = false;
         tty->post_write(tty, buf, size);
-        tty->execute_post_write = true;
+        tty->status.execute_post_write = true;
     }
 }
 
