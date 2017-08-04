@@ -1,26 +1,24 @@
 #include <liblox/common.h>
 #include <stdint.h>
 
+#include "delay.h"
 #include "mmio.h"
 #include "board.h"
 #include "irq.h"
 
 void timer_init(uint32_t freq) {
-    irq_unmask(BOARD_IRQ_TIMER3);
-
-    mmio_write(BOARD_SYS_TIMER_CLO, ~(30 * freq));
-    mmio_write(
-        BOARD_SYS_TIMER_C3,
-        mmio_read(BOARD_SYS_TIMER_CLO)
-          + freq / 100
-    );
+    unused(freq);
 }
 
 ulong timer_get_ticks(void) {
-    ulong i = mmio_read(BOARD_SYS_TIMER_CHI);
-    if (i == 0) {
+    ulong a = mmio_read(BOARD_SYS_TIMER_CLO);
+    ulong b = mmio_read(BOARD_SYS_TIMER_CHI);
+    ulong time = a + b;
+    if (time == 0) {
         static ulong ticks = 0;
+        delay(5000000);
         return ticks++;
     }
-    return i;
+
+    return time;
 }

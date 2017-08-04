@@ -69,8 +69,16 @@ void uart_write(const unsigned char* buffer, size_t size) {
     bool conv = (uart_tty != NULL ? !uart_tty->flags.raw : true);
     for (size_t i = 0; i < size; i++) {
         unsigned char c = buffer[i];
-        if (conv && c == (unsigned char) '\n') {
-            uart_putc('\r');
+        if (conv) {
+            char a = (char) c;
+            if (a == '\n') {
+                uart_putc('\r');
+            }
+
+            if (a == '\b') {
+                uart_putc('\b');
+                uart_putc(' ');
+            }
         }
         uart_putc(c);
     }

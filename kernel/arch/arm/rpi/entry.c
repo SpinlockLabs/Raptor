@@ -57,6 +57,10 @@ static char uart_conv(char c) {
     if (c == '\r') {
         return '\n';
     }
+
+    if (c == 0x7F) {
+        return '\b';
+    }
     return c;
 }
 
