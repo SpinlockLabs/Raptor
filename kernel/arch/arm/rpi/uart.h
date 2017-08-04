@@ -1,4 +1,5 @@
 #include <liblox/common.h>
+#include <kernel/tty.h>
 
 #include "board.h"
 
@@ -23,6 +24,8 @@ enum {
     UART0_ITOP = (UART0_BASE + 0x88),
     UART0_TDR = (UART0_BASE + 0x8C)
 };
+
+extern tty_t* uart_tty;
 
 void uart_init(void);
 

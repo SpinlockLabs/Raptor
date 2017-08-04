@@ -14431,13 +14431,18 @@ void draw_spinlock_logo(void) {
         for (uint32_t x = 0; x < width; x++) {
             uint8_t pixel[3] = {0, 0, 0};
             HEADER_PIXEL(data, pixel);
+
+            rgba32 c = {
+                .r = pixel[0],
+                .g = pixel[1],
+                .b = pixel[2],
+                .a = 255
+            };
+
             framebuffer_set(
                 start_w + x,
                 y,
-                pixel[0],
-                pixel[1],
-                pixel[2],
-                0
+                c.color
             );
         }
     }

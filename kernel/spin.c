@@ -1,6 +1,5 @@
-#include <liblox/io.h>
+#include "spin.h"
 
-#include <kernel/spin.h>
 #include <kernel/entry.h>
 
 #include <kernel/cpu/task.h>
@@ -30,9 +29,9 @@ void spin_wait(atomic_int* addr, atomic_int* waiters) {
 
 void spin_lock(spin_lock_t* lock) {
 #ifdef ARCH_NO_SPINLOCK
+    unused(lock);
     return;
-#endif
-
+#else
     bool warned = false;
     while (atomic_exchange(&lock->addr, 1)) {
         if (!warned) {
@@ -41,6 +40,7 @@ void spin_lock(spin_lock_t* lock) {
         }
         spin_wait(&lock->addr, &lock->waiters);
     }
+#endif
 }
 
 void spin_init(spin_lock_t* lock) {
@@ -50,13 +50,14 @@ void spin_init(spin_lock_t* lock) {
 
 void spin_unlock(spin_lock_t* lock) {
 #ifdef ARCH_NO_SPINLOCK
+    unused(lock);
     return;
-#endif
-
+#else
     if (lock->addr) {
         atomic_store(&lock->addr, 0);
         if (lock->waiters && kernel_initialized) {
             ktask_queue_flush();
         }
     }
+#endif
 }

@@ -1,5 +1,4 @@
 #include <liblox/common.h>
-#include <liblox/io.h>
 #include <liblox/hex.h>
 #include <liblox/memory.h>
 
@@ -51,7 +50,7 @@ void framebuffer_init(uint32_t w, uint32_t h) {
     uint32_t result = bcm_mailbox_read(1);
 
     if (result != 0 || pi_fbinfo->buffer == 0 || pi_fbinfo->depth != 32) {
-        printf(ERROR "Failed to initialized framebuffer.\n");
+        printf(ERROR "Failed to initialize framebuffer.\n");
         return;
     }
 
@@ -63,20 +62,21 @@ void framebuffer_init(uint32_t w, uint32_t h) {
         pi_fbinfo->h
     );
 
-    framebuffer_clear(255, 255, 255, 255);
+    framebuffer_clear(rgba32_white.color);
 
     extern void draw_spinlock_logo(void);
     draw_spinlock_logo();
 }
 
-void framebuffer_clear(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
+void framebuffer_clear(uint32_t color) {
     uint32_t w = pi_fbinfo->w;
     uint32_t h = pi_fbinfo->h;
 
     for (uint32_t y = 0; y < h; y++) {
         for (uint32_t x = 0; x < w; x++) {
             uint32_t offset = fb_offset(x, y);
-            pi_framebuffer[offset] = (uint32_t) FB_PIXEL(r, g, b, a);
+
+            pi_framebuffer[offset] = color;
         }
     }
 }
@@ -84,12 +84,9 @@ void framebuffer_clear(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
 void framebuffer_set(
     uint32_t x,
     uint32_t y,
-    uint8_t r,
-    uint8_t g,
-    uint8_t b,
-    uint8_t a) {
+    uint32_t color) {
     uint32_t offset = fb_offset(x, y);
-    pi_framebuffer[offset] = (uint32_t) FB_PIXEL(r, g, b, a);
+    pi_framebuffer[offset] = color;
 }
 
 void framebuffer_get_size(uint32_t* w, uint32_t* h) {

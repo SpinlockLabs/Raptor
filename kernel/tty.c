@@ -71,10 +71,6 @@ list_t* tty_get_all(void) {
 }
 
 void tty_subsystem_init(void) {
-    if (tty_registry != NULL) {
-        return;
-    }
-
     tty_registry = hashmap_create(10);
 }
 

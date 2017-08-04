@@ -1,6 +1,5 @@
 #include <liblox/common.h>
 #include <liblox/io.h>
-#include <liblox/sleep.h>
 #include <liblox/lox-internal.h>
 
 #include <kernel/entry.h>
@@ -48,12 +47,17 @@ void (*lox_output_string_provider)(char*) = lox_output_string_uart;
 void (*lox_output_char_provider)(char) = lox_output_char_uart;
 void (*lox_sleep_provider)(ulong) = delay;
 
-static tty_t* uart_tty = NULL;
-
 static void uart_tty_write(tty_t* tty, const uint8_t* buf, size_t size) {
     unused(tty);
 
     uart_write(buf, size);
+}
+
+static char uart_conv(char c) {
+    if (c == '\r') {
+        return '\n';
+    }
+    return c;
 }
 
 static void uart_poll_read_task(void* extra) {
@@ -62,16 +66,10 @@ static void uart_poll_read_task(void* extra) {
     if (uart_poll()) {
         unsigned char c = uart_poll_getc();
 
-        if (c == '\r') {
-            c = '\n';
-            uart_putc('\r');
-        }
-
-        if (c == 127) {
-            c = '\b';
-        }
-
         if (uart_tty->handle_read != NULL) {
+            if (!uart_tty->flags.raw) {
+                c = (unsigned char) uart_conv((char) c);
+            }
             uart_tty->handle_read(uart_tty, &c, 1);
         }
     }
@@ -86,7 +84,6 @@ void kernel_setup_devices(void) {
     tty_register(uart_tty);
 
     ktask_repeat(1, uart_poll_read_task, NULL);
-
     framebuffer_init(640, 480);
 }
 

@@ -6,8 +6,8 @@
 
 #include "mmio.h"
 
-#define ARM_OPCODE_BRANCH(distance)	(0xEA000000 | (distance))
-#define ARM_DISTANCE(from, to) ((uint32_t*) &(to) - (uint32_t*) &(from) - 2)
+#define ARM_OPCODE_BRANCH(distance)	(0xEA000000 | ((uint32_t) distance))
+#define ARM_DISTANCE(from, to) ((void*) (((void*) to) - ((void*) from) - 2))
 #define IRQ_MASK(irq) (1 << ((irq) & (BOARD_IRQS_PER_REG - 1)))
 
 #define IRQ_PENDING(irq)	(  (irq) <BOARD_IRQ2_BASE	\
@@ -39,6 +39,7 @@ typedef struct exception_table {
 } exception_table_t;
 
 void irq_wait(void) {
+    printf("Wait\n");
 }
 
 extern void IRQStub(void);
@@ -48,7 +49,9 @@ extern void DataAbortStub(void);
 
 void irq_init(void) {
     exception_table_t* table = (exception_table_t*) BOARD_EXCEPTION_TABLE_BASE;
-    table->irq = ARM_OPCODE_BRANCH(ARM_DISTANCE(table->irq, IRQStub));
+    table->irq = ARM_OPCODE_BRANCH(ARM_DISTANCE(&table->irq, IRQStub));
+    table->prefetch_abort = ARM_OPCODE_BRANCH(ARM_DISTANCE(&table->prefetch_abort, PrefetchAbortStub));
+    table->data_abort = ARM_OPCODE_BRANCH(ARM_DISTANCE(&table->data_abort, DataAbortStub));
 
     mmio_write(BOARD_IC_FIQ_CTL, 0);
     mmio_write(BOARD_IC_DISABLE_IRQS_1, (uint32_t) -1);

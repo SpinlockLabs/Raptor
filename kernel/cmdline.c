@@ -1,9 +1,9 @@
+#include "cmdline.h"
+
 #include <liblox/common.h>
 #include <liblox/string.h>
 #include <liblox/printf.h>
 #include <liblox/memory.h>
-
-#include "cmdline.h"
 
 extern char* (*arch_get_cmdline)(void);
 

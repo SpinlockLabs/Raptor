@@ -216,12 +216,12 @@ void* rkmalloc_allocate(rkmalloc_heap* heap, size_t size) {
     rkmalloc_index_entry* blk = heap->expand(header_and_size);
 
     if (blk == NULL) {
-        printf(ERROR "[rkmalloc] Failed to allocate %d bytes\n", size);
         spin_unlock(&heap->lock);
         return NULL;
     }
-
+    
     list_init_node(&blk->node);
+    
     blk->node.list = &heap->index;
 
     entry = &blk->entry;
@@ -229,7 +229,7 @@ void* rkmalloc_allocate(rkmalloc_heap* heap, size_t size) {
     entry->free = false;
     entry->block_size = block_size;
     entry->used_size = size;
-
+    
 #ifndef RKMALLOC_DISABLE_MAGIC
     entry->magic = rkmagic((uintptr_t) &blk->ptr);
 #endif

@@ -102,10 +102,12 @@ static void debug_console_handle_data(tty_t* tty, const uint8_t* buffer, size_t 
 
         tty->status.execute_post_write = false;
         if (tty->flags.echo) {
-            tty_write(tty, (uint8_t*) buffer, size);
+            uint8_t echo_buffer[1] = {0};
+            echo_buffer[0] = (uint8_t) c;
+            tty_write(tty, echo_buffer, 1);
         }
 
-        if (c == '\n') {
+        if (c == '\n' || c == '\r') {
             triggered = true;
             char* cmd = strbuf_read(&console->buffer);
             debug_console_trigger(tty, cmd);

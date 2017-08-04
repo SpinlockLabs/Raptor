@@ -22,12 +22,13 @@ endif()
 add_definitions(
   -DARCH_ARM
   -DARCH_ARM_RPI
+  -DARCH_NO_SPINLOCK
 )
 
 kernel_ldscript("${KERNEL_DIR}/arch/arm/rpi/linker.ld")
 target_link_libraries(kernel gcc)
 
-set(QEMU_FLAGS
+set(QEMU_CMD
   qemu-system-arm
     -kernel "${CMAKE_BINARY_DIR}/kernel.elf"
     -m 1024
@@ -36,7 +37,12 @@ set(QEMU_FLAGS
 )
 
 add_custom_target(qemu
-  COMMAND ${QEMU_FLAGS}
+  COMMAND ${QEMU_CMD}
+  DEPENDS kernel
+)
+
+add_custom_target(qemu-cli
+  COMMAND ${QEMU_CMD} -nographic -monitor none
   DEPENDS kernel
 )
 

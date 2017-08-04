@@ -5,6 +5,8 @@
 #include "mmio.h"
 #include "uart.h"
 
+tty_t* uart_tty = NULL;
+
 void uart_init(void) {
     // Disable UART0.
     mmio_write(UART0_CR, 0x00000000);
@@ -64,12 +66,13 @@ unsigned char uart_getc(void) {
 }
 
 void uart_write(const unsigned char* buffer, size_t size) {
+    bool conv = (uart_tty != NULL ? !uart_tty->flags.raw : true);
     for (size_t i = 0; i < size; i++) {
         unsigned char c = buffer[i];
-        if (c == (unsigned char) '\n') {
+        if (conv && c == (unsigned char) '\n') {
             uart_putc('\r');
         }
-        uart_putc(buffer[i]);
+        uart_putc(c);
     }
 }
 
