@@ -39,19 +39,14 @@ typedef struct exception_table {
 } exception_table_t;
 
 void irq_wait(void) {
-    printf("Wait\n");
+    printf(DEBUG "IRQ Wait\n");
 }
 
 extern void IRQStub(void);
-extern void UndefinedInstructionStub(void);
-extern void PrefetchAbortStub(void);
-extern void DataAbortStub(void);
 
 void irq_init(void) {
     exception_table_t* table = (exception_table_t*) BOARD_EXCEPTION_TABLE_BASE;
     table->irq = ARM_OPCODE_BRANCH(ARM_DISTANCE(&table->irq, IRQStub));
-    table->prefetch_abort = ARM_OPCODE_BRANCH(ARM_DISTANCE(&table->prefetch_abort, PrefetchAbortStub));
-    table->data_abort = ARM_OPCODE_BRANCH(ARM_DISTANCE(&table->data_abort, DataAbortStub));
 
     mmio_write(BOARD_IC_FIQ_CTL, 0);
     mmio_write(BOARD_IC_DISABLE_IRQS_1, (uint32_t) -1);

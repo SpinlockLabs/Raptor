@@ -44,7 +44,9 @@ void* kheap_expand(size_t size) {
         return (void*) kheap_placement_address;
     }
 
-    return (void*) kpmalloc_a(size);
+    void* ptr = (void*) kpmalloc(size);
+    memset(ptr, 0, size);
+    return ptr;
 }
 
 void heap_init(void) {

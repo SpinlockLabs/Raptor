@@ -17,8 +17,9 @@
 #define atomic_store(a, b) (*(a) = (b))
 #endif
 
-#define atomic_int volatile int
+#define atomic_int32 volatile int32_t
 
 #else
 #include <stdatomic.h>
+#define atomic_int32 _Atomic int32_t
 #endif

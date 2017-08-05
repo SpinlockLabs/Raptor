@@ -6,8 +6,9 @@
 
 #include <kernel/cpu/task.h>
 #include <kernel/interupt.h>
+#include <liblox/string.h>
 
-void spin_wait(atomic_int* addr, atomic_int* waiters) {
+void spin_wait(atomic_int32* addr, atomic_int32* waiters) {
     if (addr == NULL) {
         return;
     }
@@ -46,8 +47,7 @@ void spin_lock(spin_lock_t* lock) {
 }
 
 void spin_init(spin_lock_t* lock) {
-    lock->addr = 0;
-    lock->waiters = 0;
+    memset(lock, 0, sizeof(spin_lock_t));
 }
 
 void spin_unlock(spin_lock_t* lock) {

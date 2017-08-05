@@ -1,7 +1,6 @@
 #include "input.h"
 
 #include <liblox/string.h>
-
 #include <kernel/device/registry.h>
 
 list_t* input_device_find(input_device_class_t type) {

@@ -4,8 +4,8 @@
 #include <liblox/atomic.h>
 
 typedef struct spin_lock {
-    atomic_int addr;
-    atomic_int waiters;
+    atomic_int32 addr;
+    atomic_int32 waiters;
 } spin_lock_t;
 
 extern void spin_init(spin_lock_t* lock);
