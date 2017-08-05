@@ -1,5 +1,7 @@
 #include "spin.h"
 
+#include <liblox/io.h>
+
 #include <kernel/entry.h>
 
 #include <kernel/cpu/task.h>
