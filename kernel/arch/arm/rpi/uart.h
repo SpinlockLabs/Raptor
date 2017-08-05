@@ -28,14 +28,10 @@ enum {
 extern tty_t* uart_tty;
 
 void uart_init(void);
-
 void uart_putc(unsigned char byte);
-
 bool uart_poll(void);
-
-unsigned char uart_poll_getc(void);
-unsigned char uart_getc(void);
-
-void uart_write(const unsigned char *buffer, size_t size);
-
+uint8_t uart_poll_getc(void);
+uint8_t uart_getc(void);
+void uart_write(const uint8_t* buffer, size_t size);
 void uart_puts(const char *str);
+void uart_kpload(void);

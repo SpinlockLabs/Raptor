@@ -63,9 +63,6 @@ void framebuffer_init(uint32_t w, uint32_t h) {
     );
 
     framebuffer_clear(rgba32_white.color);
-
-    extern void draw_spinlock_logo(void);
-    draw_spinlock_logo();
 }
 
 void framebuffer_clear(uint32_t color) {

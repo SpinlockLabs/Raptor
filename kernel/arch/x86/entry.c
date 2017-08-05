@@ -134,6 +134,11 @@ void kernel_setup_devices(void) {
 /* Initial kernel stack pointer. */
 used uintptr_t initial_esp = 0;
 
+void kexec(const void* kernel, size_t size) {
+    unused(kernel);
+    unused(size);
+}
+
 used void kernel_main(multiboot_t* _mboot, uint32_t mboot_hdr, uintptr_t esp) {
     initial_esp = esp;
 

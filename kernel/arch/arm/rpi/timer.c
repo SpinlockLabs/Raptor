@@ -16,7 +16,6 @@ ulong timer_get_ticks(void) {
     ulong time = a + b;
     if (time == 0) {
         static ulong ticks = 0;
-        delay(5000000);
         return ticks++;
     }
 

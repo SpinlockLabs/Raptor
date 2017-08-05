@@ -20,7 +20,7 @@ void lox_output_string_uart(char *str) {
 }
 
 void lox_output_char_uart(char c) {
-    uart_putc((unsigned char) c);
+    uart_putc((uint8_t) c);
 }
 
 used void arch_panic_handler(char *str) {
@@ -68,11 +68,16 @@ static void uart_poll_read_task(void* extra) {
     unused(extra);
 
     if (uart_poll()) {
-        unsigned char c = uart_poll_getc();
+        uint8_t c = uart_poll_getc();
+
+        if (!uart_tty->flags.raw && c == 0x11) {
+            uart_kpload();
+            return;
+        }
 
         if (uart_tty->handle_read != NULL) {
             if (!uart_tty->flags.raw) {
-                c = (unsigned char) uart_conv((char) c);
+                c = (uint8_t) uart_conv((char) c);
             }
             uart_tty->handle_read(uart_tty, &c, 1);
         }
@@ -91,13 +96,15 @@ void kernel_setup_devices(void) {
     framebuffer_init(640, 480);
 }
 
-used noreturn void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags) {
+void* atags = NULL;
+
+used noreturn void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags_addr) {
     (void) r0;
     (void) r1;
-    (void) atags;
+    atags = (void*) atags_addr;
 
-    extern unsigned char __bss_start;
-    extern unsigned char __end;
+    extern uint8_t __bss_start;
+    extern uint8_t __end;
     memset(&__bss_start, 0, &__end - &__bss_start);
 
     uart_init();
@@ -118,6 +125,7 @@ used noreturn void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags) {
 
 void cpu_run_idle(void) {
     while (true) {
+        delay(50000);
         ktask_queue_flush();
     }
 }
