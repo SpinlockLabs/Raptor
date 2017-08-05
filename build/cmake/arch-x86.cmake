@@ -45,7 +45,7 @@ kernel_ldscript("${KERNEL_DIR}/arch/x86/linker.ld")
 set(QEMU_CMD_BASE
   qemu-system-i386
     -cpu ${QEMU_CPU}
-    -m 256
+    -m 1024
     -net nic,model=${QEMU_NIC}
     -drive "file=${CMAKE_BINARY_DIR}/raptor.img,format=raw,if=ide,media=disk"
 )
@@ -59,18 +59,8 @@ add_custom_target(qemu
   DEPENDS kernel diskimg
 )
 
-add_custom_target(qemu-gdb
-  COMMAND ${QEMU_CMD} -S -s -append debug -net user
-  DEPENDS kernel diskimg
-)
-
 add_custom_target(qemu-cli
   COMMAND ${QEMU_CMD} -monitor none -nographic -net user
-  DEPENDS kernel diskimg
-)
-
-add_custom_target(qemu-cli-gdb
-  COMMAND ${QEMU_CMD} -S -s -append debug -monitor none -nographic
   DEPENDS kernel diskimg
 )
 

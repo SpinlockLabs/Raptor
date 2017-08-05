@@ -64,7 +64,7 @@ static void handle_ethernet_packet_received(void* event, void* extra) {
     };
 
     event_dispatch(
-        "network:stack:ipv4:packet-receive",
+        EVENT_NETWORK_STACK_IPV4_PKT_RECEIVE,
         &real_pkt
     );
 }
@@ -128,13 +128,13 @@ static void handle_ethernet_packet_send(void* event, void* extra) {
 
 void network_stack_ethernet_init(void) {
     event_add_handler(
-        "network:stack:raw:packet-receive",
+        EVENT_NETWORK_STACK_RAW_PKT_RECEIVE,
         handle_ethernet_packet_received,
         NULL
     );
 
     event_add_handler(
-        "network:stack:raw:packet-send",
+        EVENT_NETWORK_STACK_RAW_PKT_SEND,
         handle_ethernet_packet_send,
         NULL
     );

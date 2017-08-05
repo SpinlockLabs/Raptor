@@ -60,12 +60,27 @@ typedef struct block_device_ops {
 
 typedef struct block_device_private {
     void* owner;
+    void* table;
 } block_device_private_t;
+
+typedef struct block_device_flags {
+    union {
+        struct {
+            /**
+             * Partition table type.
+             */
+            uint8_t partition_table_type : 8;
+        };
+
+        uint32_t flags;
+    };
+} block_device_flags_t;
 
 struct block_device {
     char name[64];
     block_device_ops_t ops;
     block_device_private_t internal;
+    block_device_flags_t flags;
 };
 
 block_device_t* block_device_create(char* name);

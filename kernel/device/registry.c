@@ -1,6 +1,7 @@
 #include "registry.h"
 
 #include <liblox/string.h>
+
 #include <kernel/spin.h>
 #include <kernel/dispatch/events.h>
 
@@ -30,7 +31,7 @@ device_entry_t* device_register(
     list_add(device_registry, entry);
     spin_unlock(&lock);
 
-    event_dispatch_async("device:registered", entry);
+    event_dispatch_async(EVENT_DEVICE_REGISTERED, entry);
 
     return entry;
 }
@@ -44,7 +45,7 @@ bool device_unregister(
 
     list_node_t* node = list_find(device_registry, device);
     if (node != NULL) {
-        event_dispatch("device:unregistered", node->value);
+        event_dispatch(EVENT_DEVICE_UNREGISTERED, node->value);
 
         spin_lock(&lock);
         list_remove(node);

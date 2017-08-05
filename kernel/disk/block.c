@@ -66,7 +66,7 @@ block_device_error_t block_device_register(block_device_t* device) {
     device_register(device->name, DEVICE_CLASS_BLOCK, device);
 
     event_dispatch_async(
-        "block-device:initialized",
+        EVENT_BLOCK_DEVICE_INITIALIZED,
         device
     );
 
@@ -74,15 +74,15 @@ block_device_error_t block_device_register(block_device_t* device) {
 }
 
 block_device_error_t block_device_destroy(block_device_t* device) {
+    event_dispatch(
+        EVENT_BLOCK_DEVICE_DESTROYING,
+        device
+    );
+
     spin_lock(&lock);
 
     char* name = device->name;
     block_device_error_t error = BLOCK_DEVICE_ERROR_OK;
-
-    event_dispatch(
-        "block-device:destroying",
-        device
-    );
 
     device_unregister(device_lookup(
         device->name,
@@ -95,7 +95,7 @@ block_device_error_t block_device_destroy(block_device_t* device) {
 
     hashmap_remove(registry, device);
     event_dispatch_async(
-        "block-device:destroyed",
+        EVENT_BLOCK_DEVICE_DESTROYED,
         name
     );
 

@@ -24,7 +24,7 @@ void network_iface_register(network_iface_t* iface) {
     hashmap_set(network_iface_subsystem_registry, iface->name, iface);
     spin_unlock(&network_subsystem_lock);
 
-    event_dispatch("network:iface:registered", iface->name);
+    event_dispatch(EVENT_NETWORK_IFACE_REGISTERED, iface->name);
     device_register(iface->name, DEVICE_CLASS_NETWORK, iface);
 }
 
@@ -42,9 +42,9 @@ network_iface_error_t network_iface_destroy(network_iface_t* iface) {
         return IFACE_ERR_BAD_IFACE;
     }
 
-    spin_lock(&network_subsystem_lock);
+    event_dispatch(EVENT_NETWORK_IFACE_DESTROYING, iface);
 
-    event_dispatch("network:iface:destroying", iface);
+    spin_lock(&network_subsystem_lock);
 
     device_unregister(device_lookup(
         iface->name,
@@ -64,7 +64,7 @@ network_iface_error_t network_iface_destroy(network_iface_t* iface) {
 
     spin_unlock(&network_subsystem_lock);
 
-    event_dispatch("network:iface:destroyed", name);
+    event_dispatch(EVENT_NETWORK_IFACE_DESTROYED, name);
     free(name);
 
     return error;
@@ -158,5 +158,5 @@ int network_iface_ioctl(network_iface_t* iface, ulong request, void* data) {
 void network_iface_subsystem_init(void) {
     network_iface_subsystem_registry = hashmap_create(10);
     spin_init(&network_subsystem_lock);
-    event_dispatch("network:iface:subsystem-init", NULL);
+    event_dispatch(EVENT_NETWORK_IFACE_SUBSYSTEM_INIT, NULL);
 }

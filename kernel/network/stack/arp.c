@@ -212,25 +212,25 @@ static void handle_interface_down(void* event, void* extra) {
 
 void network_stack_arp_init(void) {
     event_add_handler(
-        "network:stack:raw:packet-receive",
+        EVENT_NETWORK_STACK_RAW_PKT_RECEIVE,
         handle_potential_arp,
         NULL
     );
 
     event_add_handler(
-        "network:stack:iface-up",
+        EVENT_NETWORK_STACK_IFACE_UP,
         handle_interface_up,
         NULL
     );
 
     event_add_handler(
-        "network:stack:iface-down",
+        EVENT_NETWORK_STACK_IFACE_DOWN,
         handle_interface_down,
         NULL
     );
 
     event_add_handler(
-        "network:stack:iface-update",
+        EVENT_NETWORK_STACK_IFACE_UPDATE,
         handle_config_change,
         NULL
     );

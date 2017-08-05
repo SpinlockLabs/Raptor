@@ -63,12 +63,6 @@ static void debug_pci_list(tty_t* tty, const char* input) {
     pci_scan(pci_show_simple, -1, tty);
 }
 
-static void debug_fake_event(tty_t* tty, const char* input) {
-    unused(tty);
-
-    event_dispatch((char*) input, NULL);
-}
-
 static void debug_page_dump(tty_t* tty, const char* input) {
     unused(input);
 
@@ -100,5 +94,4 @@ void debug_x86_init(void) {
     debug_register_command("pci-list", debug_pci_list);
     debug_register_command("page-stats", debug_page_stats);
     debug_register_command("page-dump", debug_page_dump);
-    debug_register_command("fake-event", debug_fake_event);
 }

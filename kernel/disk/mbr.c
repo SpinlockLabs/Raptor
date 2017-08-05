@@ -72,7 +72,7 @@ static block_device_error_t mbr_partition_block_stat(
     return BLOCK_DEVICE_ERROR_OK;
 }
 
-static void mbr_create_block_partition(
+static block_device_t* mbr_create_block_partition(
     block_device_t* block,
     uint part_id,
     mbr_partition_t* part) {
@@ -88,9 +88,14 @@ static void mbr_create_block_partition(
     pblock->ops.write = mbr_partition_block_write;
     pblock->ops.stat = mbr_partition_block_stat;
     block_device_register(pblock);
+    return pblock;
 }
 
-static bool mbr_load_partitions(block_device_t* block, mbr_t* mbr) {
+static bool mbr_load_partitions(
+    block_device_t* block,
+    mbr_block_table_t* table,
+    mbr_t* mbr
+) {
     bool created = false;
     for (uint i = 0; i < 4; i++) {
         mbr_partition_t* part = &mbr->partitions[i];
@@ -99,8 +104,9 @@ static bool mbr_load_partitions(block_device_t* block, mbr_t* mbr) {
             continue;
         }
 
-        mbr_create_block_partition(block, i + 1, part);
+        block_device_t* dev = mbr_create_block_partition(block, i + 1, part);
         created = true;
+        table->children[i] = dev;
     }
 
     return created;
@@ -118,7 +124,11 @@ static bool mbr_partition_probe(block_device_t* block) {
         return false;
     }
 
-    return mbr_load_partitions(block, (mbr_t*) mbr);
+    mbr_block_table_t* table = zalloc(sizeof(mbr_block_table_t));
+    block->flags.partition_table_type = MBR_TABLE_ID;
+    block->internal.table = table;
+
+    return mbr_load_partitions(block, table, (mbr_t*) mbr);
 }
 
 static void mbr_partition_probe_handler(void* event, void* extra) {
@@ -129,18 +139,45 @@ static void mbr_partition_probe_handler(void* event, void* extra) {
     mbr_partition_probe(block);
 }
 
+static void mbr_destroy(block_device_t* device) {
+    mbr_block_table_t* table = device->internal.table;
+    for (uint i = 0; i < 4; i++) {
+        if (table->children[i] == NULL) {
+            continue;
+        }
+
+        block_device_t* dev = table->children[i];
+        block_device_destroy(dev);
+    }
+}
+
+static void mbr_destroy_parent_handler(void* event, void* extra) {
+    unused(extra);
+    block_device_t* block = event;
+
+    if (block->flags.partition_table_type != MBR_TABLE_ID) {
+        return;
+    }
+
+    mbr_destroy(block);
+}
+
 void block_device_mbr_subsystem_init(void) {
     event_add_handler(
-        "block-device:initialized",
+        EVENT_BLOCK_DEVICE_INITIALIZED,
         mbr_partition_probe_handler,
         NULL
     );
 
     event_add_handler(
-        "block-device:partition-probe",
-        mbr_partition_probe_handler,
+        EVENT_BLOCK_DEVICE_DESTROYING,
+        mbr_destroy_parent_handler,
         NULL
     );
 
-    // TODO(kaendfinger): Implement destruction of MBR block devices.
+    event_add_handler(
+        EVENT_BLOCK_DEVICE_PARTITION_PROBE,
+        mbr_partition_probe_handler,
+        NULL
+    );
 }

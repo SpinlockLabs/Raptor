@@ -15,19 +15,19 @@ static hashmap_t* registry = NULL;
 static spin_lock_t registry_lock;
 
 void events_subsystem_init(void) {
-    registry = hashmap_create(10);
+    registry = hashmap_create_int(10);
 
     spin_init(&registry_lock);
 }
 
-void event_add_handler(char* type, event_handler_t handler, void* extra) {
+void event_add_handler(event_type type, event_handler_t handler, void* extra) {
     spin_lock(&registry_lock);
     list_t* list = NULL;
-    if (!hashmap_has(registry, type)) {
+    if (!hashmap_has(registry, (void*) type)) {
         list = list_create();
-        hashmap_set(registry, type, list);
+        hashmap_set(registry, (void*) type, list);
     } else {
-        list = hashmap_get(registry, type);
+        list = hashmap_get(registry, (void*) type);
     }
 
     event_dispatch_info_t* info = zalloc(sizeof(event_dispatch_info_t));
@@ -39,14 +39,14 @@ void event_add_handler(char* type, event_handler_t handler, void* extra) {
     spin_unlock(&registry_lock);
 }
 
-void event_remove_handler(char* type, event_handler_t handler) {
+void event_remove_handler(event_type type, event_handler_t handler) {
     spin_lock(&registry_lock);
-    if (!hashmap_has(registry, type)) {
+    if (!hashmap_has(registry, (void*) type)) {
         spin_unlock(&registry_lock);
         return;
     }
 
-    list_t* list = hashmap_get(registry, type);
+    list_t* list = hashmap_get(registry, (void*) type);
 
     list_for_each(node, list) {
         event_dispatch_info_t* info = node->value;
@@ -64,15 +64,15 @@ void event_remove_handler(char* type, event_handler_t handler) {
     spin_unlock(&registry_lock);
 }
 
-void event_dispatch(char* type, void* event) {
+void event_dispatch(event_type type, void* event) {
     spin_lock(&registry_lock);
 
-    if (!hashmap_has(registry, type)) {
+    if (!hashmap_has(registry, (void*) type)) {
         spin_unlock(&registry_lock);
         return;
     }
 
-    list_t* list = hashmap_get(registry, type);
+    list_t* list = hashmap_get(registry, (void*) type);
 
     if (list == NULL) {
         spin_unlock(&registry_lock);
@@ -88,7 +88,7 @@ void event_dispatch(char* type, void* event) {
 }
 
 typedef struct event_dispatch_async_data {
-    char* type;
+    event_type type;
     void* event;
 } event_dispatch_async_data_t;
 
@@ -98,7 +98,7 @@ static void event_dispatch_async_task(void* data) {
     free(info);
 }
 
-void event_dispatch_async(char* type, void* event) {
+void event_dispatch_async(event_type type, void* event) {
     event_dispatch_async_data_t* data = zalloc(
         sizeof(event_dispatch_async_data_t)
     );
