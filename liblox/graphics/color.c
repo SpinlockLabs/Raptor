@@ -1,8 +1,15 @@
 #include "color.h"
 
-rgba32 rgba32_white = {
-    .r = 255,
-    .g = 255,
-    .b = 255,
-    .a = 255
-};
+uint32_t rgb_as(rgb_t* input, pixel_fmt_t fmt) {
+    if (fmt == PIXEL_FMT_RGBA32) {
+        rgba32_t pix = {
+            .r = input->r,
+            .g = input->g,
+            .b = input->b,
+            .a = 255
+        };
+
+        return pix.color;
+    }
+    return 0;
+}

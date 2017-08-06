@@ -2,6 +2,10 @@
 #include <liblox/hex.h>
 #include <liblox/memory.h>
 
+#include <liblox/graphics/colors.h>
+
+#include <kernel/graphics/fb.h>
+
 #include "fb.h"
 #include "mailbox.h"
 #include "board.h"
@@ -20,7 +24,8 @@ typedef struct fb_mbox_init {
 } fb_mbox_init_t;
 
 static fb_mbox_init_t* pi_fbinfo;
-static uint32_t* pi_framebuffer;
+static uint32_t* pi_fb;
+static framebuffer_t* fb;
 
 static uint32_t fb_offset(uint32_t x, uint32_t y) {
     uint32_t pitch = pi_fbinfo->pitch / sizeof(uint32_t);
@@ -54,7 +59,7 @@ void framebuffer_init(uint32_t w, uint32_t h) {
         return;
     }
 
-    pi_framebuffer = (uint32_t*) (pi_fbinfo->buffer & 0x3FFFFFFF);
+    pi_fb = (uint32_t*) (pi_fbinfo->buffer & 0x3FFFFFFF);
 
     printf(
         DEBUG "Framebuffer Size: %d x %d\n",
@@ -62,31 +67,19 @@ void framebuffer_init(uint32_t w, uint32_t h) {
         pi_fbinfo->h
     );
 
-    framebuffer_clear(rgba32_white.color);
-}
+    fb = framebuffer_create("pi-fb");
+    fb->format = PIXEL_FMT_RGBA32;
+    fb->buffer = pi_fb;
+    fb->width = pi_fbinfo->w;
+    fb->height = pi_fbinfo->h;
+    fb->pitch = pi_fbinfo->pitch / sizeof(uint32_t);
+    framebuffer_register(
+        device_root(),
+        fb
+    );
 
-void framebuffer_clear(uint32_t color) {
-    uint32_t w = pi_fbinfo->w;
-    uint32_t h = pi_fbinfo->h;
-
-    for (uint32_t y = 0; y < h; y++) {
-        for (uint32_t x = 0; x < w; x++) {
-            uint32_t offset = fb_offset(x, y);
-
-            pi_framebuffer[offset] = color;
-        }
-    }
-}
-
-void framebuffer_set(
-    uint32_t x,
-    uint32_t y,
-    uint32_t color) {
-    uint32_t offset = fb_offset(x, y);
-    pi_framebuffer[offset] = color;
-}
-
-void framebuffer_get_size(uint32_t* w, uint32_t* h) {
-    *w = pi_fbinfo->w;
-    *h = pi_fbinfo->h;
+    framebuffer_clear(
+        fb,
+        rgb_as(&rgb_white, fb->format)
+    );
 }
