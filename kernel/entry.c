@@ -15,8 +15,6 @@
 #include <kernel/network/iface.h>
 #include <kernel/network/stack/stack.h>
 
-#include <kernel/device/registry.h>
-
 #include <kernel/dispatch/events.h>
 #include <kernel/cpu/task.h>
 

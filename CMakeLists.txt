@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.5)
 project(raptor C)
 
+option(ARCH_USER "Enable Usermode Raptor OS" OFF)
+
 enable_language(ASM)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -39,7 +41,9 @@ include_directories(${RAPTOR_DIR})
 include(${RAPTOR_DIR}/build/cmake/kernel.cmake)
 include(${RAPTOR_DIR}/build/cmake/arch.cmake)
 
-if(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm")
+if(ARCH_USER)
+  include(${RAPTOR_DIR}/build/cmake/arch-user.cmake)
+elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm")
   if(NOT DEFINED ARM_TARGET)
     message(FATAL_ERROR "ARM toolchain detected. Please specify an ARM target via -DARM_TARGET={target}.")
   endif()

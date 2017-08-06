@@ -5,6 +5,8 @@
 #include "arch/x86/arch.h"
 #elif defined(ARCH_ARM)
 #include "arch/arm/common/arch.h"
+#elif defined(ARCH_USER)
+#include "arch/user/arch.h"
 #else
 #error Unknown architecture.
 #endif

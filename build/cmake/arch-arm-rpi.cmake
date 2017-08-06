@@ -26,7 +26,6 @@ add_definitions(
 )
 
 kernel_ldscript("${KERNEL_DIR}/arch/arm/rpi/linker.ld")
-target_link_libraries(kernel gcc)
 
 set(QEMU_CMD
   qemu-system-arm
