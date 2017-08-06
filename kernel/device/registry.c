@@ -20,7 +20,7 @@ device_entry_t* device_root(void) {
 device_entry_t* device_register(
     device_entry_t* parent,
     char* name,
-    uint classifier,
+    device_class_t classifier,
     void* device
 ) {
     if (parent == NULL || name == NULL || device == NULL) {
