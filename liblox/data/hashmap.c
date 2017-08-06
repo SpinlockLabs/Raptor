@@ -24,11 +24,11 @@ void* hashmap_string_duplicate(void* key) {
 }
 
 uint hashmap_int_hash(void* key) {
-    return (uint) key;
+    return (uint) (uintptr_t) key;
 }
 
 int hashmap_int_comp(void* a, void* b) {
-    return (int) a == (int) b;
+    return (int) (uintptr_t) a == (int) (uintptr_t) b;
 }
 
 void* hashmap_int_duplicate(void* key) {
@@ -73,7 +73,7 @@ void* hashmap_set(hashmap_t* map, void* key, void* value) {
         return NULL;
     }
 
-    uint hash = map->hash(key) % map->size;
+    uint hash = (uint) (map->hash(key) % map->size);
 
     hashmap_entry_t* x = map->entries[hash];
     if (!x) {
@@ -110,7 +110,7 @@ void* hashmap_get(hashmap_t* map, void* key) {
         return NULL;
     }
 
-    uint hash = map->hash(key) % map->size;
+    uint hash = (uint) (map->hash(key) % map->size);
 
     hashmap_entry_t* x = map->entries[hash];
     if (!x) {

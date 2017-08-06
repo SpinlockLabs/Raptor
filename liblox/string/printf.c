@@ -102,14 +102,14 @@ size_t vasprintf(char* buf, const char* fmt, va_list args) {
                 *b++ = (char) va_arg(args, int);
                 break;
             case 'x': /* Hexadecimal number */
-                i = (int) (b - (uintptr_t) buf);
-                print_hex(va_arg(args, unsigned long), arg_width,
+                i = (int) ((uintptr_t) b - (uintptr_t) buf);
+                print_hex((unsigned int) va_arg(args, unsigned long), arg_width,
                           buf, &i);
                 b = buf + i;
                 break;
             case 'd': /* Decimal number */
-                i = (int) (b - (uintptr_t) buf);
-                print_dec(va_arg(args, unsigned long), arg_width,
+                i = (int) ((uintptr_t) b - (uintptr_t) buf);
+                print_dec((unsigned int) va_arg(args, unsigned long), arg_width,
                           buf, &i);
                 b = buf + i;
                 break;
@@ -129,7 +129,7 @@ size_t vasprintf(char* buf, const char* fmt, va_list args) {
 int sprintf(char* buf, const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    int out = vasprintf(buf, fmt, args);
+    int out = (int) vasprintf(buf, fmt, args);
     va_end(args);
     return out;
 }

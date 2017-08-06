@@ -85,7 +85,7 @@ static void debug_arp_known(tty_t* tty, const char* input) {
     }
 
     list_for_each(node, list) {
-        uint32_t raddr = (uint32_t) node->value;
+        uint32_t raddr = (uint32_t) (uintptr_t) node->value;
         ipv4_address_t* addr = (ipv4_address_t*) &raddr;
         uint8_t hw[6] = {0};
         arp_lookup(iface, addr->address, hw);

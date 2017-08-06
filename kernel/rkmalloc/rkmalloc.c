@@ -255,7 +255,7 @@ void* rkmalloc_resize(rkmalloc_heap* heap, void* ptr, size_t new_size) {
         printf(
             WARN "Failed to resize 0x%x: "
                 "we don't have that in our heap!\n",
-            (int) ptr
+            ptr
         );
         return NULL;
     }
@@ -264,7 +264,7 @@ void* rkmalloc_resize(rkmalloc_heap* heap, void* ptr, size_t new_size) {
         printf(
             WARN "Failed to resize 0x%x: "
                 "heap says it is free!\n",
-            (int) ptr
+            ptr
         );
         return NULL;
     }
@@ -301,13 +301,9 @@ void rkmalloc_free(rkmalloc_heap* heap, void* ptr) {
     list_node_t* node = get_pointer_entry(heap, ptr, &entry);
 
     if (node == NULL) {
-        puts(WARN "Attempted to free an invalid pointer (");
-        puthex((int) ptr);
-        puts(")\n");
+        printf(WARN "Attempted to free an invalid pointer (0x%x)\n", ptr);
     } else if (entry->free) {
-        puts(WARN "Attempted to free an already freed pointer (");
-        puthex((int) ptr);
-        puts(")\n");
+        printf(WARN "Attempted to free an already freed pointer (0x%x)\n", ptr);
     } else {
         entry->free = true;
         insert_sitter(heap, entry);

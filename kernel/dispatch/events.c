@@ -5,7 +5,6 @@
 
 #include <kernel/spin.h>
 #include <kernel/cpu/task.h>
-#include <liblox/io.h>
 
 typedef struct event_dispatch_info {
     event_handler_t handler;
@@ -24,11 +23,11 @@ void events_subsystem_init(void) {
 void event_add_handler(event_type_t type, event_handler_t handler, void* extra) {
     spin_lock(&registry_lock);
     list_t* list = NULL;
-    if (!hashmap_has(registry, (void*) type)) {
+    if (!hashmap_has(registry, (void*) (uintptr_t) type)) {
         list = list_create();
-        hashmap_set(registry, (void*) type, list);
+        hashmap_set(registry, (void*) (uintptr_t) type, list);
     } else {
-        list = hashmap_get(registry, (void*) type);
+        list = hashmap_get(registry, (void*) (uintptr_t) type);
     }
 
     event_dispatch_info_t* info = zalloc(sizeof(event_dispatch_info_t));
@@ -42,12 +41,12 @@ void event_add_handler(event_type_t type, event_handler_t handler, void* extra) 
 
 void event_remove_handler(event_type_t type, event_handler_t handler) {
     spin_lock(&registry_lock);
-    if (!hashmap_has(registry, (void*) type)) {
+    if (!hashmap_has(registry, (void*) (uintptr_t) type)) {
         spin_unlock(&registry_lock);
         return;
     }
 
-    list_t* list = hashmap_get(registry, (void*) type);
+    list_t* list = hashmap_get(registry, (void*) (uintptr_t) type);
 
     list_for_each(node, list) {
         event_dispatch_info_t* info = node->value;
@@ -68,12 +67,12 @@ void event_remove_handler(event_type_t type, event_handler_t handler) {
  void event_dispatch(event_type_t type, void* event) {
     spin_lock(&registry_lock);
 
-    if (!hashmap_has(registry, (void*) type)) {
+    if (!hashmap_has(registry, (void*) (uintptr_t) type)) {
         spin_unlock(&registry_lock);
         return;
     }
 
-    list_t* list = hashmap_get(registry, (void*) type);
+    list_t* list = hashmap_get(registry, (void*) (uintptr_t) type);
 
     if (list == NULL) {
         spin_unlock(&registry_lock);

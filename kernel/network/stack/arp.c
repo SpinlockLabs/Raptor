@@ -176,11 +176,11 @@ static void handle_potential_arp(void* event, void* extra) {
     }
 
     if (oper == 2) {
-        arp_entry_t* entry = hashmap_get(state->table, (void*) arp->sender_ip);
+        arp_entry_t* entry = hashmap_get(state->table, (void*) (uintptr_t) arp->sender_ip);
 
         if (entry == NULL) {
             entry = zalloc(sizeof(arp_entry_t));
-            hashmap_set(state->table, (void*) arp->sender_ip, entry);
+            hashmap_set(state->table, (void*) (uintptr_t) arp->sender_ip, entry);
         }
 
         copy_mac(entry->mac, arp->sender_ha);
@@ -242,7 +242,7 @@ void arp_lookup(network_iface_t* iface, uint32_t addr, uint8_t* hw) {
         return;
     }
 
-    arp_entry_t* entry = hashmap_get(state->table, (void*) addr);
+    arp_entry_t* entry = hashmap_get(state->table, (void*) (uintptr_t) addr);
     if (entry == NULL) {
         return;
     }
