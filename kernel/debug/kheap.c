@@ -58,7 +58,7 @@ static void debug_kheap_map(tty_t* tty, const char* input) {
         return;
     }
 
-    rkmalloc_index_entry* index = (rkmalloc_index_entry*) ((uint8_t*) heap + sizeof(rkmalloc_heap));
+    rkmalloc_index_entry* index = (rkmalloc_index_entry*) ((uintptr_t) heap + sizeof(rkmalloc_heap));
 
     tty_printf(
         tty,
@@ -114,7 +114,7 @@ static void debug_kheap_dump(tty_t* tty, const char* input) {
     size_t index = 0;
     list_for_each(node, list) {
         rkmalloc_entry* entry = node->value;
-        rkmalloc_index_entry* id = (uint8_t*) entry - sizeof(rkmalloc_entry);
+        rkmalloc_index_entry* id = (rkmalloc_index_entry*) ((uintptr_t) entry - sizeof(rkmalloc_entry));
         tty_printf(tty,
                    "%d[block = %d bytes, used = %d bytes, location = 0x%x, status = %s]\n",
                    index,

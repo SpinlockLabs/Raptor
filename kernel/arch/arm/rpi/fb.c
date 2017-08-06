@@ -27,11 +27,6 @@ static fb_mbox_init_t* pi_fbinfo;
 static uint32_t* pi_fb;
 static framebuffer_t* fb;
 
-static uint32_t fb_offset(uint32_t x, uint32_t y) {
-    uint32_t pitch = pi_fbinfo->pitch / sizeof(uint32_t);
-    return ((y * pitch) + x);
-}
-
 void framebuffer_init(uint32_t w, uint32_t h) {
     uintptr_t ptr = (uintptr_t) zalloc(0x1000 + sizeof(fb_mbox_init_t));
     ptr &= 0xFFFFF000;
