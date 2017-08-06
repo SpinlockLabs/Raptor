@@ -7,7 +7,6 @@
 #include <kernel/panic.h>
 
 #include <kernel/dispatch/events.h>
-#include <kernel/device/registry.h>
 
 #include "mbr.h"
 
@@ -47,7 +46,10 @@ list_t* block_device_get_all(void) {
     return hashmap_values(registry);
 }
 
-block_device_error_t block_device_register(block_device_t* device) {
+block_device_error_t block_device_register(
+    device_entry_t* parent,
+    block_device_t* device
+) {
     spin_lock(&lock);
 
     if (hashmap_has(registry, device->name)) {
@@ -63,10 +65,15 @@ block_device_error_t block_device_register(block_device_t* device) {
     hashmap_set(registry, device->name, device);
     spin_unlock(&lock);
 
-    device_register(device->name, DEVICE_CLASS_BLOCK, device);
-
     event_dispatch_async(
         EVENT_BLOCK_DEVICE_INITIALIZED,
+        device
+    );
+
+    device_register(
+        parent,
+        device->name,
+        DEVICE_CLASS_BLOCK,
         device
     );
 
@@ -79,15 +86,14 @@ block_device_error_t block_device_destroy(block_device_t* device) {
         device
     );
 
+    if (device->entry != NULL) {
+        device_unregister(device->entry);
+    }
+
     spin_lock(&lock);
 
     char* name = device->name;
     block_device_error_t error = BLOCK_DEVICE_ERROR_OK;
-
-    device_unregister(device_lookup(
-        device->name,
-        DEVICE_CLASS_BLOCK
-    ));
 
     if (device->ops.destroy != NULL) {
         error = device->ops.destroy(device);

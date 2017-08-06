@@ -11,4 +11,5 @@ void debug_init_commands(void) {
     GROUP(cmdline);
     GROUP(disk);
     GROUP(fs);
+    GROUP(devices);
 }

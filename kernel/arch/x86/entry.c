@@ -7,6 +7,7 @@
 #include <kernel/panic.h>
 #include <kernel/cmdline.h>
 #include <kernel/timer.h>
+#include <kernel/device/driver.h>
 
 #include "cpuid.h"
 #include "cmdline.h"
@@ -24,7 +25,7 @@
 #include "devices/serial/serial.h"
 #include "devices/pcnet/pcnet.h"
 #include "devices/e1000/e1000.h"
-#include "kernel/arch/x86/devices/ata/ata.h"
+#include "devices/ata/ata.h"
 
 void lox_output_char_ebl(char c) {
     outb(0x3F8, (uint8_t) c);
@@ -106,6 +107,8 @@ void paging_init(void) {
 extern void _init(void);
 
 void kernel_setup_devices(void) {
+    pci_init();
+
     vga_pty = tty_create("vga");
     vga_pty->write = vga_pty_write;
     vga_pty->flags.allow_debug_console = true;
@@ -125,9 +128,10 @@ void kernel_setup_devices(void) {
      */
     _init();
 
-    ata_setup();
-    pcnet_setup();
-    e1000_setup();
+    driver_register(ata_driver_setup);
+    driver_register(pcnet_driver_setup);
+    driver_register(e1000_driver_setup);
+
     debug_x86_init();
 }
 
@@ -175,11 +179,6 @@ used void kernel_main(multiboot_t* _mboot, uint32_t mboot_hdr, uintptr_t esp) {
     puts(DEBUG "IRQs initialized.\n");
     timer_init(1000);
     puts(DEBUG "PIT initialized.\n");
-
-    breakpoint("pci-init");
-    puts(DEBUG "Probing PCI devices...\n");
-    pci_init();
-    puts(DEBUG "PCI probe done.\n");
 
     if (cmdline_bool_flag("enable-userspace-jump")) {
         breakpoint("userspace-jump");

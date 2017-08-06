@@ -407,10 +407,10 @@ static network_iface_error_t iface_destroy(network_iface_t* iface) {
     return IFACE_ERR_OK;
 }
 
-static void e1000_device_init(uint32_t device_pci) {
+static void e1000_device_init(device_entry_t* parent, pci_device_t* pci) {
     size_t idx = e1000_list->size;
     e1000_state_t* state = zalloc(sizeof(e1000_state_t));
-    state->device_pci = device_pci;
+    state->device_pci = pci->address;
     e1000_iface_t* net = zalloc(sizeof(e1000_iface_t));
     net->state = state;
 
@@ -526,26 +526,34 @@ static void e1000_device_init(uint32_t device_pci) {
     iface->data = net;
     net->iface = iface;
 
-    network_iface_register(iface);
+    network_iface_register(
+        parent,
+        iface
+    );
 
     net->poll_task = ktask_repeat(1, dequeue_packet_task, net);
 }
 
-static void find_e1000(uint32_t device, uint16_t vid, uint16_t did,
-                       void* extra) {
-    unused(extra);
-
-    if ((vid == 0x8086) &&
-        (did == 0x100e ||
+static bool is_device_e1000(uint16_t vid, uint16_t did) {
+    return (vid == 0x8086) &&
+           (did == 0x100e ||
             did == 0x1004 ||
             did == 0x100f ||
             did == 0x10d3 ||
-            did == 0x15b8)) {
-        e1000_device_init(device);
-    }
+            did == 0x15b8);
 }
 
-void e1000_setup(void) {
+void e1000_driver_setup(void) {
     e1000_list = list_create();
-    pci_scan(&find_e1000, -1, NULL);
+
+    list_t* list = device_query(DEVICE_CLASS_PCI);
+
+    list_for_each(node, list) {
+        device_entry_t* entry = node->value;
+        pci_device_t* pci = entry->device;
+
+        if (is_device_e1000(pci->vendor_id, pci->device_id)) {
+            e1000_device_init(entry, pci);
+        }
+    }
 }

@@ -136,7 +136,7 @@ static int keyboard_callback(cpu_registers_t* regs) {
 
 void keyboard_init(void) {
     kbd = input_device_create("ps2-keyboard", INPUT_DEV_CLASS_KEYBOARD);
-    input_device_register(kbd);
+    input_device_register(device_root(), kbd);
 
     irq_add_handler(IRQ1, &keyboard_callback);
 }

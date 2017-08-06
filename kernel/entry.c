@@ -60,9 +60,9 @@ void kernel_init(void) {
 
     debug_console_init();
     printf(DEBUG "Debug console initialized.\n");
-
     kernel_setup_devices();
-    printf(DEBUG "Device setup complete.\n");
+
+    event_dispatch(EVENT_DRIVER_SETUP, NULL);
 
     lox_output_char_provider = tty_write_kernel_log_char;
     lox_output_string_provider = tty_write_kernel_log_string;

@@ -6,6 +6,7 @@
 #include <liblox/list.h>
 
 #include <kernel/dispatch/mailbox.h>
+#include <kernel/device/registry.h>
 
 typedef struct input_device input_device_t;
 
@@ -133,6 +134,11 @@ struct input_device {
      * Internal data.
      */
     input_device_private_t internal;
+
+    /**
+     * Device entry.
+     */
+    device_entry_t* entry;
 };
 
 /**
@@ -159,10 +165,14 @@ input_device_t* input_device_create(char* name, input_device_class_t type);
 
 /**
  * Registers an input device.
+ * @param parent parent device.
  * @param device an input device.
  * @return whether the input device was registered.
  */
-bool input_device_register(input_device_t* device);
+bool input_device_register(
+    device_entry_t* parent,
+    input_device_t* device
+);
 
 /**
  * Destroys an input device.

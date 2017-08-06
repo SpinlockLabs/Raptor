@@ -4,6 +4,8 @@
 
 #include "isr.h"
 
+#define STACK_TRACE_SIZE 6
+
 static irq_handler_t isr_routines[256] = { 0 };
 
 static char* exceptions[32] = {

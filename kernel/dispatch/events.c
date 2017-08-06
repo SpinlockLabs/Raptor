@@ -5,6 +5,7 @@
 
 #include <kernel/spin.h>
 #include <kernel/cpu/task.h>
+#include <liblox/io.h>
 
 typedef struct event_dispatch_info {
     event_handler_t handler;
@@ -20,7 +21,7 @@ void events_subsystem_init(void) {
     spin_init(&registry_lock);
 }
 
-void event_add_handler(event_type type, event_handler_t handler, void* extra) {
+void event_add_handler(event_type_t type, event_handler_t handler, void* extra) {
     spin_lock(&registry_lock);
     list_t* list = NULL;
     if (!hashmap_has(registry, (void*) type)) {
@@ -39,7 +40,7 @@ void event_add_handler(event_type type, event_handler_t handler, void* extra) {
     spin_unlock(&registry_lock);
 }
 
-void event_remove_handler(event_type type, event_handler_t handler) {
+void event_remove_handler(event_type_t type, event_handler_t handler) {
     spin_lock(&registry_lock);
     if (!hashmap_has(registry, (void*) type)) {
         spin_unlock(&registry_lock);
@@ -64,7 +65,7 @@ void event_remove_handler(event_type type, event_handler_t handler) {
     spin_unlock(&registry_lock);
 }
 
-void event_dispatch(event_type type, void* event) {
+ void event_dispatch(event_type_t type, void* event) {
     spin_lock(&registry_lock);
 
     if (!hashmap_has(registry, (void*) type)) {
@@ -88,7 +89,7 @@ void event_dispatch(event_type type, void* event) {
 }
 
 typedef struct event_dispatch_async_data {
-    event_type type;
+    event_type_t type;
     void* event;
 } event_dispatch_async_data_t;
 
@@ -98,7 +99,7 @@ static void event_dispatch_async_task(void* data) {
     free(info);
 }
 
-void event_dispatch_async(event_type type, void* event) {
+void event_dispatch_async(event_type_t type, void* event) {
     event_dispatch_async_data_t* data = zalloc(
         sizeof(event_dispatch_async_data_t)
     );

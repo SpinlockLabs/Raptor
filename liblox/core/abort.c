@@ -8,7 +8,7 @@
 void abort(char* msg) {
     trace_t traces[STACK_TRACE_SIZE] = {0};
 
-    backtrace(traces, STACK_TRACE_SIZE);
+    backtrace(NULL, traces, STACK_TRACE_SIZE);
 
     for (uint i = 0; i < STACK_TRACE_SIZE; i++) {
         trace_t* trace = &traces[i];

@@ -46,7 +46,7 @@ input_device_t* input_device_create(char* name, input_device_class_t type) {
     return device;
 }
 
-bool input_device_register(input_device_t* device) {
+bool input_device_register(device_entry_t* parent, input_device_t* device) {
     if (device == NULL) {
         return false;
     }
@@ -56,6 +56,7 @@ bool input_device_register(input_device_t* device) {
     }
 
     device_entry_t* entry = device_register(
+        parent,
         device->name,
         DEVICE_CLASS_INPUT,
         device
@@ -69,10 +70,7 @@ bool input_device_destroy(input_device_t* device) {
         return false;
     }
 
-    bool result = device_unregister(device_lookup(
-        device->name,
-        DEVICE_CLASS_INPUT
-    ));
+    bool result = device_unregister(device->entry);
 
     mailbox_destroy(device->events);
     device->events = NULL;

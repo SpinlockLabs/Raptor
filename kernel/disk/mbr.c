@@ -87,7 +87,10 @@ static block_device_t* mbr_create_block_partition(
     pblock->ops.read = mbr_partition_block_read;
     pblock->ops.write = mbr_partition_block_write;
     pblock->ops.stat = mbr_partition_block_stat;
-    block_device_register(pblock);
+    block_device_register(
+        block->entry,
+        pblock
+    );
     return pblock;
 }
 

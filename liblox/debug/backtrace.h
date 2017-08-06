@@ -9,4 +9,4 @@ typedef struct trace {
     void* call;
 } trace_t;
 
-void backtrace(trace_t* traces, uint size);
+void backtrace(uintptr_t* base, trace_t* traces, uint size);

@@ -7,6 +7,8 @@
 #include <liblox/common.h>
 #include <liblox/list.h>
 
+#include <kernel/device/registry.h>
+
 typedef struct network_iface_flags network_iface_flags_t;
 
 typedef struct network_iface network_iface_t;
@@ -124,6 +126,11 @@ struct network_iface {
     */
     network_iface_class_type_t class_type;
 
+    /**
+     * Device entry.
+     */
+    device_entry_t* entry;
+
     /* Interface-provided handler for getting the interface MAC address. */
     network_iface_get_mac_func_t get_mac;
 
@@ -156,7 +163,10 @@ struct network_iface {
 network_iface_t* network_iface_create(char*);
 
 /* Registers a network interface with the subsystem. */
-void network_iface_register(network_iface_t*);
+void network_iface_register(
+    device_entry_t*,
+    network_iface_t*
+);
 
 /*
   Retrieves a network interface by name.

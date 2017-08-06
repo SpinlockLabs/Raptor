@@ -107,7 +107,10 @@ network_iface_t* ifhub_create(
     hub->flags.stub = true;
     hub->data = cfg;
     hub->destroy = ifhub_destroy;
-    network_iface_register(hub);
+    network_iface_register(
+        device_root(),
+        hub
+    );
 
     info(
         "Created %s with %s <-> %s.\n",

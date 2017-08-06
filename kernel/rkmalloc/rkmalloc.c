@@ -85,7 +85,9 @@ static void insert_sitter(rkmalloc_heap* heap, rkmalloc_entry* entry) {
         }
     }
 
+    rkmalloc_entry* prev = heap->sitters[0];
     heap->sitters[0] = entry;
+    prev->sitting = false;
 }
 
 static void drop_sitter(rkmalloc_heap* heap, rkmalloc_entry* entry) {

@@ -7,7 +7,6 @@
 #include <kernel/spin.h>
 
 #include <kernel/dispatch/events.h>
-#include <kernel/device/registry.h>
 
 static spin_lock_t network_subsystem_lock;
 static hashmap_t* network_iface_subsystem_registry = NULL;
@@ -18,14 +17,23 @@ static inline void ensure_subsystem(void) {
     }
 }
 
-void network_iface_register(network_iface_t* iface) {
+void network_iface_register(
+    device_entry_t* parent,
+    network_iface_t* iface
+) {
     ensure_subsystem();
     spin_lock(&network_subsystem_lock);
     hashmap_set(network_iface_subsystem_registry, iface->name, iface);
     spin_unlock(&network_subsystem_lock);
 
     event_dispatch(EVENT_NETWORK_IFACE_REGISTERED, iface->name);
-    device_register(iface->name, DEVICE_CLASS_NETWORK, iface);
+
+    iface->entry = device_register(
+        parent,
+        iface->name,
+        DEVICE_CLASS_NETWORK,
+        iface
+    );
 }
 
 list_t* network_iface_get_all(void) {
@@ -44,12 +52,9 @@ network_iface_error_t network_iface_destroy(network_iface_t* iface) {
 
     event_dispatch(EVENT_NETWORK_IFACE_DESTROYING, iface);
 
-    spin_lock(&network_subsystem_lock);
+    device_unregister(iface->entry);
 
-    device_unregister(device_lookup(
-        iface->name,
-        DEVICE_CLASS_NETWORK
-    ));
+    spin_lock(&network_subsystem_lock);
 
     network_iface_error_t error = IFACE_ERR_OK;
 
@@ -63,7 +68,6 @@ network_iface_error_t network_iface_destroy(network_iface_t* iface) {
     }
 
     spin_unlock(&network_subsystem_lock);
-
     event_dispatch(EVENT_NETWORK_IFACE_DESTROYED, name);
     free(name);
 
