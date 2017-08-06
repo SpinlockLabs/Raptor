@@ -50,8 +50,8 @@ void kernel_setup_devices(void) {
 
 void kernel_modules_load(void) {}
 
-void time_get(time_t* time) {
-    memset(time, 0, sizeof(time_t));
+void time_get(rtime_t* time) {
+    memset(time, 0, sizeof(rtime_t));
 }
 
 void cpu_run_idle(void) {

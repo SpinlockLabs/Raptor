@@ -29,7 +29,7 @@ static void cmos_dump(uint16_t* values) {
     }
 }
 
-void time_get(time_t* time) {
+void time_get(rtime_t* time) {
     uint16_t values[128];
     cmos_dump(values);
 
