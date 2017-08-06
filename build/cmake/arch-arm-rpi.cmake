@@ -17,6 +17,8 @@ if(CLANG)
   cflags(
     -target arm-none-eabi
   )
+elseif(GCC)
+  target_link_libraries(kernel gcc)
 endif()
 
 add_definitions(
