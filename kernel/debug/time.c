@@ -1,4 +1,4 @@
-#include "console.h"
+﻿#include "console.h"
 
 #include <kernel/time.h>
 #include <kernel/timer.h>
@@ -6,7 +6,7 @@
 static void debug_time(tty_t* tty, const char* input) {
     unused(input);
 
-    time_t* time = zalloc(sizeof(time_t));
+    rtime_t* time = zalloc(sizeof(rtime_t));
     time_get(time);
 
     tty_printf(tty, "%2d-%2d-%4d %2d:%2d:%2d\n",

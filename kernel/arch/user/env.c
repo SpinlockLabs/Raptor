@@ -1,4 +1,4 @@
-#include <liblox/lox-internal.h>
+﻿#include <liblox/lox-internal.h>
 #include <liblox/io.h>
 
 #include <kernel/tty.h>
@@ -39,6 +39,11 @@ void kernel_setup_devices(void) {
     tty->write = raptor_user_console_write;
     tty->flags.write_kernel_log = true;
     tty->flags.allow_debug_console = true;
+
+#ifndef __unix__
+    tty->flags.echo = true;
+#endif
+
     tty_register(tty);
     console_tty = tty;
 }

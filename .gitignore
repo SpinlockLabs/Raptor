@@ -1,4 +1,4 @@
-/cmake-build-*
+﻿/cmake-build-*
 .idea/
 /build-*
 /out/
@@ -16,3 +16,6 @@ cmake_install.cmake
 install_manifest.txt
 compile_commands.json
 CTestTestfile.cmake
+
+CMakeSettings.json
+.vs/

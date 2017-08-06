@@ -1,4 +1,4 @@
-#include "console.h"
+﻿#include "console.h"
 
 #include <kernel/rkmalloc/rkmalloc.h>
 #include <kernel/heap.h>
@@ -7,6 +7,12 @@ static void debug_kheap_stats(tty_t* tty, const char* input) {
     unused(input);
 
     rkmalloc_heap* heap = heap_get();
+
+    if (heap == NULL) {
+        tty_printf(tty, "No kernel heap availabe.\n");
+        return;
+    }
+
     spin_lock(&heap->lock);
 
     tty_printf(tty, "Used Object Allocations: %d bytes\n", heap->total_allocated_used_size);
@@ -46,7 +52,13 @@ static void debug_kheap_map(tty_t* tty, const char* input) {
     unused(input);
 
     rkmalloc_heap* heap = heap_get();
-    rkmalloc_index_entry* index = (rkmalloc_index_entry*) ((void*) heap + sizeof(rkmalloc_heap));
+
+    if (heap == NULL) {
+        tty_printf(tty, "No kernel heap availabe.\n");
+        return;
+    }
+
+    rkmalloc_index_entry* index = (rkmalloc_index_entry*) ((uint8_t*) heap + sizeof(rkmalloc_heap));
 
     tty_printf(
         tty,
@@ -91,12 +103,18 @@ static void debug_kheap_dump(tty_t* tty, const char* input) {
     unused(input);
 
     rkmalloc_heap* kheap = heap_get();
+
+    if (kheap == NULL) {
+        tty_printf(tty, "No kernel heap availabe.\n");
+        return;
+    }
+
     list_t* list = &kheap->index;
 
     size_t index = 0;
     list_for_each(node, list) {
         rkmalloc_entry* entry = node->value;
-        rkmalloc_index_entry* id = (void*) entry - sizeof(rkmalloc_entry);
+        rkmalloc_index_entry* id = (uint8_t*) entry - sizeof(rkmalloc_entry);
         tty_printf(tty,
                    "%d[block = %d bytes, used = %d bytes, location = 0x%x, status = %s]\n",
                    index,

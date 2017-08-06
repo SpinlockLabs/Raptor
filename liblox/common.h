@@ -1,19 +1,33 @@
-#pragma once
+﻿#pragma once
 
 #include <stddef.h>
 #include <stdbool.h>
 
+#ifndef _MSC_VER
+
 // Specifies that a struct should be packed.
 #define packed __attribute__((packed))
 
+#define vla(type, name) type name[]
+
+#else
+
+// Specifies that a struct should be packed.
+#define packed __declspec(align(1))
+
+// Disable attributes.
+#define __attribute__(x)
+
+// Disable restrict.
+#define restrict
+
+// Variable-length arrays.
+#define vla(type, name) type name[1]
+
+#endif
+
 // Specifies that an entity is used.
 #define used __attribute__((used))
-
-// Specifies that an entity is deprecated.
-#define deprecated __attribute__((deprecated))
-
-// Specifies that a function never returns.
-#define noreturn __attribute__((noreturn))
 
 // Specifies that a function never modifies its arguments.
 #define constf __attribute__((const))
@@ -38,6 +52,9 @@
 
 // Specifies that a function will not be called often.
 #define cold __attribute__((cold))
+
+// Specifies that a function will not return.
+#define noreturn __attribute__((noreturn))
 
 // Specifies that a function is pure, and has no side effects.
 #define pure __attribute__((pure))

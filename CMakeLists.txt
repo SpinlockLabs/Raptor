@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+﻿cmake_minimum_required(VERSION 3.5)
 project(raptor C)
 
 option(ARCH_USER "Enable Usermode Raptor OS" OFF)
@@ -11,7 +11,12 @@ set(RAPTOR_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 include(build/cmake/common.cmake)
 include(build/cmake/filesystem.cmake)
 
-if(NOT COMPCERT)
+if(MSVC)
+  cflags(
+    /Wall
+    /TC
+  )
+elseif(NOT COMPCERT)
   cflags(
     -Wall
     -Wextra
