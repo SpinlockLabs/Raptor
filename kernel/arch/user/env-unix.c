@@ -80,6 +80,10 @@ void* raptor_user_realloc(void* ptr, size_t size) {
     return libc_realloc(ptr, size);
 }
 
+void raptor_user_exit(void) {
+    libc_exit(0);
+}
+
 used void _start(void) {
     libc_malloc = dlsym(RTLD_NEXT, "malloc");
 

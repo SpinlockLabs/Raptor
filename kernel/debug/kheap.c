@@ -1,4 +1,4 @@
-﻿#include "console.h"
+#include "console.h"
 
 #include <kernel/rkmalloc/rkmalloc.h>
 #include <kernel/heap.h>

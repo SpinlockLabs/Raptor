@@ -18,3 +18,5 @@ void raptor_user_abort(void);
 void raptor_user_console_write(tty_t* tty, const uint8_t* buffer, size_t size);
 
 char* raptor_user_get_cmdline(void);
+
+void raptor_user_exit(void);

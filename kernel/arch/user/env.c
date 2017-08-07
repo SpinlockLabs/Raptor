@@ -1,4 +1,3 @@
-﻿#include <liblox/lox-internal.h>
 #include <liblox/io.h>
 
 #include <kernel/tty.h>
@@ -7,6 +6,7 @@
 #include <kernel/cpu/task.h>
 
 #include "env.h"
+#include "debug.h"
 
 tty_t* console_tty = NULL;
 
@@ -35,17 +35,18 @@ void irq_wait(void) {
 }
 
 void kernel_setup_devices(void) {
-    tty_t* tty = tty_create("console");
-    tty->write = raptor_user_console_write;
-    tty->flags.write_kernel_log = true;
-    tty->flags.allow_debug_console = true;
+    console_tty = tty_create("console");
+    console_tty->write = raptor_user_console_write;
+    console_tty->flags.write_kernel_log = true;
+    console_tty->flags.allow_debug_console = true;
 
 #ifndef __unix__
-    tty->flags.echo = true;
+    console_tty->flags.echo = true;
 #endif
 
-    tty_register(tty);
-    console_tty = tty;
+    tty_register(console_tty);
+
+    debug_user_init();
 }
 
 void kernel_modules_load(void) {}

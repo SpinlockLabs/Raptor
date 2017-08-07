@@ -1,4 +1,4 @@
-﻿#include "console.h"
+#include "console.h"
 
 #include <kernel/time.h>
 #include <kernel/timer.h>

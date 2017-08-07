@@ -1,4 +1,4 @@
-﻿#include "../lox-internal.h"
+#include "../lox-internal.h"
 #include "../memory.h"
 #include "../string.h"
 
