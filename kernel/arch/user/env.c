@@ -25,10 +25,8 @@ rkmalloc_heap* heap_get(void) {
     return NULL;
 }
 
-static ulong ticks = 0;
-
 ulong timer_get_ticks(void) {
-    return ++ticks;
+    return raptor_user_ticks();
 }
 
 void irq_wait(void) {
@@ -52,7 +50,7 @@ void kernel_setup_devices(void) {
 void kernel_modules_load(void) {}
 
 void time_get(rtime_t* time) {
-    memset(time, 0, sizeof(rtime_t));
+    raptor_user_get_time(time);
 }
 
 void cpu_run_idle(void) {

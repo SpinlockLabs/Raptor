@@ -5,6 +5,7 @@
 
 static void debug_exit(tty_t* tty, const char* input) {
     unused(tty);
+    unused(input);
 
     raptor_user_exit();
 }

@@ -5,7 +5,7 @@ add_definitions(
 )
 
 if(NOT WIN32)
-  target_link_libraries(kernel dl)
+  target_link_libraries(kernel dl c)
 else()
   kernel_cflags(
     /ZW:nostdlib

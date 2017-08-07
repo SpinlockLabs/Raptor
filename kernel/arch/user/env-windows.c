@@ -32,6 +32,15 @@ void* raptor_user_realloc(size_t size, void* ptr) {
     return libc_realloc(size, ptr);
 }
 
+ulong raptor_user_ticks(void) {
+    static ulong ticks = 0;
+    return ++ticks;
+}
+
+void raptor_user_get_time(rtime_t* time) {
+    memset(time, 0, sizeof(rtime_t));
+}
+
 void raptor_user_abort(void) {
     libc_abort();
 }

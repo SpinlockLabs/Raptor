@@ -3,6 +3,9 @@
 #include <dlfcn.h>
 
 #include <kernel/tty.h>
+#include <kernel/time.h>
+
+#include <time.h>
 
 #include "env.h"
 #include "entry.h"
@@ -23,6 +26,8 @@ void* (*libc_malloc)(size_t);
 void (*libc_exit)(int);
 void (*libc_free)(void*);
 void* (*libc_realloc)(void*, size_t);
+long (*libc_clock)(void);
+struct tm* (*libc_localtime)(time_t*);
 
 void* libc_sym(char* sym) {
     return dlsym(libc, sym);
@@ -30,6 +35,22 @@ void* libc_sym(char* sym) {
 
 void raptor_user_abort(void) {
     libc_abort();
+}
+
+ulong raptor_user_ticks(void) {
+    return (ulong) libc_clock();
+}
+
+void raptor_user_get_time(rtime_t* rt) {
+    time_t t = time(NULL);
+    struct tm* date = libc_localtime(&t);
+    rt->day = (uint16_t) date->tm_mday;
+    rt->month = (uint16_t) (date->tm_mon + 1);
+    rt->year = (uint16_t) (date->tm_year + 1900);
+
+    rt->hour = (uint16_t) date->tm_hour;
+    rt->minute = (uint16_t) date->tm_min;
+    rt->second = (uint16_t) date->tm_sec;
 }
 
 void raptor_user_console_write(tty_t* tty, const uint8_t* buffer, size_t size) {
@@ -105,6 +126,8 @@ used void _start(void) {
     libc_printf = libc_sym("printf");
     libc_abort = libc_sym("abort");
     libc_ioctl = libc_sym("ioctl");
+    libc_clock = libc_sym("clock");
+    libc_localtime = libc_sym("localtime");
 
     kernel_main();
     libc_exit(0);
