@@ -1,6 +1,5 @@
 #include "events.h"
 
-#include <liblox/common.h>
 #include <liblox/hashmap.h>
 
 #include <kernel/spin.h>
@@ -22,7 +21,8 @@ void events_subsystem_init(void) {
 
 void event_add_handler(event_type_t type, event_handler_t handler, void* extra) {
     spin_lock(&registry_lock);
-    list_t* list = NULL;
+
+    list_t* list;
     if (!hashmap_has(registry, (void*) (uintptr_t) type)) {
         list = list_create();
         hashmap_set(registry, (void*) (uintptr_t) type, list);

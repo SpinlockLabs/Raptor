@@ -187,7 +187,7 @@ static uint get_block_number(ext2_fs_t* this, ext2_inodetable_t* inode, uint ibl
     uint p = this->pointers_per_block;
 
     /* We're going to do some crazy math in a bit... */
-    uint a, b, c, d, e, f, g;
+    uint a, b, c, d;
 
     uint8_t* tmp;
 
@@ -226,9 +226,10 @@ static uint get_block_number(ext2_fs_t* this, ext2_inodetable_t* inode, uint ibl
         b = a - p;
         c = b - p * p;
         d = c / (p * p);
-        e = c - d * p * p;
-        f = e / p;
-        g = e - f * p;
+
+        uint e = c - d * p * p;
+        uint f = e / p;
+        uint g = e - f * p;
 
         tmp = malloc(this->block_size);
         read_block(this, inode->block[EXT2_DIRECT_BLOCKS + 2], tmp);
@@ -473,9 +474,8 @@ static fs_error_t read_ext2(fs_node_t* node, size_t offset, uint8_t* buffer, siz
         inode_read_block(this, inode, start_block, buf);
         memcpy(buffer, (uint8_t*) (((uintptr_t) buf) + (offset % this->block_size)), size_to_read);
     } else {
-        uint32_t block_offset;
         uint32_t blocks_read = 0;
-        for (block_offset = start_block; block_offset < end_block; block_offset++, blocks_read++) {
+        for (uint32_t block_offset = start_block; block_offset < end_block; block_offset++, blocks_read++) {
             if (block_offset == start_block) {
                 inode_read_block(this, inode, block_offset, buf);
                 memcpy(buffer, (uint8_t*) (((uintptr_t) buf) + (offset % this->block_size)),

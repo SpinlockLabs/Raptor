@@ -1,4 +1,4 @@
-﻿arch("user" "arch/user")
+arch("user" "arch/user")
 
 add_definitions(
   -DARCH_USER

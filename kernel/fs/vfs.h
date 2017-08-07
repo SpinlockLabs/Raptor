@@ -2,7 +2,6 @@
 
 #include <stdint.h>
 
-#include <liblox/common.h>
 #include <kernel/disk/block.h>
 
 #define VFS_MAX_NAME_SIZE 256

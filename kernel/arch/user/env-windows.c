@@ -33,12 +33,21 @@ void* raptor_user_realloc(size_t size, void* ptr) {
 }
 
 ulong raptor_user_ticks(void) {
-    static ulong ticks = 0;
-    return ++ticks;
+    DWORD ticks = GetTickCount();
+    return (ulong) ticks;
 }
 
 void raptor_user_get_time(rtime_t* time) {
-    memset(time, 0, sizeof(rtime_t));
+    SYSTEMTIME ftime;
+    GetLocalTime(&ftime);
+
+    time->year = ftime.wYear;
+    time->month = ftime.wMonth;
+    time->day = ftime.wDay;
+
+    time->hour = ftime.wHour;
+    time->minute = ftime.wMinute;
+    time->second = ftime.wSecond;
 }
 
 void raptor_user_abort(void) {
@@ -49,12 +58,28 @@ void raptor_user_exit(void) {
     libc_exit(0);
 }
 
+static char* wincmdline;
+
 char* raptor_user_get_cmdline(void) {
+    if (wincmdline != NULL) {
+        return wincmdline;
+    }
+
     char* (*getcmdline)(void) = (void*) GetProcAddress(
         kernel32,
         "GetCommandLineA"
     );
-    return getcmdline();
+
+    wincmdline = getcmdline();
+
+    if (wincmdline[0] == '"') {
+        wincmdline = strchr(wincmdline + 1, '"') + 1;
+        while (*wincmdline == ' ') {
+            wincmdline++;
+        }
+    }
+
+    return wincmdline;
 }
 
 void raptor_user_console_write(
@@ -62,6 +87,8 @@ void raptor_user_console_write(
     const uint8_t* buffer,
     size_t size
 ) {
+    unused(tty);
+
     for (size_t i = 0; i < size; i++) {
         char c = (char) buffer[i];
         if (c == '\r') {
@@ -77,6 +104,9 @@ void raptor_user_output_string(char* msg) {
 }
 
 void raptor_user_output_char(char c) {
+    if (c == '\b') {
+        libc_printf("\b ");
+    }
     libc_printf("%c", c);
 }
 
@@ -99,8 +129,8 @@ void raptor_user_process_stdin(void) {
 
 // ReSharper disable once CppInconsistentNaming
 int WINAPI mainCRTStartup(void) {
-    libc = LoadLibrary("msvcrt.dll");
-    kernel32 = LoadLibrary("kernel32.dll");
+    libc = LoadLibraryA("msvcrt.dll");
+    kernel32 = LoadLibraryA("kernel32.dll");
 
     libc_malloc = libc_sym("malloc");
     libc_free = libc_sym("free");
@@ -116,5 +146,4 @@ int WINAPI mainCRTStartup(void) {
     kernel_main();
     return 0;
 }
-
 #endif

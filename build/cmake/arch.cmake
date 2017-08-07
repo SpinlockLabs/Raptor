@@ -1,14 +1,21 @@
 function(arch ARCH SRC_DIR)
   set(ARCH "${ARCH}" PARENT_SCOPE)
-  file(GLOB_RECURSE ARCH_SRC
-    "${KERNEL_DIR}/${SRC_DIR}/*.c"
-    "${KERNEL_DIR}/${SRC_DIR}/*.h"
-    "${KERNEL_DIR}/${SRC_DIR}/*.s"
-    "${KERNEL_DIR}/${SRC_DIR}/*.cpp"
-    "${KERNEL_DIR}/${SRC_DIR}/*.hpp"
-  )
 
-  add_executable(kernel ${ARCH_SRC} ${KERNEL_COMMON_SRC})
+  set(ARCH_SCRIPT "${KERNEL_DIR}/${SRC_DIR}/arch.cmake")
+  if(EXISTS "${ARCH_SCRIPT}")
+    include("${ARCH_SCRIPT}")
+  else()
+    file(GLOB_RECURSE ARCH_SRC
+      "${KERNEL_DIR}/${SRC_DIR}/*.c"
+      "${KERNEL_DIR}/${SRC_DIR}/*.h"
+      "${KERNEL_DIR}/${SRC_DIR}/*.s"
+      "${KERNEL_DIR}/${SRC_DIR}/*.cpp"
+      "${KERNEL_DIR}/${SRC_DIR}/*.hpp"
+    )
+
+    add_executable(kernel ${ARCH_SRC} ${KERNEL_COMMON_SRC})
+  endif()
+
   if(GCC)
     target_link_libraries(kernel gcc)
   endif()

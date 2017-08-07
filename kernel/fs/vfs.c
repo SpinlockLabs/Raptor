@@ -94,7 +94,7 @@ fs_error_t vfs_mount_node(char* path, fs_node_t* node) {
     }
 
     spin_lock(&lock);
-    tree_node_t* tnode = NULL;
+    tree_node_t* tnode;
 
     char* p = strdup(path);
     char* i = p;
@@ -188,9 +188,7 @@ static fs_node_t* vfs_get_mount(
     char** out_path,
     uint* out_depth
 ) {
-    size_t depth;
-
-    for (depth = 0; depth <= path_depth; ++depth) {
+    for (size_t depth = 0; depth <= path_depth; ++depth) {
         path += strlen(path) + 1;
     }
 
@@ -281,10 +279,9 @@ fs_node_t* fs_resolve(char* _path) {
     }
 
     fs_node_t* node = mount;
-    fs_error_t error;
 
     for (; depth < path_depth; ++depth) {
-        error = fs_get_child(node, path_offset, &node);
+        fs_error_t error = fs_get_child(node, path_offset, &node);
         if (error != FS_ERROR_OK || node == NULL) {
             free(path);
             return NULL;

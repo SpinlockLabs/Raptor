@@ -2,9 +2,9 @@
 
 #include <liblox/hashmap.h>
 #include <liblox/string.h>
+#include <liblox/io.h>
 
 #include <kernel/spin.h>
-#include <kernel/panic.h>
 
 #include <kernel/dispatch/events.h>
 

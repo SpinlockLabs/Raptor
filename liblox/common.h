@@ -8,6 +8,7 @@
 // Specifies that a struct should be packed.
 #define packed __attribute__((packed))
 
+// Variable-length arrays.
 #define vla(type, name) type name[]
 
 #else
