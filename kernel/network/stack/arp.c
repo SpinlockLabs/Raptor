@@ -4,6 +4,7 @@
 #include "log.h"
 
 #include <liblox/hashmap.h>
+#include <liblox/memory.h>
 #include <liblox/net.h>
 
 #include <kernel/dispatch/events.h>

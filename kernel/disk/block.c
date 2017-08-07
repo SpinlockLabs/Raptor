@@ -1,5 +1,6 @@
 #include "block.h"
 
+#include <liblox/memory.h>
 #include <liblox/hashmap.h>
 #include <liblox/string.h>
 #include <liblox/io.h>

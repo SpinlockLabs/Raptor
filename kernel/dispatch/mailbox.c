@@ -2,6 +2,7 @@
 
 #include <liblox/list.h>
 #include <liblox/hashmap.h>
+#include <liblox/memory.h>
 
 #include <kernel/cpu/task.h>
 

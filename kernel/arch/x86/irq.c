@@ -1,10 +1,7 @@
-#include <liblox/common.h>
-
-#include <stdbool.h>
+#include "irq.h"
 
 #include "idt.h"
 #include "io.h"
-#include "irq.h"
 
 #define PIC1 0x20
 #define PIC2 0xA0

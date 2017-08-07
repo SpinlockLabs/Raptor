@@ -1,6 +1,7 @@
 #include "task.h"
 
 #include <liblox/list.h>
+#include <liblox/memory.h>
 
 #include <kernel/timer.h>
 

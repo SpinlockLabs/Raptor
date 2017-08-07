@@ -10,6 +10,7 @@
 
 #include <liblox/net.h>
 #include <liblox/string.h>
+#include <liblox/memory.h>
 
 #include <kernel/network/ethernet.h>
 #include <kernel/dispatch/events.h>

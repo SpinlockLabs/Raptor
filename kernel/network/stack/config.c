@@ -1,6 +1,8 @@
 #include "config.h"
 
 #include <liblox/hashmap.h>
+#include <liblox/memory.h>
+
 #include <kernel/dispatch/events.h>
 
 netconf_t* netconf_get(network_iface_t* iface) {

@@ -3,6 +3,7 @@
 #include <liblox/string.h>
 #include <liblox/va_list.h>
 #include <liblox/printf.h>
+#include <liblox/memory.h>
 
 static hashmap_t* tty_registry = NULL;
 

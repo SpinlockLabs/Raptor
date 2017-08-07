@@ -1,7 +1,7 @@
 #include "input.h"
 
 #include <liblox/string.h>
-#include <kernel/device/registry.h>
+#include <liblox/memory.h>
 
 list_t* input_device_find(input_device_class_t type) {
     list_t* list = list_create();

@@ -3,9 +3,10 @@
  */
 #pragma once
 
+#include <stdint.h>
+
 #include <liblox/graphics/color.h>
 
-#include <stdint.h>
 #include <kernel/device/registry.h>
 
 typedef struct framebuffer framebuffer_t;

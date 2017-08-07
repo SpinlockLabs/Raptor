@@ -1,6 +1,7 @@
 #include "events.h"
 
 #include <liblox/hashmap.h>
+#include <liblox/memory.h>
 
 #include <kernel/spin.h>
 #include <kernel/cpu/task.h>

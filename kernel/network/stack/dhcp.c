@@ -4,6 +4,7 @@
 #include <liblox/io.h>
 #include <liblox/net.h>
 #include <liblox/hashmap.h>
+#include <liblox/memory.h>
 
 #include <kernel/network/dhcp.h>
 

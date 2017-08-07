@@ -2,7 +2,6 @@
 
 #include <liblox/io.h>
 #include <kernel/interupt.h>
-#include <liblox/hashmap.h>
 
 #include "mmio.h"
 

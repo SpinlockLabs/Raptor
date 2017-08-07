@@ -77,6 +77,14 @@ char* raptor_user_get_cmdline(void) {
         while (*wincmdline == ' ') {
             wincmdline++;
         }
+    } else {
+        while (*wincmdline != ' ' && *wincmdline != '\0') {
+            wincmdline++;
+        }
+
+        if (*wincmdline == ' ') {
+            wincmdline++;
+        }
     }
 
     return wincmdline;

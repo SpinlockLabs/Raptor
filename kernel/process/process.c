@@ -1,6 +1,6 @@
-#include <liblox/tree.h>
-
 #include "process.h"
+
+#include <liblox/memory.h>
 
 #include <kernel/spin.h>
 

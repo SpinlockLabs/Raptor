@@ -1,8 +1,8 @@
+#ifdef _UBSAN
 #include "ubsan.h"
 
 #include "../io.h"
 
-#ifdef _UBSAN
 void ubsan_debug(struct SourceLocation *location) {
     printf("[UBSAN] %s:%d:%dc - ", location->file_name,
             location->line, location->column);

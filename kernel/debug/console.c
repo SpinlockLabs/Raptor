@@ -1,6 +1,7 @@
 #include "console.h"
 
 #include <liblox/string.h>
+#include <liblox/memory.h>
 #include <liblox/strbuf/strbuf.h>
 
 #include "commands.h"

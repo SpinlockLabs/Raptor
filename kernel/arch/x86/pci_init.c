@@ -1,8 +1,10 @@
 #include <liblox/io.h>
-
-#include <kernel/arch/x86/devices/pci/pci.h>
-#include <kernel/device/registry.h>
+#include <liblox/memory.h>
 #include <liblox/printf.h>
+
+#include <kernel/device/registry.h>
+
+#include "devices/pci/pci.h"
 
 #include "pci_init.h"
 

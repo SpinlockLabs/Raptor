@@ -2,6 +2,7 @@
 
 #include <liblox/string.h>
 #include <liblox/printf.h>
+#include <liblox/memory.h>
 
 #include <kernel/arch/x86/devices/pci/pci.h>
 
@@ -12,7 +13,6 @@
 #include <kernel/disk/block.h>
 
 #include <kernel/spin.h>
-#include <kernel/device/registry.h>
 
 #define dbg(msg, ...) printf(DEBUG "[ATA] " msg, ##__VA_ARGS__)
 #define info(msg, ...) printf(INFO "[ATA] " msg, ##__VA_ARGS__)

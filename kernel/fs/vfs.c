@@ -3,7 +3,7 @@
 #include <liblox/io.h>
 #include <liblox/string.h>
 #include <liblox/hashmap.h>
-#include <liblox/tree.h>
+#include <liblox/memory.h>
 
 #include <kernel/spin.h>
 
@@ -99,7 +99,7 @@ fs_error_t vfs_mount_node(char* path, fs_node_t* node) {
     char* p = strdup(path);
     char* i = p;
 
-    int path_size = strlen(p);
+    size_t path_size = strlen(p);
 
     while (i < p + path_size) {
         if (*i == VFS_PATH_SEP) {

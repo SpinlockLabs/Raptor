@@ -1,5 +1,6 @@
 #include "fb.h"
 
+#include <liblox/memory.h>
 #include <liblox/string.h>
 
 framebuffer_t* framebuffer_create(

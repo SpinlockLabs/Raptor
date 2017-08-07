@@ -1,5 +1,7 @@
 #include "console.h"
 
+#include <liblox/memory.h>
+
 #include <kernel/time.h>
 #include <kernel/timer.h>
 
@@ -16,6 +18,8 @@ static void debug_time(tty_t* tty, const char* input) {
                time->hour,
                time->minute,
                time->second);
+
+    free(time);
 }
 
 static void debug_ticks(tty_t* tty, const char* input) {

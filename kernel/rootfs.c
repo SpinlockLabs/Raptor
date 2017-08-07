@@ -1,6 +1,7 @@
 #include "rootfs.h"
 
 #include <liblox/string.h>
+#include <liblox/memory.h>
 #include <liblox/io.h>
 
 #include <kernel/cmdline.h>

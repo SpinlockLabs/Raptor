@@ -5,6 +5,7 @@
 #include <liblox/string.h>
 #include <liblox/sleep.h>
 #include <liblox/printf.h>
+#include <liblox/memory.h>
 
 #include <kernel/spin.h>
 #include <kernel/cpu/task.h>

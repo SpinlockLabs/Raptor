@@ -1,5 +1,6 @@
 #include "pcnet.h"
 
+#include <liblox/memory.h>
 #include <liblox/list.h>
 #include <liblox/printf.h>
 #include <liblox/string.h>

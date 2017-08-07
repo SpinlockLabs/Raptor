@@ -4,8 +4,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "memory.h"
-
 typedef struct list_node {
     struct list* list;
     struct list_node* prev;

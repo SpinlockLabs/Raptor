@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+
 #include <liblox/atomic.h>
 
 typedef struct spin_lock {

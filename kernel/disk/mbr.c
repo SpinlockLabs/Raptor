@@ -1,6 +1,7 @@
 #include "mbr.h"
 
 #include <liblox/string.h>
+#include <liblox/memory.h>
 #include <liblox/printf.h>
 
 #include <kernel/dispatch/events.h>

@@ -3,6 +3,7 @@
 #include "config.h"
 
 #include <liblox/net.h>
+#include <liblox/memory.h>
 
 #include <kernel/dispatch/events.h>
 #include <liblox/string.h>

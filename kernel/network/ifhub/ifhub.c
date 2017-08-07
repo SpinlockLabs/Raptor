@@ -2,6 +2,7 @@
 #include "log.h"
 
 #include <liblox/printf.h>
+#include <liblox/memory.h>
 #include <liblox/string.h>
 
 #include <kernel/network/stack/stack.h>

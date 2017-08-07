@@ -1,6 +1,7 @@
 #include "../list.h"
-#include "../hashmap.h"
 #include "../string.h"
+#include "../hashmap.h"
+#include "../memory.h"
 
 uint hashmap_string_hash(void* _key) {
     uint hash = 0;
@@ -85,7 +86,7 @@ void* hashmap_set(hashmap_t* map, void* key, void* value) {
         return e;
     }
 
-    hashmap_entry_t* p = NULL;
+    hashmap_entry_t* p;
     do {
         if (map->compare(x->key, key)) {
             void* out = x->value;
@@ -230,9 +231,9 @@ void hashmap_free(hashmap_t* map) {
     }
 
     for (uint i = 0; i < map->size; ++i) {
-        hashmap_entry_t* x = map->entries[i], *p;
+        hashmap_entry_t* x = map->entries[i];
         while (x) {
-            p = x;
+            hashmap_entry_t *p = x;
             x = x->next;
             map->key_free(p->key);
             map->value_free(p);

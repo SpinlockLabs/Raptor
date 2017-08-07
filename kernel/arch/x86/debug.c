@@ -4,8 +4,6 @@
 
 #include <kernel/tty.h>
 
-#include <kernel/dispatch/events.h>
-
 #include <kernel/debug/console.h>
 
 #include <kernel/arch/x86/devices/pci/pci.h>

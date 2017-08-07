@@ -2,6 +2,7 @@
 
 #include <liblox/io.h>
 #include <liblox/string.h>
+#include <liblox/memory.h>
 
 #include <kernel/spin.h>
 #include <kernel/dispatch/events.h>

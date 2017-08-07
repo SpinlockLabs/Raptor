@@ -1,6 +1,8 @@
 #include "serial.h"
 
-#include <kernel/arch/x86/io.h>
+#include <liblox/memory.h>
+
+#include "../../io.h"
 
 static const uint16_t serial_io_ports[4] = {
     0x3F8,
