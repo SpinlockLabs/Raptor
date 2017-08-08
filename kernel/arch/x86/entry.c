@@ -90,7 +90,7 @@ void paging_init(void) {
         while ((uintptr_t) mmap < mboot->mmap_addr + mboot->mmap_length) {
             if (mmap->type == 2) {
                 /* I don't know why we should use this type, but references use it. */
-                for (unsigned long long int i = 0; i < mmap->length; i += 0x1000) {
+                for (unsigned long long int i = 0; i < mmap->length; i += PAGE_SIZE) {
                     if (mmap->base_addr + i > 0xFFFFFFFF) {
                         break;
                     }
@@ -110,6 +110,7 @@ void paging_init(void) {
 extern void _init(void);
 
 void kernel_setup_devices(void) {
+    acpi_raptor_init();
     pci_init();
 
     vga_pty = tty_create("vga");
@@ -189,8 +190,6 @@ used void kernel_main(multiboot_t* _mboot, uint32_t mboot_hdr, uintptr_t esp) {
         puts(DEBUG "Jumping to userspace...\n");
         userspace_jump(NULL, 0xB0000000);
     }
-
-    acpi_raptor_init();
 
     kernel_init();
 }

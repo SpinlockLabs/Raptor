@@ -4,6 +4,9 @@
 
 #include "isr.h"
 
+#define PAGE_SIZE (0x1000)
+#define PAGE_OFFSET_MASK (PAGE_SIZE - 1)
+
 /**
  * Allocates the page table.
  */

@@ -1,12 +1,13 @@
-#include "acpi.h"
-
 #include "../include/acpi.h"
-#include "../rprintf/printf.h"
 
 #include <liblox/memory.h>
 #include <liblox/sleep.h>
 
 #include <kernel/arch/x86/paging.h>
+#include <liblox/printf.h>
+#include <kernel/arch/x86/io.h>
+#include <kernel/spin.h>
+#include <kernel/interupt.h>
 
 ACPI_STATUS AcpiOsInitialize(void) {
     return AE_OK;
@@ -27,6 +28,17 @@ ACPI_STATUS AcpiOsReadPort(
     ACPI_IO_ADDRESS Address,
     UINT32* Value,
     UINT32 Width) {
+
+    if (Width == 8) {
+        *Value = inb((uint16_t) Address);
+    } else if (Width == 16) {
+        *Value = ins((uint16_t) Address);
+    } else if (Width == 32) {
+        *Value = inl((uint16_t) Address);
+    } else {
+        return AE_ERROR;
+    }
+
     return AE_OK;
 }
 
@@ -34,6 +46,17 @@ ACPI_STATUS AcpiOsWritePort(
     ACPI_IO_ADDRESS Address,
     UINT32 Value,
     UINT32 Width) {
+
+    if (Width == 8) {
+        outb((uint16_t) Address, (uint8_t) Value);
+    } else if (Width == 16) {
+        outs((uint16_t) Address, (uint16_t) Value);
+    } else if (Width == 32) {
+        outl((uint16_t) Address, Value);
+    } else {
+        return AE_ERROR;
+    }
+
     return AE_OK;
 }
 
@@ -42,26 +65,17 @@ ACPI_STATUS AcpiOsSignal(UINT32 Function, void* Info) {
 }
 
 ACPI_THREAD_ID AcpiOsGetThreadId(void) {
-    return 0;
+    return 1;
 }
 
 void AcpiOsWaitEventsComplete(void) {
+    irq_wait();
 }
 
 ACPI_PHYSICAL_ADDRESS AcpiOsGetRootPointer(void) {
-    printf("[ACPI] Get root pointer.\n");
-
     ACPI_PHYSICAL_ADDRESS ret = 0;
     AcpiFindRootPointer(&ret);
     return ret;
-}
-
-void* AcpiOsAcquireObject(ACPI_CACHE_T* Cache) {
-    return 0;
-}
-
-ACPI_STATUS AcpiOsReleaseObject(ACPI_CACHE_T* Cache, void* Object) {
-    return AE_OK;
 }
 
 ACPI_STATUS AcpiOsPredefinedOverride(
@@ -83,6 +97,8 @@ ACPI_STATUS AcpiOsPhysicalTableOverride(
     ACPI_TABLE_HEADER* ExistingTable,
     ACPI_PHYSICAL_ADDRESS* NewAddress,
     UINT32* NewTableLength) {
+    *NewAddress = 0;
+    *NewTableLength = 0;
     return AE_OK;
 }
 
@@ -95,7 +111,6 @@ ACPI_STATUS AcpiOsReadMemory(
     ACPI_PHYSICAL_ADDRESS Address,
     UINT64* Value,
     UINT32 Width) {
-    printf("[ACPI] Read memory 0x%x\n", Address);
     return AE_OK;
 }
 
@@ -103,12 +118,10 @@ ACPI_STATUS AcpiOsWriteMemory(
     ACPI_PHYSICAL_ADDRESS Address,
     UINT64 Value,
     UINT32 Width) {
-    printf("[ACPI] Write memory 0x%x\n", Address);
     return AE_OK;
 }
 
 void* AcpiOsAllocate(ACPI_SIZE Size) {
-    printf("[ACPI] Allocate %d\n", Size);
     return malloc(Size);
 }
 
@@ -121,7 +134,7 @@ ACPI_STATUS AcpiOsReadPciConfiguration(
     UINT32 Reg,
     UINT64* Value,
     UINT32 Width) {
-    printf("[ACPI] Read PCI configuration\n");
+    *Value = 0;
     return AE_OK;
 }
 
@@ -130,13 +143,10 @@ ACPI_STATUS AcpiOsWritePciConfiguration(
     UINT32 Reg,
     UINT64 Value,
     UINT32 Width) {
-    printf("[ACPI] Write PCI configuration\n");
     return AE_OK;
 }
 
 BOOLEAN AcpiOsReadable(void* Memory, ACPI_SIZE Length) {
-    printf("[ACPI] Is readable 0x%x\n", Memory);
-
     page_t* page = paging_get_page(
         (uintptr_t) Memory,
         0,
@@ -155,40 +165,30 @@ BOOLEAN AcpiOsWritable(void* Memory, ACPI_SIZE Length) {
 }
 
 void* AcpiOsMapMemory(ACPI_PHYSICAL_ADDRESS Physical, ACPI_SIZE Length) {
-    printf("[ACPI] Map Memory 0x%x (len = %d)\n", Physical, Length);
-    return (void*) paging_add_map((uintptr_t) Physical, Length);
+    uintptr_t phy = Physical;
+    return (void*) paging_add_map(phy, Length);
 }
 
 void AcpiOsUnmapMemory(void* Where, ACPI_SIZE Length) {
-    printf("[ACPI] Unmap Memory 0x%x (len = %d)\n", Where, Length);
 }
 
 void AcpiOsPrintf(const char* fmt, ...) {
+#if !RAPTOR_ACPI_DEBUG
     va_list args;
     va_start(args, fmt);
-    char buffer[256] = {0};
-    mini_vsnprintf(buffer, 256, fmt, args);
+    char buffer[1024] = {0};
+    vasprintf(buffer, fmt, args);
     va_end(args);
     puts(buffer);
+#endif
 }
 
 void AcpiOsVprintf(const char* fmt, va_list vargs) {
-    char buffer[256] = {0};
-    mini_vsnprintf(buffer, 256, fmt, vargs);
+#if !RAPTOR_ACPI_DEBUG
+    char buffer[1024] = {0};
+    vasprintf(buffer, fmt, vargs);
     puts(buffer);
-}
-
-ACPI_STATUS AcpiOsCreateCache(char* CacheName, UINT16 ObjectSize,
-                              UINT16 MaxDepth, ACPI_CACHE_T** ReturnCache) {
-    return AE_OK;
-}
-
-ACPI_STATUS AcpiOsDeleteCache(ACPI_CACHE_T* Cache) {
-    return AE_OK;
-}
-
-ACPI_STATUS AcpiOsPurgeCache(void** Cache) {
-    return AE_OK;
+#endif
 }
 
 ACPI_STATUS AcpiOsExecute(ACPI_EXECUTE_TYPE Type, ACPI_OSD_EXEC_CALLBACK Function, void* Context) {
@@ -198,7 +198,7 @@ ACPI_STATUS AcpiOsExecute(ACPI_EXECUTE_TYPE Type, ACPI_OSD_EXEC_CALLBACK Functio
 }
 
 void AcpiOsSleep(UINT64 ms) {
-    sleep(ms);
+    sleep((ulong) ms);
 }
 
 void AcpiOsStall(UINT32 us) {
@@ -211,6 +211,7 @@ UINT64 AcpiOsGetTimer(void) {
 }
 
 ACPI_STATUS AcpiOsCreateSemaphore(UINT32 Max, UINT32 Initial, ACPI_SEMAPHORE* OutHandle) {
+    *OutHandle = NULL;
     return AE_OK;
 }
 
@@ -227,28 +228,33 @@ ACPI_STATUS AcpiOsWaitSemaphore(ACPI_SEMAPHORE Handle, UINT32 Units, UINT16 Time
 }
 
 ACPI_STATUS AcpiOsCreateLock(ACPI_SPINLOCK* Handle) {
+    *Handle = zalloc(sizeof(spin_lock_t));
+    spin_init(*Handle);
     return AE_OK;
 }
 
-void AcpiOsDeleteLock(ACPI_SPINLOCK Handle) {}
+void AcpiOsDeleteLock(ACPI_SPINLOCK Handle) {
+    free(Handle);
+}
 
 ACPI_CPU_FLAGS AcpiOsAcquireLock(ACPI_SPINLOCK Handle) {
+    spin_lock(Handle);
     return 0;
 }
 
-void AcpiOsReleaseLock(ACPI_SPINLOCK Handle, ACPI_CPU_FLAGS Flags) {}
+void AcpiOsReleaseLock(ACPI_SPINLOCK Handle, ACPI_CPU_FLAGS Flags) {
+    spin_unlock(Handle);
+}
 
 ACPI_STATUS AcpiOsInstallInterruptHandler(
     UINT32 InterruptNumber,
     ACPI_OSD_HANDLER Handler,
     void* Context) {
-    printf("[ACPI] Install interrupt %d\n", InterruptNumber);
     return AE_OK;
 }
 
 ACPI_STATUS AcpiOsRemoveInterruptHandler(
     UINT32 InterruptNumber,
     ACPI_OSD_HANDLER Handler) {
-    printf("[ACPI] Remove interrupt %d\n", InterruptNumber);
     return AE_OK;
 }

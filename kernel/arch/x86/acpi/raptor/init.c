@@ -35,11 +35,6 @@ static ACPI_STATUS install_handlers(void) {
 }
 
 void acpi_raptor_init(void) {
-    ACPI_DEBUG_INITIALIZE();
-
-    AcpiDbgLayer = ACPI_ALL_COMPONENTS;
-    AcpiDbgLevel = ACPI_LV_ALL;
-
     printf(INFO "[ACPI] Initializing...\n");
 
     ACPI_STATUS status;

@@ -2,6 +2,7 @@
 #include "paging.h"
 
 #include <kernel/rkmalloc/rkmalloc.h>
+#include <liblox/debug/backtrace.h>
 
 static rkmalloc_heap* kheap = NULL;
 
@@ -37,11 +38,14 @@ void kheap_free(void* ptr) {
 
 static uintptr_t _kpmalloc_int(size_t size, int align, uintptr_t* phys) {
     if (kheap_end != 0) {
-        uintptr_t address = (uintptr_t) kheap_allocate(size + 0x1000);
+        uintptr_t address = (uintptr_t) kheap_allocate(size + PAGE_SIZE);
+
+        if (address == 0) {
+            return address;
+        }
 
         if (align) {
-            size_t mask = 0x1000 - 1;
-            address = (address + mask) & ~mask;
+            address = (address + PAGE_OFFSET_MASK) & ~PAGE_OFFSET_MASK;
         }
 
         if (phys) {
@@ -53,7 +57,7 @@ static uintptr_t _kpmalloc_int(size_t size, int align, uintptr_t* phys) {
 
     if (align && (kp_placement_pointer & 0xFFFFF000)) {
         kp_placement_pointer &= 0xFFFFF000;
-        kp_placement_pointer += 0x1000;
+        kp_placement_pointer += PAGE_SIZE;
     }
 
     uint32_t addr = kp_placement_pointer;
@@ -95,7 +99,19 @@ void* kpmalloc_kheap_expand(size_t size) {
     uintptr_t address = kheap_end;
 
     if (kheap_end + size > KERNEL_HEAP_END - 1) {
-        panic("Kernel heap grew too much.");
+        printf(
+            ERROR
+                "Kernel heap grew too much while allocating %d bytes.\n",
+            size
+        );
+
+        trace_t traces[6] = {0};
+        backtrace(NULL, traces, 12);
+        for (uint i = 0; i < 12; i++) {
+            printf("[Call] 0x%x\n", traces[i].call);
+        }
+
+        panic(NULL);
     }
 
     if (kheap_end + size > kheap_alloc_point) {

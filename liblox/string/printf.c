@@ -7,6 +7,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 /*
  * Integer to string.
@@ -82,7 +83,13 @@ size_t vasprintf(char* buf, const char* fmt, va_list args) {
         }
         ++f;
         unsigned int arg_width = 0;
-        while (*f >= '0' && *f <= '9') {
+        while ((*f >= '0' && *f <= '9') || *f == '.') {
+            if (*f == '.') {
+                ++f;
+                arg_width = 0;
+                continue;
+            }
+
             arg_width *= 10;
             arg_width += *f - '0';
             ++f;
@@ -90,10 +97,11 @@ size_t vasprintf(char* buf, const char* fmt, va_list args) {
         /* fmt[i] == '%' */
         switch (*f) {
             case 's': /* String pointer -> String */
-                s = va_arg(args, char *);
+                s = va_arg(args, char*);
                 if (s == NULL) {
                     s = "(null)";
                 }
+
                 while (*s) {
                     *b++ = *s++;
                 }
@@ -101,12 +109,15 @@ size_t vasprintf(char* buf, const char* fmt, va_list args) {
             case 'c': /* Single character */
                 *b++ = (char) va_arg(args, int);
                 break;
+            case 'X':
             case 'x': /* Hexadecimal number */
                 i = (int) ((uintptr_t) b - (uintptr_t) buf);
                 print_hex((unsigned int) va_arg(args, unsigned long), arg_width,
                           buf, &i);
                 b = buf + i;
                 break;
+            case 'i':
+            case 'u':
             case 'd': /* Decimal number */
                 i = (int) ((uintptr_t) b - (uintptr_t) buf);
                 print_dec((unsigned int) va_arg(args, unsigned long), arg_width,

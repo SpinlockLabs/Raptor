@@ -38,6 +38,11 @@ endif()
 
 if(EXISTS "${RAPTOR_DIR}/kernel/arch/x86/acpi/include")
   target_include_directories(kernel PRIVATE "${RAPTOR_DIR}/kernel/arch/x86/acpi/include")
+
+  add_definitions(
+    -DACPI_USE_LOCAL_CACHE
+    -DACPI_32BIT_PHYSICAL_ADDRESS
+  )
 endif()
 
 kernel_ldscript("${KERNEL_DIR}/arch/x86/linker.ld")
