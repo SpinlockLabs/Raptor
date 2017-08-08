@@ -75,6 +75,6 @@ void framebuffer_init(uint32_t w, uint32_t h) {
 
     framebuffer_clear(
         fb,
-        rgb_as(&rgb_white, fb->format)
+        rgb_as(&rgb_green, fb->format)
     );
 }

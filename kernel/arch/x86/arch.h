@@ -9,5 +9,5 @@
 #endif
 
 typedef struct arch_process_extensions {
-    void* _unused;
+    page_directory_t* paging;
 } arch_process_extensions_t;

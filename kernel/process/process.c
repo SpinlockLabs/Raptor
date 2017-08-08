@@ -18,9 +18,12 @@ static process_t* create_kidle(void) {
     spin_lock(&tree_lock);
     process_t* proc = zalloc(sizeof(process_t));
     proc->name = "[kernel]";
-    proc->pid = 0;
+    proc->pid = process_get_next_pid();
     proc->cmdline = NULL;
     proc->status = PROCESS_RUNNING;
+
+    arch_process_init_kidle(proc);
+
     return proc;
 }
 
@@ -47,4 +50,16 @@ list_t* process_get_all(void) {
 
 tree_t* process_get_tree(void) {
     return process_tree;
+}
+
+process_t* process_get_next(void) {
+    if (wait_queue->size == 0) {
+        return kidle_process;
+    }
+
+    list_node_t* node = list_dequeue(wait_queue);
+    process_t* next = node->value;
+    free(node);
+
+    return next;
 }

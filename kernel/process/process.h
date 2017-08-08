@@ -8,6 +8,13 @@
 
 #include <kernel/arch.h>
 
+typedef struct process process_t;
+
+extern void arch_process_init(process_t*);
+extern void arch_process_init_kidle(process_t*);
+extern void arch_process_run(process_t*);
+extern void arch_process_switch_next(void);
+
 /* A process identifier. */
 typedef uint pid_t;
 
@@ -24,7 +31,7 @@ typedef enum process_status {
 } process_status_t;
 
 /* Represents a process that can be scheduled. */
-typedef struct process {
+struct process {
     /* The process identifier. */
     pid_t pid;
 
@@ -42,9 +49,34 @@ typedef struct process {
 
     /* CPU register state. */
     cpu_registers_t registers;
-} process_t;
+};
 
+/**
+ * Retrieves the next process PID.
+ * @return process pid.
+ */
 pid_t process_get_next_pid(void);
+
+/**
+ * Gets the currently running process.
+ * @return
+ */
 process_t* process_get_current(void);
+
+/**
+ * Gets a list of all the processes.
+ * @return process list.
+ */
 list_t* process_get_all(void);
+
+/**
+ * Gets the process tree.
+ * @return process tree.
+ */
 tree_t* process_get_tree(void);
+
+/**
+ * Get the next available process.
+ * @return next available process.
+ */
+process_t* process_get_next(void);
