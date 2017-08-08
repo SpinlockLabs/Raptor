@@ -25,6 +25,7 @@
 #include "devices/serial/serial.h"
 #include "devices/pcnet/pcnet.h"
 #include "devices/e1000/e1000.h"
+#include "devices/vgafb/vgafb.h"
 #include "devices/ata/ata.h"
 
 void lox_output_char_ebl(char c) {
@@ -131,6 +132,7 @@ void kernel_setup_devices(void) {
     driver_register(ata_driver_setup);
     driver_register(pcnet_driver_setup);
     driver_register(e1000_driver_setup);
+    driver_register(vgafb_setup);
 
     debug_x86_init();
 }
