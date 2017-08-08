@@ -1,8 +1,10 @@
 #include "stack.h"
 
-#include <liblox/hashmap.h>
-#include <kernel/dispatch/events.h>
 #include <liblox/string.h>
+#include <liblox/hashmap.h>
+#include <liblox/memory.h>
+
+#include <kernel/dispatch/events.h>
 #include <kernel/cpu/task.h>
 
 #include "arp.h"
@@ -23,7 +25,7 @@ static void network_stack_handle_untranslated_receive(
             .raw = pkt,
             .ipv4 = (ipv4_packet_t*) pkt->buffer
         };
-        event_dispatch("network:stack:ipv4:packet-receive", &ipv4);
+        event_dispatch(EVENT_NETWORK_STACK_IPV4_PKT_RECEIVE, &ipv4);
     }
 }
 
@@ -53,7 +55,7 @@ static network_iface_error_t network_stack_handle_interface_receive(
         .translated = false
     };
 
-    event_dispatch("network:stack:raw:packet-receive", &pkt);
+    event_dispatch(EVENT_NETWORK_STACK_RAW_PKT_RECEIVE, &pkt);
 
     if (!pkt.translated) {
         network_stack_handle_untranslated_receive(&pkt);
@@ -112,7 +114,7 @@ void network_stack_send_packet(
         .flags = flags
     };
 
-    event_dispatch("network:stack:raw:packet-send", &pkt);
+    event_dispatch(EVENT_NETWORK_STACK_RAW_PKT_SEND, &pkt);
 
     if (!pkt.translated) {
         network_stack_handle_untranslated_send(&pkt);
@@ -132,13 +134,13 @@ void network_stack_init(void) {
     network_stack_dhcp_init();
 
     event_add_handler(
-        "network:iface:registered",
+        EVENT_NETWORK_IFACE_REGISTERED,
         network_stack_on_interface_registered,
         NULL
     );
 
     event_add_handler(
-        "network:iface:destroying",
+        EVENT_NETWORK_IFACE_DESTROYING,
         network_stack_on_interface_destroying,
         NULL
     );
@@ -160,7 +162,7 @@ bool network_stack_takeover(network_iface_t* iface) {
     iface->manager_data = hashmap_create(2);
     iface->handle_receive = network_stack_handle_interface_receive;
 
-    event_dispatch("network:stack:iface-up", iface);
+    event_dispatch(EVENT_NETWORK_STACK_IFACE_UP, iface);
     return true;
 }
 
@@ -170,7 +172,7 @@ bool network_stack_disown(network_iface_t* iface) {
         return true;
     }
 
-    event_dispatch("network:stack:iface-down", iface);
+    event_dispatch(EVENT_NETWORK_STACK_IFACE_DOWN, iface);
 
     if (iface->manager_data != NULL) {
         hashmap_free((hashmap_t*) iface->manager_data);

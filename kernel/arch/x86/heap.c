@@ -7,14 +7,20 @@ static rkmalloc_heap* kheap = NULL;
 
 extern char __link_mem_end;
 
-static spin_lock_t kheap_lock = {0};
+static spin_lock_t kheap_lock;
 
 uintptr_t kp_placement_pointer = (uintptr_t) &__link_mem_end;
-volatile uintptr_t kheap_end = (uintptr_t) NULL;
+static volatile uintptr_t kheap_end = (uintptr_t) NULL;
 uintptr_t kheap_alloc_point = KERNEL_HEAP_START;
 
 rkmalloc_heap* heap_get(void) {
     return kheap;
+}
+
+static void* kheap_started_at = NULL;
+
+void* heap_start(void) {
+    return kheap_started_at;
 }
 
 void* kheap_allocate(size_t size) {
@@ -31,23 +37,14 @@ void kheap_free(void* ptr) {
 
 static uintptr_t _kpmalloc_int(size_t size, int align, uintptr_t* phys) {
     if (kheap_end != 0) {
-        uintptr_t address = 0;
+        uintptr_t address = (uintptr_t) kheap_allocate(size + 0x1000);
 
         if (align) {
-            spin_lock(kheap_lock);
-            address = kheap_end;
-            address &= 0xFFFFF000;
-            address += 0x1000;
-            kheap_end = address + size;
-            spin_unlock(kheap_lock);
-        } else {
-            address = (uintptr_t) kheap_allocate(size);
+            size_t mask = 0x1000 - 1;
+            address = (address + mask) & ~mask;
         }
 
         if (phys) {
-            if (align && size >= 0x3000) {
-                address = paging_allocate_aligned_large(address, address, phys);
-            }
             *phys = paging_get_physical_address(address);
         }
 
@@ -90,7 +87,11 @@ void kpmalloc_start_at(uintptr_t addr) {
 }
 
 void* kpmalloc_kheap_expand(size_t size) {
-    spin_lock(kheap_lock);
+    if (size == 0) {
+        return (void*) kheap_end;
+    }
+
+    spin_lock(&kheap_lock);
     uintptr_t address = kheap_end;
 
     if (kheap_end + size > KERNEL_HEAP_END - 1) {
@@ -116,7 +117,7 @@ void* kpmalloc_kheap_expand(size_t size) {
     }
 
     kheap_end += size;
-    spin_unlock(kheap_lock);
+    spin_unlock(&kheap_lock);
     memset((void*) address, 0, size);
     return (void*) address;
 }
@@ -125,6 +126,7 @@ void heap_init(void) {
     /* Initialize kheap start point. */
     kheap_end = (kp_placement_pointer + 0x1000) & ~0xFFF;
     kheap = (rkmalloc_heap*) kpmalloc_kheap_expand(sizeof(rkmalloc_heap));
+    kheap_started_at = kheap;
 
     kheap->expand = kpmalloc_kheap_expand;
     kheap->types.atomic = 8; // 8 bytes
@@ -140,9 +142,9 @@ void heap_init(void) {
     kheap->types.large = 1024 * 1024; // 1 mb
     kheap->types.huge = 5 * 1024 * 1024; // 5 mb
 
-    rkmalloc_init_heap(kheap);
+    rkmalloc_error error = rkmalloc_init_heap(kheap);
 
-    if (kheap->error_code != RKMALLOC_ERROR_NONE) {
+    if (error != RKMALLOC_ERROR_NONE) {
         panic("rkmalloc failed to initialize the kernel heap.");
     }
 }

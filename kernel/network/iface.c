@@ -1,6 +1,7 @@
 #include "iface.h"
 
 #include <liblox/string.h>
+#include <liblox/memory.h>
 #include <liblox/hashmap.h>
 
 #include <kernel/panic.h>
@@ -8,7 +9,7 @@
 
 #include <kernel/dispatch/events.h>
 
-static spin_lock_t network_subsystem_lock = {0};
+static spin_lock_t network_subsystem_lock;
 static hashmap_t* network_iface_subsystem_registry = NULL;
 
 static inline void ensure_subsystem(void) {
@@ -17,13 +18,23 @@ static inline void ensure_subsystem(void) {
     }
 }
 
-void network_iface_register(network_iface_t* iface) {
+void network_iface_register(
+    device_entry_t* parent,
+    network_iface_t* iface
+) {
     ensure_subsystem();
-    spin_lock(network_subsystem_lock);
+    spin_lock(&network_subsystem_lock);
     hashmap_set(network_iface_subsystem_registry, iface->name, iface);
-    spin_unlock(network_subsystem_lock);
+    spin_unlock(&network_subsystem_lock);
 
-    event_dispatch("network:iface:registered", iface->name);
+    event_dispatch(EVENT_NETWORK_IFACE_REGISTERED, iface->name);
+
+    iface->entry = device_register(
+        parent,
+        iface->name,
+        DEVICE_CLASS_NETWORK,
+        iface
+    );
 }
 
 list_t* network_iface_get_all(void) {
@@ -40,9 +51,11 @@ network_iface_error_t network_iface_destroy(network_iface_t* iface) {
         return IFACE_ERR_BAD_IFACE;
     }
 
-    spin_lock(network_subsystem_lock);
+    event_dispatch(EVENT_NETWORK_IFACE_DESTROYING, iface);
 
-    event_dispatch("network:iface:destroying", iface);
+    device_unregister(iface->entry);
+
+    spin_lock(&network_subsystem_lock);
 
     network_iface_error_t error = IFACE_ERR_OK;
 
@@ -55,9 +68,8 @@ network_iface_error_t network_iface_destroy(network_iface_t* iface) {
         hashmap_remove(network_iface_subsystem_registry, name);
     }
 
-    spin_unlock(network_subsystem_lock);
-
-    event_dispatch("network:iface:destroyed", name);
+    spin_unlock(&network_subsystem_lock);
+    event_dispatch(EVENT_NETWORK_IFACE_DESTROYED, name);
     free(name);
 
     return error;
@@ -93,16 +105,16 @@ network_iface_t* network_iface_create(char* name) {
 network_iface_t* network_iface_get(char* name) {
     ensure_subsystem();
 
-    spin_lock(network_subsystem_lock);
+    spin_lock(&network_subsystem_lock);
     network_iface_t* iface = hashmap_get(network_iface_subsystem_registry, name);
-    spin_unlock(network_subsystem_lock);
+    spin_unlock(&network_subsystem_lock);
     return iface;
 }
 
 void network_iface_each(network_iface_handle_iter_t handle, void* data) {
     ensure_subsystem();
 
-    spin_lock(network_subsystem_lock);
+    spin_lock(&network_subsystem_lock);
 
     bool end = false;
     for (uint i = 0; i < network_iface_subsystem_registry->size; ++i) {
@@ -121,7 +133,7 @@ void network_iface_each(network_iface_handle_iter_t handle, void* data) {
         }
     }
 
-    spin_unlock(network_subsystem_lock);
+    spin_unlock(&network_subsystem_lock);
 }
 
 network_iface_error_t network_iface_send(network_iface_t* iface,
@@ -150,6 +162,6 @@ int network_iface_ioctl(network_iface_t* iface, ulong request, void* data) {
 
 void network_iface_subsystem_init(void) {
     network_iface_subsystem_registry = hashmap_create(10);
-    spin_init(network_subsystem_lock);
-    event_dispatch("network:iface:subsystem-init", NULL);
+    spin_init(&network_subsystem_lock);
+    event_dispatch(EVENT_NETWORK_IFACE_SUBSYSTEM_INIT, NULL);
 }

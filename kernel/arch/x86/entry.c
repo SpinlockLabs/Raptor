@@ -7,7 +7,9 @@
 #include <kernel/panic.h>
 #include <kernel/cmdline.h>
 #include <kernel/timer.h>
+#include <kernel/device/driver.h>
 
+#include "cpuid.h"
 #include "cmdline.h"
 #include "gdt.h"
 #include "paging.h"
@@ -23,12 +25,10 @@
 #include "devices/serial/serial.h"
 #include "devices/pcnet/pcnet.h"
 #include "devices/e1000/e1000.h"
+#include "devices/vgafb/vgafb.h"
 #include "devices/ata/ata.h"
 
 #include "acpi/raptor/init.h"
-
-const uint32_t kProcessorIdIntel = 0x756e6547;
-const uint32_t kProcessorIdAMD = 0x68747541;
 
 void lox_output_char_ebl(char c) {
     outb(0x3F8, (uint8_t) c);
@@ -58,7 +58,7 @@ void lox_output_char_vga(char c) {
     lox_output_char_ebl(c);
 }
 
-used void arch_panic_handler(nullable char *msg) {
+used void arch_panic_handler(nullable char* msg) {
     asm("cli;");
 
     if (msg != NULL) {
@@ -107,30 +107,47 @@ void paging_init(void) {
     paging_finalize();
 }
 
+extern void _init(void);
+
 void kernel_setup_devices(void) {
+    pci_init();
+
     vga_pty = tty_create("vga");
     vga_pty->write = vga_pty_write;
     vga_pty->flags.allow_debug_console = true;
     vga_pty->flags.write_kernel_log = true;
+    vga_pty->flags.echo = true;
     keyboard_init();
     tty_register(vga_pty);
 
     tty_serial_t* serial_port_a = tty_create_serial("serial-a", 0);
-    serial_port_a->echo = true;
+    serial_port_a->tty->flags.echo = true;
     serial_port_a->tty->flags.allow_debug_console = true;
     serial_port_a->tty->flags.write_kernel_log = true;
     tty_register(serial_port_a->tty);
 
-    ata_setup();
-    pcnet_setup();
-    e1000_setup();
+    /**
+     * Calls functions marked as a constructor in the C runtime.
+     */
+    _init();
+
+    driver_register(ata_driver_setup);
+    driver_register(pcnet_driver_setup);
+    driver_register(e1000_driver_setup);
+    driver_register(vgafb_setup);
+
     debug_x86_init();
 }
 
 /* Initial kernel stack pointer. */
 used uintptr_t initial_esp = 0;
 
-used void kernel_main(multiboot_t *_mboot, uint32_t mboot_hdr, uintptr_t esp) {
+void kexec(const void* kernel, size_t size) {
+    unused(kernel);
+    unused(size);
+}
+
+used void kernel_main(multiboot_t* _mboot, uint32_t mboot_hdr, uintptr_t esp) {
     initial_esp = esp;
 
     if (mboot_hdr != MULTIBOOT_EAX_MAGIC) {
@@ -138,7 +155,6 @@ used void kernel_main(multiboot_t *_mboot, uint32_t mboot_hdr, uintptr_t esp) {
     }
 
     mboot = _mboot;
-
     init_cmdline(mboot);
 
     vga_init();
@@ -148,11 +164,10 @@ used void kernel_main(multiboot_t *_mboot, uint32_t mboot_hdr, uintptr_t esp) {
         lox_output_char_provider = lox_output_char_vga;
     }
 
-    uint32_t ebx = 0;
-    get_cpuid(0, 0, &ebx, 0, 0);
-    if (ebx == kProcessorIdIntel) {
+    uint processor_type = cpuid_get_processor_type();
+    if (processor_type == PROCESSOR_TYPE_INTEL) {
         puts(INFO "Processor Type: Intel\n");
-    } else if (ebx == kProcessorIdAMD) {
+    } else if (processor_type == PROCESSOR_TYPE_AMD) {
         puts(INFO "Processor Type: AMD\n");
     } else {
         puts(INFO "Processor Type: Unknown\n");
@@ -168,11 +183,6 @@ used void kernel_main(multiboot_t *_mboot, uint32_t mboot_hdr, uintptr_t esp) {
     puts(DEBUG "IRQs initialized.\n");
     timer_init(1000);
     puts(DEBUG "PIT initialized.\n");
-
-    breakpoint("pci-init");
-    puts(DEBUG "Probing PCI devices...\n");
-    pci_init();
-    puts(DEBUG "PCI probe done.\n");
 
     if (cmdline_bool_flag("enable-userspace-jump")) {
         breakpoint("userspace-jump");

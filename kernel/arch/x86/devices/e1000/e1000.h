@@ -1,3 +1,3 @@
 #pragma once
 
-void e1000_setup(void);
+void e1000_driver_setup(void);

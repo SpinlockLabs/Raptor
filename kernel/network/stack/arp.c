@@ -4,6 +4,7 @@
 #include "log.h"
 
 #include <liblox/hashmap.h>
+#include <liblox/memory.h>
 #include <liblox/net.h>
 
 #include <kernel/dispatch/events.h>
@@ -133,7 +134,10 @@ static void handle_config_change(void* event, void* extra) {
     unused(extra);
 
     network_iface_t* iface = event;
-    uint32_t gw = (uint32_t) hashmap_get(iface->manager_data, "gateway");
+    netconf_t* conf = netconf_get(iface);
+    netconf_lock(conf);
+    uint32_t gw = conf->ipv4.gateway;
+    netconf_unlock(conf);
 
     if (gw == 0) {
         return;
@@ -173,11 +177,11 @@ static void handle_potential_arp(void* event, void* extra) {
     }
 
     if (oper == 2) {
-        arp_entry_t* entry = hashmap_get(state->table, (void*) arp->sender_ip);
+        arp_entry_t* entry = hashmap_get(state->table, (void*) (uintptr_t) arp->sender_ip);
 
         if (entry == NULL) {
             entry = zalloc(sizeof(arp_entry_t));
-            hashmap_set(state->table, (void*) arp->sender_ip, entry);
+            hashmap_set(state->table, (void*) (uintptr_t) arp->sender_ip, entry);
         }
 
         copy_mac(entry->mac, arp->sender_ha);
@@ -209,25 +213,25 @@ static void handle_interface_down(void* event, void* extra) {
 
 void network_stack_arp_init(void) {
     event_add_handler(
-        "network:stack:raw:packet-receive",
+        EVENT_NETWORK_STACK_RAW_PKT_RECEIVE,
         handle_potential_arp,
         NULL
     );
 
     event_add_handler(
-        "network:stack:iface-up",
+        EVENT_NETWORK_STACK_IFACE_UP,
         handle_interface_up,
         NULL
     );
 
     event_add_handler(
-        "network:stack:iface-down",
+        EVENT_NETWORK_STACK_IFACE_DOWN,
         handle_interface_down,
         NULL
     );
 
     event_add_handler(
-        "network:stack:iface-update",
+        EVENT_NETWORK_STACK_IFACE_UPDATE,
         handle_config_change,
         NULL
     );
@@ -239,7 +243,7 @@ void arp_lookup(network_iface_t* iface, uint32_t addr, uint8_t* hw) {
         return;
     }
 
-    arp_entry_t* entry = hashmap_get(state->table, (void*) addr);
+    arp_entry_t* entry = hashmap_get(state->table, (void*) (uintptr_t) addr);
     if (entry == NULL) {
         return;
     }

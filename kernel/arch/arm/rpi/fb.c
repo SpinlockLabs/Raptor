@@ -1,12 +1,16 @@
 #include <liblox/common.h>
-#include <liblox/io.h>
 #include <liblox/hex.h>
+#include <liblox/memory.h>
+
+#include <liblox/graphics/colors.h>
+
+#include <kernel/graphics/fb.h>
 
 #include "fb.h"
 #include "mailbox.h"
-#include "delay.h"
+#include "board.h"
 
-typedef struct fb_mbox_init_t {
+typedef struct fb_mbox_init {
     uint32_t w;
     uint32_t h;
     uint32_t vw;
@@ -17,59 +21,60 @@ typedef struct fb_mbox_init_t {
     uint32_t y;
     uint32_t buffer;
     uint32_t size;
-} packed fb_mbox_init_t;
+} fb_mbox_init_t;
 
-void *pi_fb_mbox_ptr = (void*) 0x40040000;
-static uint8_t *pi_framebuffer;
-
-static uint32_t fb_get_pixel_addr(uint32_t x, uint32_t y) {
-    uint32_t offset = ((y * ((fb_mbox_init_t*) pi_fb_mbox_ptr)->pitch) + (x * 3));
-    return (uint32_t) (pi_framebuffer + offset);
-}
+static fb_mbox_init_t* pi_fbinfo;
+static uint32_t* pi_fb;
+static framebuffer_t* fb;
 
 void framebuffer_init(uint32_t w, uint32_t h) {
-    mmio_write(0x40040000, w);
-    mmio_write(0x40040004, h);
-    mmio_write(0x40040008, w);
-    mmio_write(0x4004000C, h);
-    mmio_write(0x40040010, 0);
-    mmio_write(0x40040014, 32);
-    mmio_write(0x40040018, 0);
-    mmio_write(0x4004001C, 0);
-    mmio_write(0x40040020, 0);
-    mmio_write(0x40040024, 0);
+    uintptr_t ptr = (uintptr_t) zalloc(0x1000 + sizeof(fb_mbox_init_t));
+    ptr &= 0xFFFFF000;
+    ptr += 0x1000;
 
-    bcm_mailbox_write(1, (uint32_t) pi_fb_mbox_ptr);
-    delay(5000);
-    putint_phexl(DEBUG "Framebuffer Mbox: ", (int) bcm_mailbox_read(1));
+    pi_fbinfo = (fb_mbox_init_t*) ptr;
 
-    fb_mbox_init_t *init = ((fb_mbox_init_t*) pi_fb_mbox_ptr);
+    pi_fbinfo->w = w;
+    pi_fbinfo->h = h;
+    pi_fbinfo->vw = w;
+    pi_fbinfo->vh = h;
+    pi_fbinfo->pitch = 0;
+    pi_fbinfo->depth = 32;
+    pi_fbinfo->x = 0;
+    pi_fbinfo->y = 0;
+    pi_fbinfo->buffer = 0;
+    pi_fbinfo->size = 0;
 
-    pi_framebuffer = (uint8_t*) init->buffer;
+    uint32_t mbox_address = BOARD_BUS_ADDRESS(ptr);
+    bcm_mailbox_write(1, mbox_address);
+    uint32_t result = bcm_mailbox_read(1);
 
-    framebuffer_clear((fb_pixel_t) {
-        .r = 255,
-        .g = 0,
-        .b = 0
-    });
-
-    putint_phexl(DEBUG "Framebuffer Structure: ", (int) pi_fb_mbox_ptr);
-    putint_phexl(DEBUG "Framebuffer Location: ", (int) init->buffer);
-    putint_phexl(DEBUG "Framebuffer Size: ", (int) init->size);
-    putint_phexl(DEBUG "Framebuffer Pitch: ", (int) init->pitch);
-}
-
-void framebuffer_clear(fb_pixel_t spec) {
-    fb_mbox_init_t *init = ((fb_mbox_init_t*) pi_fb_mbox_ptr);
-
-    for (uint32_t x = 0; x < init->w; x++) {
-        for (uint32_t y = 0; y < init->h; y++) {
-            uint32_t addr = fb_get_pixel_addr(x, y);
-            uint8_t *pix = (uint8_t*) addr;
-
-            *(pix + 0) = spec.r;
-            *(pix + 1) = spec.g;
-            *(pix + 2) = spec.b;
-        }
+    if (result != 0 || pi_fbinfo->buffer == 0 || pi_fbinfo->depth != 32) {
+        printf(ERROR "Failed to initialize framebuffer.\n");
+        return;
     }
+
+    pi_fb = (uint32_t*) (pi_fbinfo->buffer & 0x3FFFFFFF);
+
+    printf(
+        DEBUG "Framebuffer Size: %d x %d\n",
+        pi_fbinfo->w,
+        pi_fbinfo->h
+    );
+
+    fb = framebuffer_create("pi-fb");
+    fb->format = PIXEL_FMT_RGBA32;
+    fb->buffer = pi_fb;
+    fb->width = pi_fbinfo->w;
+    fb->height = pi_fbinfo->h;
+    fb->pitch = pi_fbinfo->pitch / sizeof(uint32_t);
+    framebuffer_register(
+        device_root(),
+        fb
+    );
+
+    framebuffer_clear(
+        fb,
+        rgb_as(&rgb_white, fb->format)
+    );
 }

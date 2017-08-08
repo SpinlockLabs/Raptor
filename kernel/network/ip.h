@@ -37,7 +37,7 @@ typedef struct ipv4_packet {
     uint16_t checksum;
     uint32_t source;
     uint32_t destination;
-    uint8_t payload[];
+    vla(uint8_t, payload);
 } packed ipv4_packet_t;
 
 typedef struct ip_packet_moving {
@@ -50,7 +50,7 @@ typedef struct ip_packet_moving {
 typedef struct udp_ipv4_packet {
     ipv4_packet_t ipv4;
     udp_packet_t udp;
-    uint8_t payload[];
+    vla(uint8_t, payload);
 } packed udp_ipv4_packet_t;
 
 uint16_t ip_calculate_checksum(void* p, size_t width);

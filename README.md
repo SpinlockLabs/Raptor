@@ -1,5 +1,3 @@
-# Raptor
+# Raptor OS
 
-Your not-so-family-friendly Operating System. We really hate clouds.
-
-
+The Winner's Operating System.

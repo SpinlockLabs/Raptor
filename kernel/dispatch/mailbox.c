@@ -2,6 +2,7 @@
 
 #include <liblox/list.h>
 #include <liblox/hashmap.h>
+#include <liblox/memory.h>
 
 #include <kernel/cpu/task.h>
 
@@ -11,7 +12,11 @@ typedef struct mailbox_handler_entry {
 } mailbox_handler_entry_t;
 
 void mailbox_add_handler(mailbox_t* box, mailbox_handler_t handler, void* extra) {
-    spin_lock(box->lock);
+    if (box == NULL) {
+        return;
+    }
+
+    spin_lock(&box->lock);
     list_t* list = box->internal;
 
     mailbox_handler_entry_t* info = zalloc(sizeof(mailbox_handler_entry_t));
@@ -20,11 +25,15 @@ void mailbox_add_handler(mailbox_t* box, mailbox_handler_t handler, void* extra)
 
     list_add(list, info);
 
-    spin_unlock(box->lock);
+    spin_unlock(&box->lock);
 }
 
 void mailbox_remove_handler(mailbox_t* box, mailbox_handler_t handler) {
-    spin_lock(box->lock);
+    if (box == NULL) {
+        return;
+    }
+
+    spin_lock(&box->lock);
 
     list_t* list = box->internal;
 
@@ -37,15 +46,19 @@ void mailbox_remove_handler(mailbox_t* box, mailbox_handler_t handler) {
         list_remove(node);
         free(node);
         free(info);
-        spin_unlock(box->lock);
+        spin_unlock(&box->lock);
         return;
     }
 
-    spin_unlock(box->lock);
+    spin_unlock(&box->lock);
 }
 
 void mailbox_deliver(mailbox_t* box, void* event) {
-    spin_lock(box->lock);
+    if (box == NULL) {
+        return;
+    }
+
+    spin_lock(&box->lock);
     list_t* list = box->internal;
 
     list_for_each(node, list) {
@@ -53,7 +66,7 @@ void mailbox_deliver(mailbox_t* box, void* event) {
         info->handler(box, event, info->extra);
     }
 
-    spin_unlock(box->lock);
+    spin_unlock(&box->lock);
 }
 
 typedef struct mailbox_deliver_async_data {
@@ -68,6 +81,10 @@ static void mailbox_deliver_async_task(void* data) {
 }
 
 void mailbox_deliver_async(mailbox_t* box, void* event) {
+    if (box == NULL) {
+        return;
+    }
+
     mailbox_deliver_async_data_t* data = zalloc(
         sizeof(mailbox_deliver_async_data_t)
     );
@@ -82,15 +99,20 @@ mailbox_t* mailbox_create(void) {
     list_t* list = list_create();
     list->free_values = true;
     box->internal = list;
-    spin_init(box->lock);
+
+    spin_init(&box->lock);
     return box;
 }
 
 void mailbox_destroy(mailbox_t* box) {
-    spin_lock(box->lock);
+    if (box == NULL) {
+        return;
+    }
+
+    spin_lock(&box->lock);
     list_t* list = box->internal;
     list_free(list);
-    spin_unlock(box->lock);
+    spin_unlock(&box->lock);
 
     free(box);
 }

@@ -1,5 +1,6 @@
 #include "pcnet.h"
 
+#include <liblox/memory.h>
 #include <liblox/list.h>
 #include <liblox/printf.h>
 #include <liblox/string.h>
@@ -158,9 +159,9 @@ static void init_descriptor(pcnet_state_t* state, int index, int is_tx) {
 }
 
 static void enqueue_packet(pcnet_state_t* state, pcnet_netbuf_t* buffer) {
-    spin_lock(state->net_queue_lock);
+    spin_lock(&state->net_queue_lock);
     list_add(state->net_queue, buffer);
-    spin_unlock(state->net_queue_lock);
+    spin_unlock(&state->net_queue_lock);
 }
 
 static void dequeue_packet_task(void* extra) {
@@ -172,11 +173,11 @@ static void dequeue_packet_task(void* extra) {
         return;
     }
 
-    spin_lock(state->net_queue_lock);
+    spin_lock(&state->net_queue_lock);
     list_node_t* n = list_dequeue(state->net_queue);
     pcnet_netbuf_t* value = n->value;
     free(n);
-    spin_unlock(state->net_queue_lock);
+    spin_unlock(&state->net_queue_lock);
 
     if (iface->handle_receive != NULL) {
         iface->handle_receive(
@@ -285,22 +286,22 @@ static network_iface_error_t pcnet_iface_destroy(network_iface_t* iface) {
     return IFACE_ERR_OK;
 }
 
-static void pcnet_init(uint32_t device_pci) {
+static void pcnet_init(device_entry_t* parent, pci_device_t* pci) {
     pcnet_state_t* state = zalloc(sizeof(pcnet_state_t));
-    state->device_pci = device_pci;
+    state->device_pci = pci->address;
 
     uint16_t command_reg = (uint16_t) (
-        pci_read_field(device_pci, PCI_COMMAND, 4) & 0xFFFF0000);
+        pci_read_field(state->device_pci, PCI_COMMAND, 4) & 0xFFFF0000);
     if (command_reg & (1 << 2)) {
         printf(WARN "Bus mastering already enabled.\n");
     }
     command_reg |= (1 << 2);
     command_reg |= (1 << 0);
-    pci_write_field(device_pci, PCI_COMMAND, 4, command_reg);
+    pci_write_field(state->device_pci, PCI_COMMAND, 4, command_reg);
 
-    state->io_base = pci_read_field(device_pci, PCI_BAR0, 4) & 0xFFFFFFF0;
-    state->mem_base = pci_read_field(device_pci, PCI_BAR1, 4) & 0xFFFFFFF0;
-    state->irq = (size_t) pci_read_field(device_pci, PCI_INTERRUPT_LINE, 1);
+    state->io_base = pci_read_field(state->device_pci, PCI_BAR0, 4) & 0xFFFFFFF0;
+    state->mem_base = pci_read_field(state->device_pci, PCI_BAR1, 4) & 0xFFFFFFF0;
+    state->irq = (size_t) pci_read_field(state->device_pci, PCI_INTERRUPT_LINE, 1);
 
     /* Read MAC from EEPROM */
     state->mac[0] = inb((uint16_t) (state->io_base + 0));
@@ -401,13 +402,11 @@ static void pcnet_init(uint32_t device_pci) {
 
     write_csr32(state, 0, read_csr32(state, 0) | (1 << 0) | (1 << 6)); /* do it */
 
-    uint64_t start_time;
-    asm volatile (".byte 0x0f, 0x31" : "=A" (start_time));
+    uint64_t start_time = arch_x86_get_timestamp();
 
     uint32_t status;
     while (((status = read_csr32(state, 0)) & (1 << 8)) == 0) {
-        uint64_t now_time;
-        asm volatile (".byte 0x0f, 0x31" : "=A" (now_time));
+        uint64_t now_time = arch_x86_get_timestamp();
         if (now_time - start_time > 0x10000) {
             printf(ERROR "Could not initialize PCNet card, status is 0x%4x\n", status);
             return;
@@ -447,20 +446,25 @@ static void pcnet_init(uint32_t device_pci) {
     pcnet_iface->destroy = pcnet_iface_destroy;
     pcnet_iface->data = dat;
 
-    network_iface_register(pcnet_iface);
+    network_iface_register(
+        parent,
+        pcnet_iface
+    );
 
     dat->poll_task = ktask_repeat(1, dequeue_packet_task, dat);
 }
 
-static void find_pcnet(uint32_t device, uint16_t vendor_id, uint16_t device_id, void* extra) {
-    unused(extra);
-
-    if ((vendor_id == 0x1022) && (device_id == 0x2000)) {
-        pcnet_init(device);
-    }
-}
-
-void pcnet_setup(void) {
+void pcnet_driver_setup(void) {
     pcnet_list = list_create();
-    pci_scan(&find_pcnet, -1, NULL);
+
+    list_t* list = device_query(DEVICE_CLASS_PCI);
+
+    list_for_each(node, list) {
+        device_entry_t* entry = node->value;
+        pci_device_t* pci = entry->device;
+
+        if (pci->vendor_id == 0x8086 && pci->device_id == 0x7010) {
+            pcnet_init(entry, pci);
+        }
+    }
 }

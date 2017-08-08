@@ -1,5 +1,6 @@
-#include "../tree.h"
 #include "../common.h"
+#include "../tree.h"
+#include "../memory.h"
 
 tree_t* tree_create(void) {
     /* Create a new tree */

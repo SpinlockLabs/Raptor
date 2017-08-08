@@ -16,9 +16,5 @@ void gpio_set_act_led_state(bool state) {
     state = !state;
 #endif
 
-    if (state) {
-        mmio_op(GPIO_SET1) |= 1 << GPIO_ACT_LED_BIT;
-    } else {
-        mmio_op(GPIO_CLR1) |= 1 << GPIO_ACT_LED_BIT;
-    }
+    mmio_op(state ? GPIO_SET1 : GPIO_CLR1) |= 1 << GPIO_ACT_LED_BIT;
 }

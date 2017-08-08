@@ -27,7 +27,7 @@ static void debug_read(tty_t* tty, const char* input) {
 }
 
 void debug_cmdline_init(void) {
-    debug_console_register_command("cmdline", show_cmdline);
-    debug_console_register_command("cmdline-has", has_flag);
-    debug_console_register_command("cmdline-read", debug_read);
+    debug_register_command("cmdline", show_cmdline);
+    debug_register_command("cmdline-has", has_flag);
+    debug_register_command("cmdline-read", debug_read);
 }

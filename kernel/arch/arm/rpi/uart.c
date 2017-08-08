@@ -1,9 +1,11 @@
 #include <liblox/string.h>
+#include <kernel/kexec.h>
 
-#include "delay.h"
 #include "gpio.h"
 #include "mmio.h"
 #include "uart.h"
+
+tty_t* uart_tty = NULL;
 
 void uart_init(void) {
     // Disable UART0.
@@ -43,36 +45,76 @@ void uart_init(void) {
     mmio_write(UART0_CR, (1 << 0) | (1 << 8) | (1 << 9));
 }
 
-void uart_putc(unsigned char byte) {
+void uart_putc(uint8_t byte) {
     // Wait for UART to become ready to transmit.
     while (mmio_read(UART0_FR) & (1 << 5)) {}
     mmio_write(UART0_DR, byte);
 }
 
-unsigned char uart_poll_getc(void) {
-    return (unsigned char) mmio_read(UART0_DR);
+uint8_t uart_poll_getc(void) {
+    return (uint8_t) mmio_read(UART0_DR);
 }
 
 bool uart_poll(void) {
     return (mmio_read(UART0_FR) & (1 << 4)) ? false : true;
 }
 
-unsigned char uart_getc(void) {
+uint8_t uart_getc(void) {
     // Wait for UART to receive something.
-    while (!uart_poll()) {}
-    return uart_poll_getc();
+    while (true) {
+        if (!(mmio_read(UART0_FR) & (1 << 4))) {
+            break;
+        }
+    }
+    return (uint8_t) mmio_read(UART0_DR);
 }
 
-void uart_write(const unsigned char *buffer, size_t size) {
+uint32_t uart_read32(void) {
+    uint8_t b = 0;
+    uint32_t value = uart_getc();
+
+    b = uart_getc();
+    value |= b << 8;
+    b = uart_getc();
+    value |= b << 16;
+    b = uart_getc();
+    value |= b << 24;
+    return value;
+}
+
+void uart_kpload(void) {
+    uart_puts("KPL\r\n");
+    uint32_t length = uart_read32();
+
+    extern uint32_t kpmalloc_a(uint32_t);
+    uint8_t* ptr = (uint8_t*) kpmalloc_a(length);
+    for (uint32_t i = 0; i < length; i++) {
+        uint8_t b = uart_getc();
+        ptr[i] = b;
+    }
+
+    kexec(ptr, length);
+}
+
+void uart_write(const uint8_t* buffer, size_t size) {
+    bool conv = (uart_tty != NULL ? !uart_tty->flags.raw : true);
     for (size_t i = 0; i < size; i++) {
-        unsigned char c = buffer[i];
-        if (c == (unsigned char) '\n') {
-            uart_putc('\r');
+        uint8_t c = buffer[i];
+        if (conv) {
+            char a = (char) c;
+            if (a == '\n') {
+                uart_putc('\r');
+            }
+
+            if (a == '\b') {
+                uart_putc('\b');
+                uart_putc(' ');
+            }
         }
-        uart_putc(buffer[i]);
+        uart_putc(c);
     }
 }
 
-void uart_puts(const char *str) {
-    uart_write((const unsigned char*) str, strlen(str));
+void uart_puts(const char* str) {
+    uart_write((const uint8_t*) str, strlen(str));
 }

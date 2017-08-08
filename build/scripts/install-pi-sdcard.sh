@@ -14,8 +14,8 @@ then
   exec sudo "${SHELL}" "${0}" "${@}"
 fi
 
-umount "${PART}" || true
-umount "${PART}" || true
+umount "${PART}" > /dev/null || true
+umount "${PART}" > /dev/null || true
 mkdir -p /tmp/sdcard
 mount "${PART}" /tmp/sdcard
 arm-none-eabi-objcopy kernel.elf -O binary /tmp/sdcard/kernel7.img

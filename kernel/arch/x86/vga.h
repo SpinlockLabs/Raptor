@@ -42,5 +42,7 @@ void vga_set_at(char, uint8_t, size_t, size_t);
 void vga_cursor(size_t, size_t);
 void vga_nextrow(void);
 void vga_putchar(char);
+void vga_putchar_direct(char c, bool user);
 void vga_write(const char*, size_t);
 void vga_write_string(const char*);
+void vga_get_cursor(size_t* col, size_t* row);

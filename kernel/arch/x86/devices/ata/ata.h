@@ -154,4 +154,4 @@ typedef struct ata_device {
     uint32_t atapi_sector_size;
 } ata_device_t;
 
-void ata_setup(void);
+void ata_driver_setup(void);

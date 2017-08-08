@@ -1,9 +1,9 @@
 #include "icmp.h"
 #include "stack.h"
-#include "log.h"
 #include "config.h"
 
 #include <liblox/net.h>
+#include <liblox/memory.h>
 
 #include <kernel/dispatch/events.h>
 #include <liblox/string.h>
@@ -93,7 +93,7 @@ static void handle_ipv4_packet(void* event, void* extra) {
 
 void network_stack_icmp_init(void) {
     event_add_handler(
-        "network:stack:ipv4:packet-receive",
+        EVENT_NETWORK_STACK_IPV4_PKT_RECEIVE,
         handle_ipv4_packet,
         NULL
     );

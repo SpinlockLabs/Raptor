@@ -2,6 +2,7 @@
 
 #include <liblox/string.h>
 #include <liblox/printf.h>
+#include <liblox/memory.h>
 
 #include <kernel/arch/x86/devices/pci/pci.h>
 
@@ -17,9 +18,10 @@
 #define info(msg, ...) printf(INFO "[ATA] " msg, ##__VA_ARGS__)
 
 static char ata_drive_char = 'a';
-static uint32_t ata_pci = 0x00000000;
+static uint32_t ide_controller_pci = 0x00000000;
+static device_entry_t* ide_controller_dev = NULL;
 
-static spin_lock_t ata_lock = {0};
+static spin_lock_t ata_lock;
 
 static ata_device_t ata_primary_master = {
     .io_base = 0x1F0,
@@ -140,7 +142,7 @@ static block_device_error_t ata_block_read_sector(
     uint16_t bus = ata->io_base;
     uint8_t slave = (uint8_t) ata->slave;
 
-    spin_lock(ata_lock);
+    spin_lock(&ata_lock);
 
     ata_wait(ata, 0);
     outb(ata->bar4, 0x00);
@@ -195,7 +197,7 @@ static block_device_error_t ata_block_read_sector(
     memcpy(buffer, ata->dma_start, 512);
     ata_outb(ata->bar4, 0x2, (uint8_t) (inb((uint16_t) (ata->bar4 + 0x02)) | 0x04 | 0x02));
 
-    spin_unlock(ata_lock);
+    spin_unlock(&ata_lock);
 
     return BLOCK_DEVICE_ERROR_OK;
 }
@@ -342,15 +344,15 @@ static void ata_device_init(ata_device_t* dev) {
     dev->dma_prdt[0].bytes = 512;
     dev->dma_prdt[0].last = 0x8000;
 
-    uint16_t command_reg = (uint16_t) pci_read_field(ata_pci, PCI_COMMAND, 4);
+    uint16_t command_reg = (uint16_t) pci_read_field(ide_controller_pci, PCI_COMMAND, 4);
     if (command_reg & (1 << 2)) {
         dbg("Bus mastering already enabled.\n");
     } else {
         command_reg |= (1 << 2);
-        pci_write_field(ata_pci, PCI_COMMAND, 4, command_reg);
+        pci_write_field(ide_controller_pci, PCI_COMMAND, 4, command_reg);
     }
 
-    uint32_t bar4 = pci_read_field(ata_pci, PCI_BAR4, 4);
+    uint32_t bar4 = pci_read_field(ide_controller_pci, PCI_BAR4, 4);
 
     if (bar4 & 0x00000001) {
         dev->bar4 = (uint16_t) (bar4 & 0xFFFFFFFC);
@@ -379,7 +381,17 @@ static int ata_device_detect(ata_device_t* dev) {
         block_device_t* block = ata_device_create(dev);
         ata_drive_char++;
         ata_device_init(dev);
-        block_device_register(block);
+
+        device_entry_t* parent = device_root();
+
+        if (ide_controller_dev != NULL) {
+            parent = ide_controller_dev;
+        }
+
+        block_device_register(
+            parent,
+            block
+        );
 
         return 1;
     }
@@ -393,20 +405,18 @@ static int ata_device_detect(ata_device_t* dev) {
     return 0;
 }
 
-static void find_ata(uint32_t device, uint16_t vid, uint16_t did,
-                     void *extra) {
-    unused(device);
-    unused(extra);
+void ata_driver_setup(void) {
+    list_t* list = device_query(DEVICE_CLASS_PCI);
 
-    if ((vid == 0x8086) &&
-        (did == 0x7010)) {
-        // Match with a IDE controller.
-        ata_pci = device;
+    list_for_each(node, list) {
+        device_entry_t* entry = node->value;
+        pci_device_t* pci = entry->device;
+
+        if (pci->vendor_id == 0x8086 && pci->device_id == 0x7010) {
+            ide_controller_pci = pci->address;
+            ide_controller_dev = entry;
+        }
     }
-}
-
-void ata_setup(void) {
-    pci_scan(&find_ata, -1, NULL);
 
     irq_add_handler(14, ata_irq_handler);
     irq_add_handler(15, ata_irq_handler_s);

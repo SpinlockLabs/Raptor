@@ -1,17 +1,18 @@
 #include "block.h"
 
+#include <liblox/memory.h>
 #include <liblox/hashmap.h>
 #include <liblox/string.h>
+#include <liblox/io.h>
 
 #include <kernel/spin.h>
-#include <kernel/panic.h>
 
 #include <kernel/dispatch/events.h>
 
 #include "mbr.h"
 
 static hashmap_t* registry = NULL;
-static spin_lock_t lock = {0};
+static spin_lock_t lock;
 
 void block_device_subsystem_init(void) {
     registry = hashmap_create(5);
@@ -36,9 +37,9 @@ block_device_t* block_device_create(char* name) {
 }
 
 block_device_t* block_device_get(char* name) {
-    spin_lock(lock);
+    spin_lock(&lock);
     block_device_t* device = hashmap_get(registry, name);
-    spin_unlock(lock);
+    spin_unlock(&lock);
     return device;
 }
 
@@ -46,8 +47,11 @@ list_t* block_device_get_all(void) {
     return hashmap_values(registry);
 }
 
-block_device_error_t block_device_register(block_device_t* device) {
-    spin_lock(lock);
+block_device_error_t block_device_register(
+    device_entry_t* parent,
+    block_device_t* device
+) {
+    spin_lock(&lock);
 
     if (hashmap_has(registry, device->name)) {
         printf(
@@ -55,15 +59,22 @@ block_device_error_t block_device_register(block_device_t* device) {
                  "device already exists!\n"
         );
 
-        spin_unlock(lock);
+        spin_unlock(&lock);
         return BLOCK_DEVICE_ERROR_EXISTS;
     }
 
     hashmap_set(registry, device->name, device);
-    spin_unlock(lock);
+    spin_unlock(&lock);
 
     event_dispatch_async(
-        "block-device:initialized",
+        EVENT_BLOCK_DEVICE_INITIALIZED,
+        device
+    );
+
+    device_register(
+        parent,
+        device->name,
+        DEVICE_CLASS_BLOCK,
         device
     );
 
@@ -71,15 +82,19 @@ block_device_error_t block_device_register(block_device_t* device) {
 }
 
 block_device_error_t block_device_destroy(block_device_t* device) {
-    spin_lock(lock);
+    event_dispatch(
+        EVENT_BLOCK_DEVICE_DESTROYING,
+        device
+    );
+
+    if (device->entry != NULL) {
+        device_unregister(device->entry);
+    }
+
+    spin_lock(&lock);
 
     char* name = device->name;
     block_device_error_t error = BLOCK_DEVICE_ERROR_OK;
-
-    event_dispatch(
-        "block-device:destroying",
-        device
-    );
 
     if (device->ops.destroy != NULL) {
         error = device->ops.destroy(device);
@@ -87,11 +102,11 @@ block_device_error_t block_device_destroy(block_device_t* device) {
 
     hashmap_remove(registry, device);
     event_dispatch_async(
-        "block-device:destroyed",
+        EVENT_BLOCK_DEVICE_DESTROYED,
         name
     );
 
-    spin_unlock(lock);
+    spin_unlock(&lock);
 
     return error;
 }

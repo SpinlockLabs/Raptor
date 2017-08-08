@@ -39,13 +39,28 @@ void kernel_init(void) {
     heap_init();
     puts(DEBUG "Heap initialized.\n");
 
+    device_registry_init();
+    printf(DEBUG "Device registry initialized.\n");
+
     events_subsystem_init();
+    printf(DEBUG "Event system initialized.\n");
+
     tty_subsystem_init();
+    printf(DEBUG "Console initialized.\n");
+
     vfs_subsystem_init();
     block_device_subsystem_init();
+    printf(DEBUG "VFS initialized.\n");
+
     network_iface_subsystem_init();
     network_stack_init();
+    printf(DEBUG "Network initialized.\n");
+
     debug_console_init();
+    printf(DEBUG "Debug console initialized.\n");
+    kernel_setup_devices();
+
+    event_dispatch(EVENT_DRIVER_SETUP, NULL);
 
     lox_output_char_provider = tty_write_kernel_log_char;
     lox_output_string_provider = tty_write_kernel_log_string;
@@ -54,7 +69,6 @@ void kernel_init(void) {
     kernel_modules_load();
     puts(DEBUG "Kernel modules loaded.\n");
 
-    kernel_setup_devices();
     debug_console_start();
 
     /**

@@ -9,7 +9,6 @@ typedef struct tty_serial {
     tty_t* tty;
     uint16_t port;
     ktask_id poll_task;
-    bool echo;
 } tty_serial_t;
 
 tty_serial_t* tty_create_serial(char* name, uint index);

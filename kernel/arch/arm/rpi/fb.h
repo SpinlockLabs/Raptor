@@ -1,12 +1,13 @@
 #pragma once
 
+#include <liblox/graphics/color.h>
 #include <stdint.h>
 
-typedef struct fb_pixel_t {
-    uint8_t r;
-    uint8_t g;
-    uint8_t b;
-} packed fb_pixel_t;
-
+void pifb_get_size(uint32_t*, uint32_t*);
 void framebuffer_init(uint32_t, uint32_t);
-void framebuffer_clear(fb_pixel_t spec);
+void pifb_clear(uint32_t);
+void pifb_set(
+    uint32_t x,
+    uint32_t y,
+    uint32_t color
+);

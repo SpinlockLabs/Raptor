@@ -19,6 +19,7 @@ static uint32_t _kpmalloc_int(uint32_t size, int align, uint32_t *phys) {
     }
 
     kheap_placement_address += size;
+
     return addr;
 }
 
@@ -38,26 +39,44 @@ uint32_t kpmalloc(uint32_t size) {
     return _kpmalloc_int(size, 0, 0);
 }
 
-void* rkpmalloc(size_t size) {
-    uint32_t p = 0;
-    return (void*) kpmalloc_ap(size, &p);
+void* kheap_expand(size_t size) {
+    if (size == 0) {
+        return (void*) kheap_placement_address;
+    }
+
+    void* ptr = (void*) kpmalloc(size);
+    memset(ptr, 0, size);
+    return ptr;
 }
 
 void heap_init(void) {
     kheap = (rkmalloc_heap*) kpmalloc(sizeof(rkmalloc_heap));
-    kheap->kmalloc = rkpmalloc;
-    kheap->types = (rkmalloc_heap_types) {
-        .tiny = 1 * 1024, // 1 kb
-        .small = 2 * 1024, // 2 KB
-        .medium = 16 * 1024, // 16 kb
-        .large = 1024 * 1024, // 1 mb
-        .huge = 5 * 1024 * 1024 // 5 mb
-    };
+    kheap->expand = kheap_expand;
+
+    kheap->types.atomic = 8; // 8 bytes
+    kheap->types.molecular = 16; // 16 bytes
+    kheap->types.nano = 64; // 64 bytes
+    kheap->types.micro = 256; // 256 bytes
+    kheap->types.mini = 512; // 512 bytes
+    kheap->types.tiny = 1 * 1024; // 1 kb
+    kheap->types.small = 2 * 1024; // 2 kb
+    kheap->types.medium = 4 * 1024; // 4 kb
+    kheap->types.moderate = 16 * 1024; // 16 kb
+    kheap->types.fair = 64 * 1024; // 64 kb
+    kheap->types.large = 1024 * 1024; // 1 mb
+    kheap->types.huge = 5 * 1024 * 1024; // 5 mb
 
     rkmalloc_init_heap(kheap);
 }
 
+rkmalloc_heap* heap_get(void) {
+    return kheap;
+}
+
 void* kheap_allocate(size_t size) {
+    if (size == 0) {
+        return (void*) kheap_placement_address;
+    }
     return rkmalloc_allocate(kheap, size);
 }
 
@@ -65,5 +84,10 @@ void kheap_free(void *ptr) {
     rkmalloc_free(kheap, ptr);
 }
 
+void* kheap_reallocate(void* ptr, size_t size) {
+    return rkmalloc_resize(kheap, ptr, size);
+}
+
 void* (*lox_allocate_provider)(size_t) = kheap_allocate;
 void (*lox_free_provider)(void *ptr) = kheap_free;
+void* (*lox_reallocate_provider)(void* ptr, size_t size) = kheap_reallocate;

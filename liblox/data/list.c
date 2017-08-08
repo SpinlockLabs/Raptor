@@ -1,6 +1,7 @@
 #include "../common.h"
 #include "../list.h"
 #include "../string.h"
+#include "../memory.h"
 
 #define list_invalid_index(list, idx) (idx) >= (list)->size
 
@@ -23,7 +24,7 @@ list_node_t* list_create_node(void) {
 }
 
 list_t* list_create(void) {
-    list_t* val = (list_t*) zalloc(sizeof(list_t));
+    list_t* val = zalloc(sizeof(list_t));
 
     ensure_allocated(val);
 
@@ -82,6 +83,10 @@ list_node_t* list_insert_node_before(list_node_t* node, list_node_t* entry) {
     node->prev = entry;
     entry->prev = tmp;
     entry->next = node;
+
+    if (node == entry->list->head) {
+        entry->list->head = entry;
+    }
 
     if (node->list != NULL) {
         node->list->size++;
@@ -278,4 +283,33 @@ list_node_t* list_dequeue(list_t* list) {
     list_node_t* out = list->head;
     list_remove(out);
     return out;
+}
+
+void list_swap(list_node_t* left, list_node_t* right) {
+    void* tmp = left->value;
+    left->value = right->value;
+    right->value = tmp;
+}
+
+static void list_bubble_sort(list_t* list, list_compare_t compare) {
+    size_t size = list->size;
+    bool swapped;
+
+    do {
+        swapped = false;
+
+        for (size_t index = 1; index < size - 1; index++) {
+            list_node_t* left = list_get_at(list, index - 1);
+            list_node_t* right = list_get_at(list, index);
+
+            if (compare(left->value, right->value) > 0) {
+                list_swap(left, right);
+                swapped = true;
+            }
+        }
+    } while (swapped);
+}
+
+void list_sort(list_t* list, list_compare_t compare) {
+    list_bubble_sort(list, compare);
 }

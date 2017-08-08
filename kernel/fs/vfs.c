@@ -3,7 +3,7 @@
 #include <liblox/io.h>
 #include <liblox/string.h>
 #include <liblox/hashmap.h>
-#include <liblox/tree.h>
+#include <liblox/memory.h>
 
 #include <kernel/spin.h>
 
@@ -12,7 +12,7 @@
 static fs_node_t* fs_root;
 static vfs_entry_t* vfs_root;
 static tree_t* tree = NULL;
-static spin_lock_t lock = {0};
+static spin_lock_t lock;
 static hashmap_t* filesystems;
 
 static void vfs_dump(tree_node_t* c, uint level) {
@@ -93,13 +93,13 @@ fs_error_t vfs_mount_node(char* path, fs_node_t* node) {
         return FS_ERROR_BAD_STATE;
     }
 
-    spin_lock(lock);
-    tree_node_t* tnode = NULL;
+    spin_lock(&lock);
+    tree_node_t* tnode;
 
     char* p = strdup(path);
     char* i = p;
 
-    int path_size = strlen(p);
+    size_t path_size = strlen(p);
 
     while (i < p + path_size) {
         if (*i == VFS_PATH_SEP) {
@@ -115,7 +115,7 @@ fs_error_t vfs_mount_node(char* path, fs_node_t* node) {
         r->fs = node;
         fs_root = node;
         free(p);
-        spin_unlock(lock);
+        spin_unlock(&lock);
         return FS_ERROR_OK;
     }
 
@@ -159,7 +159,7 @@ fs_error_t vfs_mount_node(char* path, fs_node_t* node) {
     entry->fs = node;
 
     free(p);
-    spin_unlock(lock);
+    spin_unlock(&lock);
     return FS_ERROR_OK;
 }
 
@@ -188,9 +188,7 @@ static fs_node_t* vfs_get_mount(
     char** out_path,
     uint* out_depth
 ) {
-    size_t depth;
-
-    for (depth = 0; depth <= path_depth; ++depth) {
+    for (size_t depth = 0; depth <= path_depth; ++depth) {
         path += strlen(path) + 1;
     }
 
@@ -281,10 +279,9 @@ fs_node_t* fs_resolve(char* _path) {
     }
 
     fs_node_t* node = mount;
-    fs_error_t error;
 
     for (; depth < path_depth; ++depth) {
-        error = fs_get_child(node, path_offset, &node);
+        fs_error_t error = fs_get_child(node, path_offset, &node);
         if (error != FS_ERROR_OK || node == NULL) {
             free(path);
             return NULL;

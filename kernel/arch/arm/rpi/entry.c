@@ -3,30 +3,28 @@
 #include <liblox/lox-internal.h>
 
 #include <kernel/entry.h>
-#include <kernel/cpu/task.h>
-#include <kernel/spin.h>
+#include <kernel/tty.h>
+#include <kernel/timer.h>
 
+#include <kernel/cpu/task.h>
+#include <liblox/string.h>
+
+#include "irq.h"
 #include "gpio.h"
 #include "uart.h"
 #include "fb.h"
+#include "delay.h"
 
 void lox_output_string_uart(char *str) {
     uart_puts(str);
 }
 
 void lox_output_char_uart(char c) {
-    uart_putc((unsigned char) c);
+    uart_putc((uint8_t) c);
 }
-
-ulong timer_get_ticks(void) {
-    return 0;
-}
-
-void spin_lock(spin_lock_t lock) {}
-void spin_unlock(spin_lock_t lock) {}
 
 used void arch_panic_handler(char *str) {
-    lox_output_string_uart("[PANIC]");
+    lox_output_string_uart("[PANIC] ");
 
     if (str != NULL) {
         lox_output_string_uart(str);
@@ -35,8 +33,10 @@ used void arch_panic_handler(char *str) {
     lox_output_char_uart('\n');
 }
 
+static char* rpi_cmdline = "";
+
 char* arch_arm_rpi_get_cmdline(void) {
-    return "";
+    return rpi_cmdline;
 }
 
 void kernel_modules_load(void) {}
@@ -45,59 +45,87 @@ void paging_init(void) {}
 char* (*arch_get_cmdline)(void) = arch_arm_rpi_get_cmdline;
 void (*lox_output_string_provider)(char*) = lox_output_string_uart;
 void (*lox_output_char_provider)(char) = lox_output_char_uart;
+void (*lox_sleep_provider)(ulong) = delay;
 
-void rpi_tick(void) {
-    static bool state = false;
-    static bool blink_act = true;
-    static unsigned int counter = 0;
+static void uart_tty_write(tty_t* tty, const uint8_t* buf, size_t size) {
+    unused(tty);
 
-    if (uart_poll()) {
-        unsigned char c = uart_poll_getc();
-        char cc = (char) c;
-
-        if (cc == 't') {
-            blink_act = !blink_act;
-        }
-
-        uart_putc(c);
-    }
-
-    counter++;
-
-    if (counter == 50000) {
-        counter = 0;
-        state = !state;
-
-        if (blink_act) {
-            gpio_set_act_led_state(state);
-        }
-    }
-
-    cpu_task_queue(rpi_tick);
+    uart_write(buf, size);
 }
 
-used noreturn void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags) {
+static char uart_conv(char c) {
+    if (c == '\r') {
+        return '\n';
+    }
+
+    if (c == 0x7F) {
+        return '\b';
+    }
+    return c;
+}
+
+static void uart_poll_read_task(void* extra) {
+    unused(extra);
+
+    if (uart_poll()) {
+        uint8_t c = uart_poll_getc();
+
+        if (!uart_tty->flags.raw && c == 0x11) {
+            uart_kpload();
+            return;
+        }
+
+        if (uart_tty->handle_read != NULL) {
+            if (!uart_tty->flags.raw) {
+                c = (uint8_t) uart_conv((char) c);
+            }
+            uart_tty->handle_read(uart_tty, &c, 1);
+        }
+    }
+}
+
+void kernel_setup_devices(void) {
+    uart_tty = tty_create("uart");
+    uart_tty->write = uart_tty_write;
+    uart_tty->flags.allow_debug_console = true;
+    uart_tty->flags.write_kernel_log = true;
+    uart_tty->flags.echo = true;
+    tty_register(uart_tty);
+
+    ktask_repeat(1, uart_poll_read_task, NULL);
+    framebuffer_init(640, 480);
+}
+
+void* atags = NULL;
+
+used noreturn void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags_addr) {
     (void) r0;
     (void) r1;
-    (void) atags;
+    atags = (void*) atags_addr;
+
+    extern uint8_t __bss_start;
+    extern uint8_t __end;
+    memset(&__bss_start, 0, &__end - &__bss_start);
 
     uart_init();
-    puts("\n");
-    puts(DEBUG "UART initialized.\n");
+    printf("\n");
+    printf(DEBUG "UART initialized.\n");
 
     gpio_init();
-    puts(DEBUG "GPIO initialized.\n");
+    printf(DEBUG "GPIO initialized.\n");
 
-    framebuffer_init(640, 480);
-    puts(DEBUG "Framebuffer initialized.\n");
+    irq_init();
+    printf(DEBUG "IRQ initialized.\n");
 
-    cpu_task_queue(rpi_tick);
+    timer_init(1000);
+    printf(DEBUG "Timer initialized.\n");
 
     kernel_init();
 }
 
 void cpu_run_idle(void) {
     while (true) {
-        cpu_task_queue_flush();
+        delay(50000);
+        ktask_queue_flush();
     }
 }

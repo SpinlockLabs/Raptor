@@ -3,13 +3,13 @@
 #include <liblox/common.h>
 #include <stdint.h>
 
-typedef struct time {
+typedef struct rtime {
     uint16_t second;
     uint16_t minute;
     uint16_t hour;
     uint16_t day;
     uint16_t month;
     uint16_t year;
-} packed time_t;
+} packed rtime_t;
 
-extern void time_get(time_t*);
+extern void time_get(rtime_t*);

@@ -2,9 +2,13 @@
 
 #include <stdint.h>
 
-typedef volatile int spin_lock_t[2];
+#include <liblox/atomic.h>
 
-extern void spin_init(spin_lock_t lock);
-extern void spin_lock(spin_lock_t lock);
-extern void spin_unlock(spin_lock_t lock);
+typedef struct spin_lock {
+    atomic_int32 addr;
+    atomic_int32 waiters;
+} spin_lock_t;
 
+extern void spin_init(spin_lock_t* lock);
+extern void spin_lock(spin_lock_t* lock);
+extern void spin_unlock(spin_lock_t* lock);

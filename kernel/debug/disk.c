@@ -32,10 +32,10 @@ static void block_probe(tty_t* tty, const char* input) {
         return;
     }
 
-    event_dispatch_async("block-device:partition-probe", device);
+    event_dispatch_async(EVENT_BLOCK_DEVICE_PARTITION_PROBE, device);
 }
 
 void debug_disk_init(void) {
-    debug_console_register_command("block-list", block_list);
-    debug_console_register_command("block-probe", block_probe);
+    debug_register_command("block-list", block_list);
+    debug_register_command("block-probe", block_probe);
 }

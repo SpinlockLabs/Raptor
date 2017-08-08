@@ -12,19 +12,47 @@ typedef void (*tty_handle_read_func_t)(tty_t* tty, const uint8_t* buf, size_t si
 typedef void (*tty_destroy_func_t)(tty_t* tty);
 
 typedef struct tty_flags {
-    bool write_kernel_log;
-    bool allow_debug_console;
+    union {
+        struct {
+            bool write_kernel_log : 1;
+            bool allow_debug_console : 1;
+            bool echo : 1;
+            bool raw : 1;
+        };
+        uint32_t value;
+    };
 } tty_flags_t;
+
+typedef struct tty_status {
+    union {
+        struct {
+            bool execute_post_write : 1;
+        };
+        uint32_t value;
+    };
+} tty_status_t;
+
+typedef struct tty_private {
+    /**
+     * TTY (provider) specific data.
+     */
+    void* provider;
+
+    /**
+     * Owner (controller) specific data.
+     */
+    void* controller;
+} tty_private_t;
 
 struct tty {
     char* name;
     tty_flags_t flags;
+    tty_status_t status;
     tty_write_func_t write;
     tty_write_func_t post_write;
     tty_handle_read_func_t handle_read;
     tty_destroy_func_t destroy;
-    bool execute_post_write;
-    void* data;
+    tty_private_t internal;
 };
 
 tty_t* tty_create(char* name);

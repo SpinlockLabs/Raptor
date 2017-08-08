@@ -1,9 +1,8 @@
 #include "events.h"
 
-#include <liblox/common.h>
 #include <liblox/hashmap.h>
+#include <liblox/memory.h>
 
-#include <kernel/panic.h>
 #include <kernel/spin.h>
 #include <kernel/cpu/task.h>
 
@@ -13,26 +12,23 @@ typedef struct event_dispatch_info {
 } event_dispatch_info_t;
 
 static hashmap_t* registry = NULL;
-static spin_lock_t registry_lock = {0};
+static spin_lock_t registry_lock;
 
 void events_subsystem_init(void) {
-    registry = hashmap_create(10);
+    registry = hashmap_create_int(10);
 
-    if (registry == NULL) {
-        panic("Failed to create the events subsystem registry.");
-    }
-
-    spin_init(registry_lock);
+    spin_init(&registry_lock);
 }
 
-void event_add_handler(char* type, event_handler_t handler, void* extra) {
-    spin_lock(registry_lock);
-    list_t* list = NULL;
-    if (!hashmap_has(registry, type)) {
+void event_add_handler(event_type_t type, event_handler_t handler, void* extra) {
+    spin_lock(&registry_lock);
+
+    list_t* list;
+    if (!hashmap_has(registry, (void*) (uintptr_t) type)) {
         list = list_create();
-        hashmap_set(registry, type, list);
+        hashmap_set(registry, (void*) (uintptr_t) type, list);
     } else {
-        list = hashmap_get(registry, type);
+        list = hashmap_get(registry, (void*) (uintptr_t) type);
     }
 
     event_dispatch_info_t* info = zalloc(sizeof(event_dispatch_info_t));
@@ -41,17 +37,17 @@ void event_add_handler(char* type, event_handler_t handler, void* extra) {
 
     list_add(list, info);
 
-    spin_unlock(registry_lock);
+    spin_unlock(&registry_lock);
 }
 
-void event_remove_handler(char* type, event_handler_t handler) {
-    spin_lock(registry_lock);
-    if (!hashmap_has(registry, type)) {
-        spin_unlock(registry_lock);
+void event_remove_handler(event_type_t type, event_handler_t handler) {
+    spin_lock(&registry_lock);
+    if (!hashmap_has(registry, (void*) (uintptr_t) type)) {
+        spin_unlock(&registry_lock);
         return;
     }
 
-    list_t* list = hashmap_get(registry, type);
+    list_t* list = hashmap_get(registry, (void*) (uintptr_t) type);
 
     list_for_each(node, list) {
         event_dispatch_info_t* info = node->value;
@@ -62,29 +58,29 @@ void event_remove_handler(char* type, event_handler_t handler) {
         list_remove(node);
         free(node);
         free(info);
-        spin_unlock(registry_lock);
+        spin_unlock(&registry_lock);
         return;
     }
 
-    spin_unlock(registry_lock);
+    spin_unlock(&registry_lock);
 }
 
-void event_dispatch(char* type, void* event) {
-    spin_lock(registry_lock);
+ void event_dispatch(event_type_t type, void* event) {
+    spin_lock(&registry_lock);
 
-    if (!hashmap_has(registry, type)) {
-        spin_unlock(registry_lock);
+    if (!hashmap_has(registry, (void*) (uintptr_t) type)) {
+        spin_unlock(&registry_lock);
         return;
     }
 
-    list_t* list = hashmap_get(registry, type);
+    list_t* list = hashmap_get(registry, (void*) (uintptr_t) type);
 
     if (list == NULL) {
-        spin_unlock(registry_lock);
+        spin_unlock(&registry_lock);
         return;
     }
 
-    spin_unlock(registry_lock);
+    spin_unlock(&registry_lock);
 
     list_for_each(node, list) {
         event_dispatch_info_t* info = node->value;
@@ -93,7 +89,7 @@ void event_dispatch(char* type, void* event) {
 }
 
 typedef struct event_dispatch_async_data {
-    char* type;
+    event_type_t type;
     void* event;
 } event_dispatch_async_data_t;
 
@@ -103,7 +99,7 @@ static void event_dispatch_async_task(void* data) {
     free(info);
 }
 
-void event_dispatch_async(char* type, void* event) {
+void event_dispatch_async(event_type_t type, void* event) {
     event_dispatch_async_data_t* data = zalloc(
         sizeof(event_dispatch_async_data_t)
     );

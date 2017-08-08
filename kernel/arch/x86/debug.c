@@ -4,8 +4,6 @@
 
 #include <kernel/tty.h>
 
-#include <kernel/dispatch/events.h>
-
 #include <kernel/debug/console.h>
 
 #include <kernel/arch/x86/devices/pci/pci.h>
@@ -63,12 +61,6 @@ static void debug_pci_list(tty_t* tty, const char* input) {
     pci_scan(pci_show_simple, -1, tty);
 }
 
-static void debug_fake_event(tty_t* tty, const char* input) {
-    unused(tty);
-
-    event_dispatch((char*) input, NULL);
-}
-
 static void debug_page_dump(tty_t* tty, const char* input) {
     unused(input);
 
@@ -96,9 +88,8 @@ static void debug_page_dump(tty_t* tty, const char* input) {
 }
 
 void debug_x86_init(void) {
-    debug_console_register_command("kpused", debug_kpused);
-    debug_console_register_command("pci-list", debug_pci_list);
-    debug_console_register_command("page-stats", debug_page_stats);
-    debug_console_register_command("page-dump", debug_page_dump);
-    debug_console_register_command("fake-event", debug_fake_event);
+    debug_register_command("kpused", debug_kpused);
+    debug_register_command("pci-list", debug_pci_list);
+    debug_register_command("page-stats", debug_page_stats);
+    debug_register_command("page-dump", debug_page_dump);
 }

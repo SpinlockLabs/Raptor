@@ -8,6 +8,8 @@
 
 #include <kernel/disk/block.h>
 
+#define MBR_TABLE_ID 0x01
+
 typedef struct mbr_partition {
     uint8_t status;
     uint8_t chs_first_sector[3];
@@ -22,6 +24,10 @@ typedef struct mbr {
     mbr_partition_t partitions[4];
     uint8_t signature[2];
 } packed mbr_t;
+
+typedef struct mbr_block_table {
+    block_device_t* children[4];
+} mbr_block_table_t;
 
 /* Checks a buffer to determine if it contains an MBR. */
 bool mbr_check_signature(uint8_t*, size_t);

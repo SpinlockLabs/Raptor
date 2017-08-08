@@ -2,13 +2,12 @@
 
 #include <stddef.h>
 #include <stdbool.h>
-
-#include "memory.h"
+#include <stdint.h>
 
 typedef struct list_node {
+    struct list* list;
     struct list_node* prev;
     struct list_node* next;
-    struct list* list;
     void* value;
 } list_node_t;
 
@@ -16,8 +15,15 @@ typedef struct list {
     list_node_t* head;
     list_node_t* tail;
     size_t size;
-    bool free_values;
+    union {
+        struct {
+            bool free_values : 1;
+        };
+        uint32_t flags;
+    };
 } list_t;
+
+typedef int (*list_compare_t)(void* a, void* b);
 
 void list_init(list_t* list);
 void list_init_node(list_node_t* node);
@@ -39,5 +45,7 @@ list_node_t* list_find(list_t* list, void* value);
 list_t* list_diff(list_t* left, list_t* right);
 bool list_contains(list_t* list, void* value);
 void list_merge(list_t* target, list_t* source);
+void list_swap(list_node_t* left, list_node_t* right);
+void list_sort(list_t* list, list_compare_t compare);
 
 #define list_for_each(i, list) for (list_node_t* (i) = (list)->head; (i) != NULL; (i) = (i)->next)

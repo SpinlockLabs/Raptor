@@ -1,6 +1,6 @@
 set(
   TOOLCHAIN_TARGET
-  "i386-pc-linux-musl"
+  "x86_64-pc-elf"
   CACHE STRING
   "GCC Toolchain Target Prefix"
 )
@@ -11,8 +11,6 @@ set(
   CACHE STRING
   "GCC Toolchain Architecture"
 )
-
-set(TOOLCHAIN_DIR "Default" CACHE STRING "Helpstring")
 
 set(TOOLCHAIN_PREFIX "${TOOLCHAIN_TARGET}")
 

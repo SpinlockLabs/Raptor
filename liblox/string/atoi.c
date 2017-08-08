@@ -10,8 +10,11 @@ int atoi(const char* s) {
     switch (*s) {
         case '-':
             neg = 1;
+            s++;
+            break;
         case '+':
             s++;
+            break;
         default: break;
     }
 

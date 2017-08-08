@@ -1,6 +1,7 @@
 #include "../list.h"
-#include "../hashmap.h"
 #include "../string.h"
+#include "../hashmap.h"
+#include "../memory.h"
 
 uint hashmap_string_hash(void* _key) {
     uint hash = 0;
@@ -24,11 +25,11 @@ void* hashmap_string_duplicate(void* key) {
 }
 
 uint hashmap_int_hash(void* key) {
-    return (uint) key;
+    return (uint) (uintptr_t) key;
 }
 
 int hashmap_int_comp(void* a, void* b) {
-    return (int) a == (int) b;
+    return (int) (uintptr_t) a == (int) (uintptr_t) b;
 }
 
 void* hashmap_int_duplicate(void* key) {
@@ -42,12 +43,11 @@ static void hashmap_int_free(void* ptr) {
 hashmap_t* hashmap_create(size_t size) {
     hashmap_t* map = zalloc(sizeof(hashmap_t));
 
-    map->hash = &hashmap_string_hash;
-    map->compare = &hashmap_string_comp;
-    map->key_duplicate = &hashmap_string_duplicate;
-    map->key_free = &free;
-    map->value_free = &free;
-
+    map->hash = hashmap_string_hash;
+    map->compare = hashmap_string_comp;
+    map->key_duplicate = hashmap_string_duplicate;
+    map->key_free = free;
+    map->value_free = free;
     map->size = size;
     map->entries = zalloc(sizeof(hashmap_entry_t*) * size);
 
@@ -57,11 +57,11 @@ hashmap_t* hashmap_create(size_t size) {
 hashmap_t* hashmap_create_int(size_t size) {
     hashmap_t* map = zalloc(sizeof(hashmap_t));
 
-    map->hash = &hashmap_int_hash;
-    map->compare = &hashmap_int_comp;
-    map->key_duplicate = &hashmap_int_duplicate;
-    map->key_free = &hashmap_int_free;
-    map->value_free = &free;
+    map->hash = hashmap_int_hash;
+    map->compare = hashmap_int_comp;
+    map->key_duplicate = hashmap_int_duplicate;
+    map->key_free = hashmap_int_free;
+    map->value_free = free;
 
     map->size = size;
     map->entries = zalloc(sizeof(hashmap_entry_t*) * size);
@@ -74,7 +74,7 @@ void* hashmap_set(hashmap_t* map, void* key, void* value) {
         return NULL;
     }
 
-    uint hash = map->hash(key) % map->size;
+    uint hash = (uint) (map->hash(key) % map->size);
 
     hashmap_entry_t* x = map->entries[hash];
     if (!x) {
@@ -86,7 +86,7 @@ void* hashmap_set(hashmap_t* map, void* key, void* value) {
         return e;
     }
 
-    hashmap_entry_t* p = NULL;
+    hashmap_entry_t* p;
     do {
         if (map->compare(x->key, key)) {
             void* out = x->value;
@@ -111,7 +111,7 @@ void* hashmap_get(hashmap_t* map, void* key) {
         return NULL;
     }
 
-    uint hash = map->hash(key) % map->size;
+    uint hash = (uint) (map->hash(key) % map->size);
 
     hashmap_entry_t* x = map->entries[hash];
     if (!x) {
@@ -231,9 +231,9 @@ void hashmap_free(hashmap_t* map) {
     }
 
     for (uint i = 0; i < map->size; ++i) {
-        hashmap_entry_t* x = map->entries[i], *p;
+        hashmap_entry_t* x = map->entries[i];
         while (x) {
-            p = x;
+            hashmap_entry_t *p = x;
             x = x->next;
             map->key_free(p->key);
             map->value_free(p);

@@ -12,7 +12,9 @@ void __output_char(char c) {
 }
 
 void _start(void) {
-    char* args[0];
+    char* args[1] = {
+            "exe"
+    };
     int ret = main(0, args);
 
     syscall(SYSCALL_EXIT, ret);

@@ -1,10 +1,7 @@
-#include <liblox/common.h>
-
-#include <stdbool.h>
+#include "irq.h"
 
 #include "idt.h"
 #include "io.h"
-#include "irq.h"
 
 #define PIC1 0x20
 #define PIC2 0xA0
@@ -33,12 +30,13 @@ static volatile int sync_depth = 0;
 
 void int_disable(void) {
     uint32_t flags;
-    asm volatile("pushf\n\t"
-                 "pop %%eax\n\t"
-                 "movl %%eax, %0\n\t"
-                 : "=r"(flags)
-                 :
-                 : "%eax");
+    asm volatile(
+        "pushf\n\t"
+        "pop %%eax\n\t"
+        "movl %%eax, %0\n\t"
+        : "=r"(flags)
+        :: "eax"
+    );
 
     cli();
 
@@ -106,7 +104,7 @@ void irq_remove_handler(size_t irq) {
     }
 }
 
-static void irq_remap() {
+static void irq_remap(void) {
     // Cascade init.
     outb(PIC1_CMD, ICW1_INIT + ICW1_ICW4);
     io_wait();
@@ -164,6 +162,10 @@ void irq_ack(size_t irq) {
         outb(PIC2_CMD, 0x20);
     }
     outb(PIC1_CMD, 0x20);
+}
+
+void irq_wait(void) {
+    asm("hlt;");
 }
 
 used void irq_handler(cpu_registers_t *r) {

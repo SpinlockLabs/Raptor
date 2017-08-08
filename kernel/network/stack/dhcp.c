@@ -4,6 +4,7 @@
 #include <liblox/io.h>
 #include <liblox/net.h>
 #include <liblox/hashmap.h>
+#include <liblox/memory.h>
 
 #include <kernel/network/dhcp.h>
 
@@ -178,26 +179,26 @@ static void handle_potential_dhcp_reply(void* event, void* extra) {
     netconf_unlock(conf);
 
     event_dispatch(
-        "network:stack:iface-update",
+        EVENT_NETWORK_STACK_IFACE_UPDATE,
         iface
     );
 }
 
 void network_stack_dhcp_init(void) {
     event_add_handler(
-        "network:stack:ipv4:packet-receive",
+        EVENT_NETWORK_STACK_IPV4_PKT_RECEIVE,
         handle_potential_dhcp_reply,
         NULL
     );
 
     event_add_handler(
-        "network:stack:iface-up",
+        EVENT_NETWORK_STACK_IFACE_UP,
         dhcp_handle_interface_up,
         NULL
     );
 
     event_add_handler(
-        "network:stack:iface-down",
+        EVENT_NETWORK_STACK_IFACE_DOWN,
         dhcp_handle_interface_down,
         NULL
     );

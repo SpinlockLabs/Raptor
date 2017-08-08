@@ -1,8 +1,12 @@
 /* Architecture-specific headers. */
 #pragma once
 
-#ifdef ARCH_X86
-#include <kernel/arch/x86/arch.h>
+#if defined(ARCH_X86)
+#include "arch/x86/arch.h"
+#elif defined(ARCH_ARM)
+#include "arch/arm/common/arch.h"
+#elif defined(ARCH_USER)
+#include "arch/user/arch.h"
 #else
 #error Unknown architecture.
 #endif

@@ -5,6 +5,7 @@
 #include <liblox/string.h>
 #include <liblox/sleep.h>
 #include <liblox/printf.h>
+#include <liblox/memory.h>
 
 #include <kernel/spin.h>
 #include <kernel/cpu/task.h>
@@ -83,25 +84,25 @@ static uint32_t read_command(e1000_state_t* state, uint16_t addr) {
 }
 
 static void enqueue_packet(e1000_state_t* state, e1000_netbuf_t* buffer) {
-    spin_lock(state->net_queue_lock);
+    spin_lock(&state->net_queue_lock);
     list_add(state->net_queue, buffer);
-    spin_unlock(state->net_queue_lock);
+    spin_unlock(&state->net_queue_lock);
 }
 
 static void dequeue_packet_task(void* data) {
     e1000_iface_t* net = data;
     e1000_state_t* state = net->state;
 
-    spin_lock(state->net_queue_lock);
+    spin_lock(&state->net_queue_lock);
     if (state->net_queue->size == 0) {
-        spin_unlock(state->net_queue_lock);
+        spin_unlock(&state->net_queue_lock);
         return;
     }
 
     list_node_t* n = list_dequeue(state->net_queue);
     e1000_netbuf_t* value = n->value;
     free(n);
-    spin_unlock(state->net_queue_lock);
+    spin_unlock(&state->net_queue_lock);
 
     network_iface_t* iface = net->iface;
     if (iface->handle_receive != NULL) {
@@ -407,10 +408,10 @@ static network_iface_error_t iface_destroy(network_iface_t* iface) {
     return IFACE_ERR_OK;
 }
 
-static void e1000_device_init(uint32_t device_pci) {
+static void e1000_device_init(device_entry_t* parent, pci_device_t* pci) {
     size_t idx = e1000_list->size;
     e1000_state_t* state = zalloc(sizeof(e1000_state_t));
-    state->device_pci = device_pci;
+    state->device_pci = pci->address;
     e1000_iface_t* net = zalloc(sizeof(e1000_iface_t));
     net->state = state;
 
@@ -428,7 +429,9 @@ static void e1000_device_init(uint32_t device_pci) {
 
     for (int i = 0; i < E1000_NUM_RX_DESC; ++i) {
         state->rx_virt[i] = (void*) kpmalloc_ap(
-            8192 + 16, (uint32_t*) &state->rx[i].addr);
+            8192 + 16,
+            (uintptr_t*) &state->rx[i].addr
+        );
         state->rx[i].status = 0;
     }
 
@@ -439,7 +442,7 @@ static void e1000_device_init(uint32_t device_pci) {
     for (int i = 0; i < E1000_NUM_TX_DESC; ++i) {
         state->tx_virt[i] = (void*) kpmalloc_ap(
             8192 + 16,
-            (uint32_t*) &state->tx[i].addr
+            (uintptr_t*) &state->tx[i].addr
         );
         state->tx[i].status = 0;
         state->tx[i].cmd = (1 << 0);
@@ -524,25 +527,34 @@ static void e1000_device_init(uint32_t device_pci) {
     iface->data = net;
     net->iface = iface;
 
-    network_iface_register(iface);
+    network_iface_register(
+        parent,
+        iface
+    );
 
     net->poll_task = ktask_repeat(1, dequeue_packet_task, net);
 }
 
-static void find_e1000(uint32_t device, uint16_t vid, uint16_t did,
-                       void* extra) {
-    unused(extra);
-
-    if ((vid == 0x8086) &&
-        (did == 0x100e ||
+static bool is_device_e1000(uint16_t vid, uint16_t did) {
+    return (vid == 0x8086) &&
+           (did == 0x100e ||
             did == 0x1004 ||
             did == 0x100f ||
-            did == 0x15b8)) {
-        e1000_device_init(device);
-    }
+            did == 0x10d3 ||
+            did == 0x15b8);
 }
 
-void e1000_setup(void) {
+void e1000_driver_setup(void) {
     e1000_list = list_create();
-    pci_scan(&find_e1000, -1, NULL);
+
+    list_t* list = device_query(DEVICE_CLASS_PCI);
+
+    list_for_each(node, list) {
+        device_entry_t* entry = node->value;
+        pci_device_t* pci = entry->device;
+
+        if (is_device_e1000(pci->vendor_id, pci->device_id)) {
+            e1000_device_init(entry, pci);
+        }
+    }
 }

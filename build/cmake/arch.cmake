@@ -1,18 +1,38 @@
 function(arch ARCH SRC_DIR)
-  file(GLOB_RECURSE ARCH_SRC
-    "${KERNEL_DIR}/${SRC_DIR}/*.c"
-    "${KERNEL_DIR}/${SRC_DIR}/*.h"
-    "${KERNEL_DIR}/${SRC_DIR}/*.s"
-    "${KERNEL_DIR}/${SRC_DIR}/*.cpp"
-    "${KERNEL_DIR}/${SRC_DIR}/*.hpp"
-  )
+  set(ARCH "${ARCH}" PARENT_SCOPE)
 
-  add_executable(kernel ${ARCH_SRC} ${KERNEL_COMMON_SRC})
-  if(NOT CLANG)
+  set(ARCH_SCRIPT "${KERNEL_DIR}/${SRC_DIR}/arch.cmake")
+  if(EXISTS "${ARCH_SCRIPT}")
+    include("${ARCH_SCRIPT}")
+  else()
+    file(GLOB_RECURSE ARCH_SRC
+      "${KERNEL_DIR}/${SRC_DIR}/*.c"
+      "${KERNEL_DIR}/${SRC_DIR}/*.h"
+      "${KERNEL_DIR}/${SRC_DIR}/*.s"
+      "${KERNEL_DIR}/${SRC_DIR}/*.cpp"
+      "${KERNEL_DIR}/${SRC_DIR}/*.hpp"
+    )
+
+    add_executable(kernel ${ARCH_SRC} ${KERNEL_COMMON_SRC})
+  endif()
+
+  if(GCC)
     target_link_libraries(kernel gcc)
   endif()
   target_link_libraries(kernel lox-kernel)
   set_target_properties(kernel PROPERTIES OUTPUT_NAME "kernel.elf")
+endfunction()
+
+function(arch_include_src DIR)
+  file(GLOB_RECURSE EXTRA_SRC
+    "${DIR}/*.c"
+    "${DIR}/*.h"
+    "${DIR}/*.s"
+    "${DIR}/*.cpp"
+    "${DIR}/*.hpp"
+  )
+
+  target_sources(kernel PUBLIC ${EXTRA_SRC})
 endfunction()
 
 set(KERNEL_C_FLAGS "${CMAKE_C_FLAGS}")
@@ -30,7 +50,7 @@ function(kernel_cflags)
 endfunction()
 
 function(kernel_ldscript LDSCRIPT)
-  set(KERNEL_LD_FLAGS "${KERNEL_LD_FLAGS} -T\"${LDSCRIPT}\"" PARENT_SCOPE)
+  set(KERNEL_LD_FLAGS "${KERNEL_LD_FLAGS} -Wl,-T\"${LDSCRIPT}\"" PARENT_SCOPE)
   set_source_files_properties(
     kernel/entry.c
     PROPERTIES
@@ -61,18 +81,24 @@ endfunction()
 kernel_cflags(
   -nostdlib
   -nostartfiles
-  -ffreestanding
-  -fno-lto
 )
 
-if(NOT CLANG)
+if(NOT COMPCERT)
+  kernel_cflags(
+    -ffreestanding
+    -fno-lto
+  )
+endif()
+
+if(GCC)
   kernel_cflags(
     -fno-use-linker-plugin
   )
 endif()
 
 if(UBSAN)
-  kernel_cflags(
+  cflags(
+    -D_UBSAN=1
     -fsanitize=undefined
   )
 endif()

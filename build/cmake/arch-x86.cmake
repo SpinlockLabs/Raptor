@@ -1,14 +1,17 @@
 arch("x86" "arch/x86")
-option(OPTIMIZE_NATIVE "Optimize for the native machine." OFF)
 option(ENABLE_X64 "Enable x86_64 mode." OFF)
+
+set(OPTIMIZE_FOR "generic" CACHE STRING "CPU to Optimize For")
+set(QEMU_CPU "core2duo" CACHE STRING "QEMU CPU")
+set(QEMU_NIC "e1000" CACHE STRING "QEMU NIC Model")
 
 cflags(
   -DARCH_X86
 )
 
-if(ENABLE_X64)
+if(ENABLE_X64 AND NOT COMPCERT)
   cflags(-m64)
-else()
+elseif(NOT COMPCERT)
   cflags(-m32)
 endif()
 
@@ -16,32 +19,34 @@ if(CLANG)
   cflags(-target i686-pc-elf)
 endif()
 
-if(OPTIMIZE_NATIVE)
-    cflags(-march=native)
-else()
-    cflags(-mtune=generic)
+if(NOT COMPCERT)
+  if(OPTIMIZE_FOR STREQUAL "generic")
+    cflags(-mtune=${OPTIMIZE_FOR})
+  else()
+    cflags(-march=${OPTIMIZE_FOR})
+  endif()
+
+  kernel_cflags(
+    -fno-stack-protector
+    -fno-pic
+  )
 endif()
 
-kernel_cflags(
-  -fno-stack-protector
-  -fno-pic
-)
-
-if(NOT CLANG)
+if(GCC)
   kernel_cflags(-no-pie)
 endif()
 
-if(EXISTS ${RAPTOR_DIR}/kernel/arch/x86/acpi/include)
-  kernel_cflags(-I${RAPTOR_DIR}/kernel/arch/x86/acpi/include)
+if(EXISTS "${RAPTOR_DIR}/kernel/arch/x86/acpi/include")
+  target_include_directories(kernel PRIVATE "${RAPTOR_DIR}/kernel/arch/x86/acpi/include")
 endif()
 
 kernel_ldscript("${KERNEL_DIR}/arch/x86/linker.ld")
 
 set(QEMU_CMD_BASE
   qemu-system-i386
-    -cpu core2duo
-    -m 256
-    -net nic,model=e1000
+    -cpu ${QEMU_CPU}
+    -m 1024
+    -net nic,model=${QEMU_NIC}
     -drive "file=${CMAKE_BINARY_DIR}/raptor.img,format=raw,if=ide,media=disk"
 )
 
@@ -54,18 +59,8 @@ add_custom_target(qemu
   DEPENDS kernel diskimg
 )
 
-add_custom_target(qemu-gdb
-  COMMAND ${QEMU_CMD} -S -s -append debug -net user
-  DEPENDS kernel diskimg
-)
-
 add_custom_target(qemu-cli
   COMMAND ${QEMU_CMD} -monitor none -nographic -net user
-  DEPENDS kernel diskimg
-)
-
-add_custom_target(qemu-cli-gdb
-  COMMAND ${QEMU_CMD} -S -s -append debug -monitor none -nographic
   DEPENDS kernel diskimg
 )
 
@@ -106,11 +101,13 @@ add_custom_target(
 if(RAPTOR_WINDOWS)
     add_custom_target(qemu-windows
       COMMAND "C:/Program Files/qemu/qemu-system-i386.exe"
-            -net user
-            -net nic,model=e1000
-            -cpu core2duo
-            -m 256
+            -netdev user,id=net0
+            -device ${QEMU_NIC},netdev=net0
+            -cpu ${QEMU_CPU}
+            -m 1024
+            -M q35
+            -serial file:kernel.log
             -kernel "${CMAKE_BINARY_DIR}/kernel.elf"
-      DEPENDS kernel diskimg
+      DEPENDS kernel
     )
 endif()

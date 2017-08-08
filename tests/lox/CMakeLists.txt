@@ -6,7 +6,13 @@ function(test NAME)
   list(REMOVE_AT ARGS 0)
   add_executable(${NAME} ${ARGS})
   target_link_libraries(${NAME} lox dl lox-test)
-  target_compile_options(${NAME} PRIVATE -fno-builtin)
+  if(NOT COMPCERT)
+    set_target_properties(
+      ${NAME}
+      PROPERTIES
+      COMPILE_FLAGS "-fno-builtin -static"
+    )
+  endif()
   target_include_directories(${NAME} PRIVATE ${RAPTOR_DIR})
   set(EXE $<TARGET_FILE:${NAME}>)
 
@@ -18,3 +24,4 @@ function(test NAME)
 endfunction()
 
 test(test_list test_list.c)
+test(test_jsmn test_jsmn.c)
