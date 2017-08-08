@@ -1,14 +1,14 @@
-#ifdef __unix__
+#include "env.h"
+#include "entry.h"
 
 #include <dlfcn.h>
+
+#include <liblox/memory.h>
 
 #include <kernel/tty.h>
 #include <kernel/time.h>
 
 #include <time.h>
-
-#include "env.h"
-#include "entry.h"
 
 #ifndef RTLD_NEXT
 #define RTLD_NEXT ((void*) -1l)
@@ -132,4 +132,3 @@ used void _start(void) {
     kernel_main();
     libc_exit(0);
 }
-#endif

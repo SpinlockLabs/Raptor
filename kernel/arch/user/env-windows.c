@@ -1,5 +1,3 @@
-#ifdef _WIN32
-
 #include "env.h"
 #include "entry.h"
 
@@ -154,4 +152,3 @@ int WINAPI mainCRTStartup(void) {
     kernel_main();
     return 0;
 }
-#endif
