@@ -463,7 +463,7 @@ void pcnet_driver_setup(void) {
         device_entry_t* entry = node->value;
         pci_device_t* pci = entry->device;
 
-        if (pci->vendor_id == 0x8086 && pci->device_id == 0x7010) {
+        if (pci->vendor_id == 0x1022 && pci->device_id == 0x2000) {
             pcnet_init(entry, pci);
         }
     }
