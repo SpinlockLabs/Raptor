@@ -77,10 +77,14 @@ static void debug_page_dump(tty_t* tty, const char* input) {
             if (p->frame) {
                 tty_printf(
                     tty,
-                    "page 0x%x 0x%x %s\n",
+                    "page 0x%x 0x%x %s%s%s%s%s\n",
                     (i * 1024 + j) * 0x1000,
                     p->frame * 0x1000,
-                    p->present ? "[present]" : ""
+                    p->present ? "[present]" : "",
+                    p->rw ? "[rw]" : "",
+                    p->user ? "[user]" : "[kernel]",
+                    p->writethrough ? "[writethrough]" : "",
+                    p->nocache ? "[nocache]" : ""
                 );
             }
         }
