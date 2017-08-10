@@ -232,8 +232,8 @@ uintptr_t paging_allocate_aligned_large(uintptr_t address, size_t size, uintptr_
         }
 
         page->frame = index + i;
-        page->accessed = 1;
-        page->dirty = 1;
+        page->writethrough = 1;
+        page->nocache = 1;
     }
 
     spin_unlock(&frame_alloc_lock);
@@ -444,12 +444,12 @@ page_table_t* paging_clone_table(page_table_t* src, uintptr_t* phys) {
             table->pages[i].user = 1;
         }
 
-        if (src->pages[i].dirty) {
-            table->pages[i].dirty = 1;
+        if (src->pages[i].nocache) {
+            table->pages[i].nocache = 1;
         }
 
-        if (src->pages[i].accessed) {
-            table->pages[i].accessed = 1;
+        if (src->pages[i].writethrough) {
+            table->pages[i].writethrough = 1;
         }
 
         copy_page_physical(src->pages[i].frame * 0x1000, table->pages[i].frame * 0x1000);
