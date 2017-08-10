@@ -33,7 +33,7 @@ if(NOT COMPCERT)
 endif()
 
 if(GCC)
-  kernel_cflags(-no-pie)
+  kernel_cflags(-fno-pie)
 endif()
 
 if(EXISTS ${RAPTOR_DIR}/kernel/arch/x86/acpi/include)
