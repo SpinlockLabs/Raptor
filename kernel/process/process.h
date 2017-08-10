@@ -9,11 +9,12 @@
 #include <kernel/arch.h>
 
 typedef struct process process_t;
+typedef struct process_image process_image_t;
 
-extern void arch_process_init(process_t*);
+/**
+ * Initializes the kernel idle process.
+ */
 extern void arch_process_init_kidle(process_t*);
-extern void arch_process_run(process_t*);
-extern void arch_process_switch_next(void);
 
 /* A process identifier. */
 typedef uint pid_t;
@@ -29,6 +30,18 @@ typedef enum process_status {
     /* The process is ready to run. */
     PROCESS_READY
 } process_status_t;
+
+/**
+ * Process image.
+ */
+struct process_image {
+    uintptr_t stack;
+    uintptr_t size;
+    uintptr_t entry;
+    uintptr_t heap;
+    uintptr_t heap_actual;
+    uintptr_t user_stack;
+};
 
 /* Represents a process that can be scheduled. */
 struct process {
@@ -47,8 +60,13 @@ struct process {
     /* Current process status. */
     process_status_t status;
 
-    /* CPU register state. */
-    cpu_registers_t registers;
+    /* Process image. */
+    process_image_t image;
+
+    /**
+     * Process tree node.
+     */
+    tree_node_t* node;
 };
 
 /**
@@ -79,4 +97,25 @@ tree_t* process_get_tree(void);
  * Get the next available process.
  * @return next available process.
  */
-process_t* process_get_next(void);
+process_t* process_get_next_ready(void);
+
+/**
+ * Gets the kernel idle process.
+ * @return kernel idle process.
+ */
+process_t* process_get_kidle(void);
+
+/**
+ * Sets the current process.
+ */
+void process_set_current(process_t*);
+
+/**
+ * Enqueue the process in the wait queue.
+ */
+void process_enqueue(process_t*);
+
+/**
+ * Initializes the process tree.
+ */
+void process_tree_init(void);

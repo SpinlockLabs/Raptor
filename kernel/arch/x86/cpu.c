@@ -5,6 +5,7 @@
 
 void cpu_run_idle(void) {
     while (true) {
+        ktask_queue_flush();
         int_enable();
         asm("hlt;");
     }

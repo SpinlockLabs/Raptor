@@ -90,3 +90,18 @@ page_directory_t* paging_get_directory(void);
  * Page fault handler.
  */
 void page_fault(cpu_registers_t* regs);
+
+/**
+ * Allocates a page frame.
+ * @param page page.
+ * @param is_kernel is kernel-space
+ * @param is_writable is rw
+ * @return if successful
+ */
+bool paging_allocate_frame(page_t* page, int is_kernel, int is_writable);
+
+/**
+ * Invalidates the page cache at the given address.
+ * @param addr address.
+ */
+void paging_invalidate_tables_at(uintptr_t addr);

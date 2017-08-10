@@ -89,7 +89,7 @@ static bool first_frame(uintptr_t* val) {
     return false;
 }
 
-static bool alloc_frame(page_t* page, int is_kernel, int is_writable) {
+bool paging_allocate_frame(page_t* page, int is_kernel, int is_writable) {
     bool made = false;
     if (page->frame == 0) {
         spin_lock(&frame_alloc_lock);
@@ -107,6 +107,15 @@ static bool alloc_frame(page_t* page, int is_kernel, int is_writable) {
     page->rw = (is_writable == 1) ? 1 : 0;
     page->user = (is_kernel == 1) ? 0 : 1;
     return made;
+}
+
+void paging_invalidate_tables_at(uintptr_t addr) {
+    asm volatile (
+        "movl %0,%%eax\n"
+        "invlpg (%%eax)\n"
+        :: "r"(addr)
+        : "%eax"
+    );
 }
 
 static void dma_frame(page_t* page, int is_kernel,
@@ -246,7 +255,7 @@ bool paging_heap_expand_into(uintptr_t addr) {
     if (page == NULL) {
         panic("Failed to get the page while expanding kernel heap.");
     }
-    return alloc_frame(page, 1, 0);
+    return paging_allocate_frame(page, 1, 0);
 }
 
 void paging_mark_system(uintptr_t addr) {
@@ -301,7 +310,7 @@ void paging_finalize(void) {
 
     /* Allocate starting kernel heap. */
     for (uintptr_t i = kp_placement_pointer + 0x3000; i < tmp_heap_start; i += 0x1000) {
-        alloc_frame(paging_get_page(i, 1, kernel_directory), 1, 0);
+        paging_allocate_frame(paging_get_page(i, 1, kernel_directory), 1, 0);
     }
 
     /* Create pages for an extended heap allocation. */
@@ -363,7 +372,7 @@ void paging_unmap_dma(uintptr_t virt) {
         return;
     }
 
-    alloc_frame(page, 1, 1);
+    paging_allocate_frame(page, 1, 1);
 }
 
 uintptr_t paging_get_physical_address(uintptr_t virt) {
@@ -431,7 +440,7 @@ page_table_t* paging_clone_table(page_table_t* src, uintptr_t* phys) {
         if (!src->pages[i].frame) {
             continue;
         }
-        alloc_frame(&table->pages[i], 0, 0);
+        paging_allocate_frame(&table->pages[i], 0, 0);
         if (src->pages[i].present) {
             table->pages[i].present = 1;
         }

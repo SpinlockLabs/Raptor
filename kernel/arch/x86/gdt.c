@@ -65,3 +65,8 @@ void gdt_set_gate(int32_t num, uint32_t base, uint32_t lim, uint8_t acc, uint8_t
     ENTRY(num).granularity |= gran & 0xF0;
     ENTRY(num).access = acc;
 }
+
+void set_kernel_stack(uintptr_t stack) {
+    /* Set the kernel stack */
+    gdt.tss.esp0 = stack;
+}

@@ -52,7 +52,7 @@ tree_t* process_get_tree(void) {
     return process_tree;
 }
 
-process_t* process_get_next(void) {
+process_t* process_get_next_ready(void) {
     if (wait_queue->size == 0) {
         return kidle_process;
     }
@@ -62,4 +62,17 @@ process_t* process_get_next(void) {
     free(node);
 
     return next;
+}
+
+void process_enqueue(process_t* process) {
+    process->status = PROCESS_READY;
+    list_add(wait_queue, process);
+}
+
+void process_set_current(process_t* process) {
+    current_process = process;
+}
+
+process_t* process_get_kidle(void) {
+    return kidle_process;
 }

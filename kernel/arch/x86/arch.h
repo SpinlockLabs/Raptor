@@ -10,4 +10,7 @@
 
 typedef struct arch_process_extensions {
     page_directory_t* paging;
+    cpu_registers_t registers;
 } arch_process_extensions_t;
+
+void set_kernel_stack(uintptr_t stack);
