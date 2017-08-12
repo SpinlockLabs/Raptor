@@ -1,12 +1,15 @@
 #include "debug.h"
 #include "heap.h"
 #include "paging.h"
+#include "elf32load.h"
 
 #include <kernel/tty.h>
 
 #include <kernel/debug/console.h>
 
 #include <kernel/arch/x86/devices/pci/pci.h>
+#include <kernel/fs/vfs.h>
+#include <liblox/memory.h>
 
 static void debug_kpused(tty_t* tty, const char* input) {
     unused(input);
@@ -91,9 +94,43 @@ static void debug_page_dump(tty_t* tty, const char* input) {
     }
 }
 
+static void debug_start_true(tty_t* tty, const char* input) {
+    unused(tty);
+    unused(input);
+
+    fs_node_t* node = fs_resolve("/bin/true");
+    if (node == NULL) {
+        tty_printf(tty, "Failed to resolve '/bin/true' executable.\n");
+        return;
+    }
+
+    fs_stat_t stat;
+    if (fs_stat(node, &stat) != FS_ERROR_OK) {
+        tty_printf(tty, "Failed to stat '/bin/true' executable.\n");
+        return;
+    }
+    uint8_t* buff = zalloc(stat.size);
+    if (fs_read(node, 0, buff, stat.size) != FS_ERROR_OK) {
+        tty_printf(tty, "Failed to read '/bin/true' executable.\n");
+        return;
+    }
+
+    char* argv[] = {""};
+
+    extern void sysexec(
+        char* name,
+        uint8_t* bytes,
+        size_t size,
+        int argc,
+        char**);
+
+    sysexec("true", buff, stat.size, 0, argv);
+}
+
 void debug_x86_init(void) {
     debug_register_command("kpused", debug_kpused);
     debug_register_command("pci-list", debug_pci_list);
     debug_register_command("page-stats", debug_page_stats);
     debug_register_command("page-dump", debug_page_dump);
+    debug_register_command("start-true", debug_start_true);
 }
