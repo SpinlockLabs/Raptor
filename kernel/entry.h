@@ -4,4 +4,4 @@
 
 extern volatile bool kernel_initialized;
 
-noreturn void kernel_init(void);
+does_not_return void kernel_init(void);

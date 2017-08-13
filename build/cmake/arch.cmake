@@ -1,4 +1,4 @@
-function(arch ARCH SRC_DIR)
+﻿function(arch ARCH SRC_DIR)
   set(ARCH "${ARCH}" PARENT_SCOPE)
 
   set(ARCH_SCRIPT "${KERNEL_DIR}/${SRC_DIR}/arch.cmake")
@@ -81,12 +81,14 @@ function(arch_post_init)
   )
 endfunction()
 
-kernel_cflags(
-  -nostdlib
-  -nostartfiles
-)
+if(NOT MSVC)
+  kernel_cflags(
+    -nostdlib
+    -nostartfiles
+  )
+endif()
 
-if(NOT COMPCERT)
+if(NOT COMPCERT AND NOT MSVC)
   kernel_cflags(
     -ffreestanding
     -fno-lto

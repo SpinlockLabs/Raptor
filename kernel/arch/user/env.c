@@ -1,4 +1,4 @@
-#include <liblox/io.h>
+﻿#include <liblox/io.h>
 
 #include <kernel/tty.h>
 #include <kernel/rkmalloc/rkmalloc.h>
@@ -44,6 +44,7 @@ void kernel_setup_devices(void) {
 
     tty_register(console_tty);
 
+    raptor_user_setup_devices();
     debug_user_init();
 }
 

@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "common.h"
 
@@ -7,4 +7,4 @@
  * In kernel mode, this calls a kernel panic.
  * @param msg abort message
  */
-noreturn void abort(char* msg);
+does_not_return void abort(char* msg);

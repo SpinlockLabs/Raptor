@@ -1,18 +1,18 @@
 #pragma once
 
 #include <stddef.h>
+#include <stdint.h>
 #include <stdbool.h>
 
-#ifndef _MSC_VER
-
-// Specifies that a struct should be packed.
-#define packed __attribute__((packed))
-
-// Variable-length arrays.
-#define vla(type, name) type name[]
-
+#if UINTPTR_MAX <= UINT_MAX
+// Machine is 32-bit.
+#define BITS_32
 #else
+// Machine is 64-bit.
+#define BITS_64
+#endif
 
+#if defined(_MSC_VER) && !defined(__clang__)
 // Specifies that a struct should be packed.
 #define packed __declspec(align(1))
 
@@ -25,42 +25,59 @@
 // Variable-length arrays.
 #define vla(type, name) type name[1]
 
-#endif
-
-// Specifies that an entity is used.
-#define used __attribute__((used))
-
-// Specifies that a function never modifies its arguments.
-#define constf __attribute__((const))
-
-// Specifies that a given function argument is unused.
-#define unused(name) (void) name
-
-// Specifies that the value a is likely to be the same as value b.
-#define likely_val(a, b) __builtin_expect((a), (b))
-
-// Specifies that x is likely to be true.
-#define likely(x) likely_val(x, 1)
-
-// Specifies that x is unlikely to be true.
-#define unlikely(x) likely_val(x, 0)
-
-// Specifies that a function should always be inlined.
-#define always_inline __attribute__((always_inline))
-
-// Specifies that a function will be called often.
-#define hot __attribute__((hot))
-
-// Specifies that a function will not be called often.
-#define cold __attribute__((cold))
-
-// Specifies that a function will not return.
-#define noreturn __attribute__((noreturn))
-
-// Specifies that a function is pure, and has no side effects.
+// Declares that a function is pure, and has no side effects.
 #define pure __attribute__((pure))
 
-// Specifies that the location in the program is unreachable.
+// Declares that a function should have no enter and exit instructions.
+#define naked _declspec(naked)
+
+// Declares that a function will not return.
+#define does_not_return _declspec(noreturn)
+#else
+// Declares that a struct should be packed.
+#define packed __attribute__((packed))
+
+// Variable-length arrays.
+#define vla(type, name) type name[]
+
+// Declares that a function is pure, and has no side effects.
+#define pure __attribute__((pure))
+
+// Declares that a function should have no enter and exit instructions.
+#define naked __attribute__((naked))
+
+// Declares that a function will not return.
+#define does_not_return __attribute__((noreturn))
+#endif
+
+// Declares that an entity is used.
+#define used __attribute__((used))
+
+// Declares that a function never modifies its arguments.
+#define constfunc __attribute__((const))
+
+// Declares that a given function argument is unused.
+#define unused(name) (void) name
+
+// Declares that the value a is likely to be the same as value b.
+#define likely_val(a, b) __builtin_expect((a), (b))
+
+// Declares that x is likely to be true.
+#define likely(x) likely_val(x, 1)
+
+// Declares that x is unlikely to be true.
+#define unlikely(x) likely_val(x, 0)
+
+// Declares that a function should always be inlined.
+#define always_inline __attribute__((always_inline))
+
+// Declares that a function will be called often.
+#define hotfunc __attribute__((hot))
+
+// Declares that a function will not be called often.
+#define coldfunc __attribute__((cold))
+
+// Declares that the location in the program is unreachable.
 #define unreachable() __builtin_unreachable()
 
 // Checks if x is null, and if it is, returns null.
@@ -83,3 +100,6 @@ typedef unsigned int uint;
 
 // Simplified type for unsigned long.
 typedef unsigned long ulong;
+
+// Simplified type for unsigned char.
+typedef unsigned char uchar;
