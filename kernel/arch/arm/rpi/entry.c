@@ -98,7 +98,7 @@ void kernel_setup_devices(void) {
 
 void* atags = NULL;
 
-used noreturn void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags_addr) {
+used does_not_return void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags_addr) {
     (void) r0;
     (void) r1;
     atags = (void*) atags_addr;

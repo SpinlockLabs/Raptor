@@ -5,4 +5,4 @@
 /*
  * Call a kernel panic.
  */
-noreturn void panic(nullable char* msg);
+does_not_return void panic(nullable char* msg);

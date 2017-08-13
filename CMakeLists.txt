@@ -1,4 +1,4 @@
-﻿cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.5)
 project(raptor C)
 
 option(ARCH_USER "Enable Usermode Raptor OS" OFF)
@@ -65,4 +65,8 @@ add_subdirectory(userspace)
 
 if(TESTS)
   include(${RAPTOR_DIR}/build/cmake/tests.cmake)
+endif()
+
+if(WIN32)
+  add_subdirectory(host)
 endif()

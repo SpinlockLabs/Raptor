@@ -1,5 +1,7 @@
-#include "env.h"
-#include "entry.h"
+﻿#include "../env.h"
+#include "../entry.h"
+
+#include "init.h"
 
 #include <windows.h>
 
@@ -28,6 +30,13 @@ void raptor_user_free(void* ptr) {
 
 void* raptor_user_realloc(size_t size, void* ptr) {
     return libc_realloc(size, ptr);
+}
+
+void raptor_user_setup_devices(void) {
+    raptor_user_network_init();
+}
+
+void __chkstk(void) {
 }
 
 ulong raptor_user_ticks(void) {

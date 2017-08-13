@@ -1,4 +1,4 @@
-#include "env.h"
+﻿#include "env.h"
 #include "entry.h"
 
 #include <dlfcn.h>
@@ -35,6 +35,9 @@ void* libc_sym(char* sym) {
 
 void raptor_user_abort(void) {
     libc_abort();
+}
+
+void raptor_user_setup_devices(void) {
 }
 
 ulong raptor_user_ticks(void) {

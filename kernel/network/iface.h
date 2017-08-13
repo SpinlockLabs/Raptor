@@ -121,9 +121,7 @@ struct network_iface {
         network_iface_flags_t flags;
     };
 
-    /*
-      Class type.
-    */
+    /* Class type. */
     network_iface_class_type_t class_type;
 
     /**
@@ -214,4 +212,3 @@ void network_iface_subsystem_init(void);
 #define NET_IFACE_IOCTL_GET_PROMISCUOUS 0xEF420
 #define NET_IFACE_IOCTL_ENABLE_PROMISCUOUS 0xEF421
 #define NET_IFACE_IOCTL_DISABLE_PROMISCUOUS 0xEF422
-

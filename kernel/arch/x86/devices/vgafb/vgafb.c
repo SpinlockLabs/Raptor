@@ -1,12 +1,14 @@
 #include "vgafb.h"
 
+#include <liblox/string.h>
+#include <liblox/memory.h>
+#include <liblox/graphics/colors.h>
+
 #include <kernel/arch/x86/io.h>
 #include <kernel/arch/x86/devices/pci/pci.h>
 #include <kernel/arch/x86/paging.h>
 #include <kernel/graphics/fb.h>
 #include <kernel/cmdline.h>
-#include <liblox/string.h>
-#include <liblox/memory.h>
 
 typedef struct vgafb vgafb_t;
 
@@ -36,9 +38,10 @@ static void vgafb_init(vgafb_t* vga) {
     fb->width = vga->width;
     fb->height = vga->height;
     fb->buffer = vga->memory;
-    fb->pitch = vga->stride;
+    fb->pitch = vga->stride / sizeof(uint32_t);
     fb->format = PIXEL_FMT_RGBA32;
     framebuffer_register(device_root(), fb);
+    framebuffer_clear(fb, rgb_white.color);
 }
 
 #define PREFERRED_VY 4096
@@ -86,14 +89,24 @@ static void graphics_install_bochs(
     uint32_t vid_memsize;
     outs(0x1CE, 0x00);
 
-    uint16_t i = ins(0x1CF);
-    if (i < 0xB0C0 || i > 0xB0C6) {
-        printf(WARN "[VGA FB] Bochs graphics failed to initialize. Was it already initialized?\n");
+    uint16_t val = ins(0x1CF);
+
+    if (val == 0x00) {
+        printf(WARN "[VGA FB] Bochs graphics not available.\n");
         return;
     }
 
-    outs(0x1CF, 0xB0C4);
-    i = ins(0x1CF);
+    if (val < 0xB0C0 || val > 0xB0C6) {
+        printf(
+            WARN "[VGA FB] Bochs graphics of version 0x%x found, which is not supported.\n",
+            val
+        );
+        return;
+    }
+
+    outs(0x1CF, 0xB0C5);
+    ins(0xB0C5);
+
     res_change_bochs(vga, width, height);
     width = vga->width;
 
@@ -127,17 +140,17 @@ static void graphics_install_bochs(
 
 mem_found:
     outs(0x1CE, 0x0a);
-    i = ins(0x1CF);
+    val = ins(0x1CF);
 
-    if (i > 1) {
-        vid_memsize = (uint32_t) i * 64 * 1024;
+    if (val > 1) {
+        vid_memsize = (uint32_t) val * 64 * 1024;
     } else {
         vid_memsize = inl(0x1CF);
     }
 
-    printf(DEBUG "[VGA FB] Memory is of size %d\n", vid_memsize);
-
-    for (uintptr_t a = (uintptr_t) vga->memory; a <= (uintptr_t) vga->memory + vid_memsize; a += 0x1000) {
+    for (uintptr_t a = (uintptr_t) vga->memory;
+         a <= (uintptr_t) vga->memory + vid_memsize;
+         a += 0x1000) {
         paging_map_dma(a, a);
     }
 
@@ -206,7 +219,7 @@ void vgafb_setup(void) {
         return;
     }
 
-    printf(INFO "[VGA FB] Initializing video with '%s'\n", vid);
+    printf(INFO "[VGA FB] Using video method '%s'\n", vid);
 
     vgafb_t* vga = zalloc(sizeof(vgafb_t));
     if (strcmp(vid, "bochs") == 0) {
