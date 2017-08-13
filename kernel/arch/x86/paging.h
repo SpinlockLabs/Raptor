@@ -76,6 +76,8 @@ void paging_remove_map(uintptr_t logical, size_t size);
  */
 uintptr_t paging_get_physical_address(uintptr_t virt);
 
+void paging_release_directory_for_exec(page_directory_t* dir);
+
 /**
  * Gets the amount of the used memory.
  */

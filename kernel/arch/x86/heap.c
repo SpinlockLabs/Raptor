@@ -41,7 +41,13 @@ void kheap_free(void* ptr) {
 
 static uintptr_t _kpmalloc_int(size_t size, int align, uintptr_t* phys) {
     if (kheap_end != 0) {
-        uintptr_t address = (uintptr_t) kheap_allocate(size + 0x1000);
+        uintptr_t tsize = size;
+
+        if (align) {
+            tsize += 0x1000;
+        }
+
+        uintptr_t address = (uintptr_t) kheap_allocate(tsize);
 
         if (align) {
             size_t mask = 0x1000 - 1;

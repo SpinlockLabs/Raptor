@@ -1,12 +1,15 @@
 #include <liblox/common.h>
 #include <liblox/hex.h>
+#include <liblox/memory.h>
 
 #include <kernel/spin.h>
 #include <kernel/paging.h>
+#include <kernel/process/process.h>
 
 #include "heap.h"
 #include "irq.h"
 #include "paging.h"
+#include "arch-x86.h"
 
 #define INDEX_FROM_BIT(a) ((a) / (8 * 4))
 #define OFFSET_FROM_BIT(a) ((a) % (8 * 4))
@@ -323,7 +326,14 @@ void paging_finalize(void) {
 }
 
 void paging_switch_directory(page_directory_t* dir) {
+    if (current_directory != NULL &&
+        dir->physicalAddr == current_directory->physicalAddr) {
+        return;
+    }
+
     current_directory = dir;
+
+    printf(DEBUG "Switching to page directory (phys: 0x%x)\n", dir->physicalAddr);
 
     asm volatile(
         "mov %0, %%cr3\n"
@@ -333,6 +343,8 @@ void paging_switch_directory(page_directory_t* dir) {
         ::"r"(dir->physicalAddr)
         : "eax"
     );
+
+    printf("Switched to page directory.\n");
 }
 
 page_t* paging_get_page(uintptr_t address, int make, page_directory_t* dir) {
@@ -355,6 +367,28 @@ page_t* paging_get_page(uintptr_t address, int make, page_directory_t* dir) {
     }
 
     return NULL;
+}
+
+void paging_release_directory_for_exec(page_directory_t* dir) {
+    uint32_t i;
+    /* This better be the only owner of this directory... */
+    for (i = 0; i < 1024; ++i) {
+        if (!dir->tables[i] || (uintptr_t)dir->tables[i] == (uintptr_t)0xFFFFFFFF) {
+            continue;
+        }
+        if (kernel_directory->tables[i] != dir->tables[i]) {
+            if (i * 0x1000 * 1024 < USER_STACK_BOTTOM) {
+                for (uint32_t j = 0; j < 1024; ++j) {
+                    if (dir->tables[i]->pages[j].frame) {
+                        free_frame(&(dir->tables[i]->pages[j]));
+                    }
+                }
+                dir->tablesPhysical[i] = 0;
+                free(dir->tables[i]);
+                dir->tables[i] = 0;
+            }
+        }
+    }
 }
 
 void paging_map_dma(uintptr_t virt, uintptr_t phys) {

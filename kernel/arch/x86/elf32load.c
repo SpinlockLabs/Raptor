@@ -2,7 +2,7 @@
 
 #include <liblox/string.h>
 
-#include <kernel/binfmt/elf32.h>
+#include <liblox/binfmt/elf32.h>
 #include <kernel/process/process.h>
 
 #include "paging.h"
@@ -11,9 +11,6 @@
 
 #define PUSH(stack, type, item) stack -= sizeof(type); \
 							*((type *) stack) = item
-
-#define USER_STACK_BOTTOM 0xAFF00000
-#define USER_STACK_TOP    0xB0000000
 
 void enter_user_jmp(uintptr_t location, int argc, char ** argv, uintptr_t stack) {
     int_disable();
@@ -61,7 +58,8 @@ bool elf32_execute(
     process->image.entry = entry;
     process->image.size = end_addr - base_addr;
 
-    // Release directory for exec.
+
+    paging_release_directory_for_exec(paging_get_directory());
     paging_invalidate_tables();
 
     for (uintptr_t x = 0; x < (uint32_t) header->e_phentsize * header->e_phnum; x += header->e_phentsize) {

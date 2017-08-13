@@ -8,6 +8,9 @@
 
 #include <kernel/arch.h>
 
+#define USER_STACK_BOTTOM 0xAFF00000
+#define USER_STACK_TOP    0xB0000000
+
 typedef struct process process_t;
 typedef struct process_image process_image_t;
 
@@ -28,7 +31,10 @@ typedef enum process_status {
     PROCESS_WAITING,
 
     /* The process is ready to run. */
-    PROCESS_READY
+    PROCESS_READY,
+
+    /* The process is loading. */
+    PROCESS_LOADING
 } process_status_t;
 
 /**

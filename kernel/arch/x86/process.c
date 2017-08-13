@@ -6,6 +6,7 @@
 
 #include "paging.h"
 #include "elf32load.h"
+#include "irq.h"
 
 #define KERNEL_STACK_SIZE 0x8000
 
@@ -19,6 +20,8 @@ void sysexec(
     size_t size,
     int argc,
     char** argv) {
+    int_disable();
+
     process_t* proc = zalloc(sizeof(process_t));
     proc->name = name;
     proc->node = process_get_tree()->root;
@@ -26,7 +29,7 @@ void sysexec(
     proc->cmdline = argv;
     proc->image.entry = 0;
     proc->image.stack = initial_esp + 1;
-    proc->status = PROCESS_RUNNING;
+    proc->status = PROCESS_LOADING;
     list_add(process_get_all(), proc);
 
     process_set_current(proc);
