@@ -26,6 +26,11 @@ void* realloc(void* ptr, size_t size) {
     return lox_reallocate_provider(ptr, size);
 }
 
+__attribute__((malloc))
+void* valloc(size_t size) {
+    return lox_aligned_allocate_provider(size);
+}
+
 void free(void *ptr) {
     lox_free_provider(ptr);
 }

@@ -23,6 +23,7 @@ void (*libc_putc)(char);
 uint (*libc_read)(int, void*, size_t);
 int (*libc_ioctl)(int, ulong, ...);
 void* (*libc_malloc)(size_t);
+void* (*libc_valloc)(size_t);
 void (*libc_exit)(int);
 void (*libc_free)(void*);
 void* (*libc_realloc)(void*, size_t);
@@ -104,6 +105,10 @@ void* raptor_user_realloc(void* ptr, size_t size) {
     return libc_realloc(ptr, size);
 }
 
+void* raptor_user_valloc(size_t size) {
+    return libc_valloc(size);
+}
+
 void raptor_user_exit(void) {
     libc_exit(0);
 }
@@ -119,6 +124,7 @@ used void _start(void) {
         return;
     }
 
+    libc_valloc = libc_sym("valloc");
     libc_realloc = libc_sym("realloc");
     libc_free = libc_sym("free");
 

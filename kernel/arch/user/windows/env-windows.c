@@ -9,7 +9,8 @@ static HMODULE libc;
 static HMODULE kernel32;
 
 void* (*libc_malloc)(size_t);
-void(*libc_free)(void*);
+void* (*libc_valloc)(size_t);
+void (*libc_free)(void*);
 void* (*libc_realloc)(size_t, void*);
 void (*libc_abort)(void);
 void (*libc_exit)(int);
@@ -22,6 +23,10 @@ void* libc_sym(char* sym) {
 
 void* raptor_user_malloc(size_t size) {
     return libc_malloc(size);
+}
+
+void* raptor_user_valloc(size_t size) {
+    return libc_valloc(size);
 }
 
 void raptor_user_free(void* ptr) {
@@ -148,6 +153,7 @@ int WINAPI mainCRTStartup(void) {
     kernel32 = LoadLibraryA("kernel32.dll");
 
     libc_malloc = libc_sym("malloc");
+    libc_valloc = libc_sym("valloc");
     libc_free = libc_sym("free");
     libc_realloc = libc_sym("realloc");
     libc_abort = libc_sym("abort");
