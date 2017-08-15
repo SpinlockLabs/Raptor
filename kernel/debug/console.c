@@ -65,7 +65,7 @@ static void debug_console_handle_data(tty_t* tty, const uint8_t* buffer, size_t 
 
     debug_console_t* console = tty->internal.controller;
 
-    if (size == 1 && buffer[0] == '\b') {
+    if (size == 1 && (buffer[0] == '\b' || buffer[0] == 0x7f)) {
         if (strbuf_backspace(&console->buffer)) {
             if (tty->flags.echo) {
                 tty_write_string(tty, "\b");

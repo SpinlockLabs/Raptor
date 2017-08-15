@@ -37,7 +37,6 @@ endif()
 if(CLANG)
   cflags(
     -Wno-unused-command-line-argument
-    -no-integrated-as
   )
 endif()
 
