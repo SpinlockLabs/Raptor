@@ -1,3 +1,7 @@
+if(WEB)
+  set(KERNEL_EXE_NAME "kernel.html")
+endif()
+
 arch("user" "arch/user")
 
 add_definitions(
@@ -5,9 +9,11 @@ add_definitions(
   -DARCH_NO_SPINLOCK
 )
 
-if(NOT WIN32)
-  target_link_libraries(kernel dl c)
-else()
+if(WEB)
+  kernel_cflags(
+    -s ONLY_MY_CODE=1
+  )
+elseif(WIN32)
   kernel_cflags(
     /ZW:nostdlib
     /MT
@@ -21,4 +27,6 @@ else()
   ldflags(
     /FORCE:MULTIPLE
   )
+else()
+  target_link_libraries(kernel dl c)
 endif()
