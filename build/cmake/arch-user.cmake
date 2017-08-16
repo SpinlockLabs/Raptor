@@ -2,6 +2,7 @@ arch("user" "arch/user")
 
 add_definitions(
   -DARCH_USER
+  -DARCH_NO_SPINLOCK
 )
 
 if(NOT WIN32)

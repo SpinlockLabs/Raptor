@@ -8,6 +8,7 @@
 #include <kernel/interupt.h>
 #include <liblox/string.h>
 
+#ifndef ARCH_NO_SPINLOCK
 void spin_wait(atomic_int32* addr, atomic_int32* waiters) {
     if (addr == NULL) {
         return;
@@ -29,6 +30,7 @@ void spin_wait(atomic_int32* addr, atomic_int32* waiters) {
         atomic_fetch_sub(waiters, 1);
     }
 }
+#endif
 
 void spin_lock(spin_lock_t* lock) {
 #ifdef ARCH_NO_SPINLOCK
