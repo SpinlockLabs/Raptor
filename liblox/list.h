@@ -47,5 +47,6 @@ bool list_contains(list_t* list, void* value);
 void list_merge(list_t* target, list_t* source);
 void list_swap(list_node_t* left, list_node_t* right);
 void list_sort(list_t* list, list_compare_t compare);
+list_t* list_pcreate(size_t count);
 
 #define list_for_each(i, list) for (list_node_t* (i) = (list)->head; (i) != NULL; (i) = (i)->next)

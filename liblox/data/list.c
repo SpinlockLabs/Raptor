@@ -32,6 +32,42 @@ list_t* list_create(void) {
     return val;
 }
 
+list_t* list_pcreate(size_t count) {
+    size_t total = sizeof(list_t);
+    total += count * sizeof(list_node_t);
+    list_t* list = zalloc(total);
+    ensure_allocated(list);
+
+    list_init(list);
+
+    list_node_t* first = (list_node_t*) (
+        (uintptr_t) list + sizeof(list_t)
+    );
+
+    list_node_t* current = first;
+    list_node_t* previous = NULL;
+    for (size_t i = 0; i < count; i++) {
+        if (previous != NULL) {
+            previous->next = current;
+        }
+
+        current->prev = previous;
+        previous = current;
+        current = (list_node_t*) (
+            (uintptr_t) current + sizeof(list_node_t)
+        );
+    }
+
+    if (count > 0) {
+        list->head = first;
+        list->tail = previous;
+    }
+
+    list->size = count;
+
+    return list;
+}
+
 list_node_t* list_insert_node_after(list_node_t* node, list_node_t* entry) {
     ensure_allocated(entry);
     ensure_allocated(entry->list);
