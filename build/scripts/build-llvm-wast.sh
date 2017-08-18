@@ -5,6 +5,7 @@ export LLC=${1:-llc}
 shift || true
 
 FILES=$("$(dirname ${0})/build-llvm-as.sh" --target=wasm32 -Oz "${@}")
+find -type f -name '*.wast' -exec rm {} ';'
 for F in ${FILES}
 do
   A=$(echo $F | sed 's/\.s$/\.wast/')

@@ -21,12 +21,16 @@ function transform_compile_args() {
     sed -E 's/([^ \/]*\.[^\.]+)\.o/\1\.ll/gm'
 }
 
+find -type f -name '*.ll' -exec rm {} ';'
+
 CLANG=${CLANG:-clang}
 ensure_dirs
 IFS=$'\n' GLOBIGNORE='*' command eval 'CMDS=($(transform_compile_args))'
 for CMD in "${CMDS[@]}"
 do
-  ${CLANG} -S ${CMD} "${@}" -emit-llvm ${CLANG_ARGS} 1>&2
+  ( ((i=i % 4)); ((i++==0)) && wait ) || true
+  ${CLANG} -S ${CMD} "${@}" -emit-llvm ${CLANG_ARGS} 1>&2 &
 done
+wait
 
 find -type f -name '*.ll'

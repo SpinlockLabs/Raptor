@@ -24,9 +24,12 @@ function transform_compile_args() {
 EMCC=${EMCC:-emcc}
 ensure_dirs
 IFS=$'\n' GLOBIGNORE='*' command eval 'CMDS=($(transform_compile_args))'
+find -type f -name '*.bc' -exec rm {} ';'
 for CMD in "${CMDS[@]}"
 do
-  ${EMCC} ${CMD} "${@}" ${EMCC_ARGS} 1>&2
+  ( ((i=i % 4)); ((i++==0)) && wait ) || true
+  "${EMCC}" ${CMD} "${@}" ${EMCC_ARGS} 1>&2 &
 done
+wait
 
 find -type f -name '*.bc'

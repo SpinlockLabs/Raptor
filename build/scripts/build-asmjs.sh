@@ -13,6 +13,15 @@ shift || true
 export EMCC=${EMCC:-emcc}
 
 "$(dirname ${0})/build-emcc.sh" > /dev/null
-"$(dirname ${0})/calculate-object-deps.sh" "${TARGET}" |
-  sed 's/\.o$/\.bc/gm' |
-  xargs ${EMCC} -Oz -o ${TARGET}.html
+FILES=$(
+  "$(dirname ${0})/calculate-object-deps.sh" "${TARGET}" |
+      sed 's/\.o$/\.bc/gm'
+)
+
+${EMCC} \
+  -s ONLY_MY_CODE=1 \
+  -s LINKABLE=1 \
+  -s EXPORT_ALL=1 \
+  -O1 \
+  -o ${TARGET}.html \
+  ${FILES}
