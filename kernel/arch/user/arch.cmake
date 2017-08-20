@@ -25,6 +25,10 @@ else()
   add_arch_file(${CMAKE_CURRENT_LIST_DIR}/env-unix.c)
 endif()
 
+if(APPLE)
+  include(${CMAKE_CURRENT_LIST_DIR}/mac/arch.cmake)
+endif()
+
 add_executable(kernel ${KERNEL_COMMON_SRC} ${USER_ARCH_SRC})
 if(DEFINED USER_ARCH_LIBS)
   target_link_libraries(kernel ${USER_ARCH_LIBS})
