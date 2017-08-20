@@ -22,11 +22,7 @@ endfunction()
 if(WIN32)
   include(${CMAKE_CURRENT_LIST_DIR}/windows/arch.cmake)
 else()
-  add_arch_file(${CMAKE_CURRENT_LIST_DIR}/env-unix.c)
-endif()
-
-if(APPLE)
-  include(${CMAKE_CURRENT_LIST_DIR}/mac/arch.cmake)
+  include(${CMAKE_CURRENT_LIST_DIR}/unix/arch.cmake)
 endif()
 
 add_executable(kernel ${KERNEL_COMMON_SRC} ${USER_ARCH_SRC})

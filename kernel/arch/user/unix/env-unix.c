@@ -1,19 +1,18 @@
-﻿#include "env.h"
-#include "entry.h"
+#include "../env.h"
+#include "../entry.h"
 
 #include <dlfcn.h>
 
-#ifdef __APPLE__
 #include <unistd.h>
 #include <termios.h>
 
-#include "mac/init.h"
+#ifdef __APPLE__
+#include "../mac/init.h"
+#elif __linux__
+#include "../linux/init.h"
 #endif
 
 #include <liblox/memory.h>
-
-#include <kernel/tty.h>
-#include <kernel/time.h>
 
 #include <time.h>
 
@@ -59,6 +58,8 @@ void raptor_user_setup_devices(void) {
 
 #ifdef __APPLE__
     raptor_user_mac_init();
+#elif __linux__
+    raptor_user_linux_init();
 #endif
 }
 

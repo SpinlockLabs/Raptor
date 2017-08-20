@@ -64,6 +64,7 @@ list_t* list_pcreate(size_t count) {
     }
 
     list->size = count;
+    list->free_values = true;
 
     return list;
 }
@@ -283,6 +284,10 @@ list_t* list_diff(list_t* left, list_t* right) {
 }
 
 void list_free_entries(list_t* list) {
+    if (!list->free_nodes) {
+        return;
+    }
+
     list_node_t* node = list->head;
 
     while (node != NULL) {
@@ -303,7 +308,10 @@ void list_free(list_t* list) {
         if (list->free_values && node->value != NULL) {
             free(node->value);
         }
-        free(node);
+
+        if (list->free_nodes) {
+            free(node);
+        }
 
         node = next;
     }
