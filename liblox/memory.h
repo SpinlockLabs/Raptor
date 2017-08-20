@@ -2,19 +2,13 @@
 
 #include <stddef.h>
 
+#if !defined(USE_EXTERNAL_MALLOC)
 /**
  * Allocates an uninitialized block of memory.
  * @param size size of block
  * @return pointer to block.
  */
 void* malloc(size_t size);
-
-/**
- * Allocates a zero-initialized block of memory.
- * @param size size of block
- * @return pointer to block.
- */
-void* zalloc(size_t size);
 
 /**
  * Reallocates the given block to fit the given size.
@@ -44,3 +38,13 @@ void* valloc(size_t size);
  * @param ptr pointer to block.
  */
 void free(void* ptr);
+#else
+#include <malloc.h>
+#endif
+
+/**
+ * Allocates a zero-initialized block of memory.
+ * @param size size of block
+ * @return pointer to block.
+ */
+void* zalloc(size_t size);

@@ -3,7 +3,9 @@
  */
 #pragma once
 
-#if defined(__STDC_NO_ATOMICS__) || __STDC_VERSION__ < 201112L
+#if defined(__STDC_NO_ATOMICS__) || \
+  defined(__EMSCRIPTEN__) || \
+  __STDC_VERSION__ < 201112L
 
 #ifdef __GNUC__
 #define atomic_fetch_add __sync_add_and_fetch

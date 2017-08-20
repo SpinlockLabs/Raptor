@@ -3,12 +3,20 @@
 #include <liblox/list.h>
 #include <liblox/string.h>
 
-int main() {
-    list_t* list = list_create();
-    list_add(list, "Hello World");
+static const uint count = 1000000;
 
-    assert(list->size == 1);
-    assert(strcmp(list_get_value_at(list, 0), "Hello World") == 0);
+int main() {
+    list_t* list = list_pcreate(count);
+
+    list_for_each(node, list) {
+        node->value = "Hello World";
+    }
+
+    assert(list->size == count);
+
+    list_for_each(node, list) {
+        assert(strcmp(node->value, "Hello World") == 0);
+    }
 
     return 0;
 }
