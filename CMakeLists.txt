@@ -30,10 +30,6 @@ else()
   )
 endif()
 
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  cflags(-g)
-endif()
-
 if(CLANG)
   cflags(
     -Wno-unused-command-line-argument
@@ -66,6 +62,4 @@ if(TESTS)
   include(${RAPTOR_DIR}/build/cmake/tests.cmake)
 endif()
 
-if(WIN32)
-  add_subdirectory(host)
-endif()
+add_subdirectory(host)
