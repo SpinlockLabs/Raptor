@@ -1,3 +1,7 @@
+if(WEB)
+  set(KERNEL_EXE_NAME "kernel.html")
+endif()
+
 arch("user" "arch/user")
 
 add_definitions(
@@ -7,6 +11,10 @@ add_definitions(
 
 if(CYGWIN)
   target_link_libraries(kernel cygwin)
+elseif(WEB)
+  kernel_cflags(
+    -s ONLY_MY_CODE=1
+  )
 elseif(UNIX)
   target_link_libraries(kernel dl c)
 elseif(WIN32)
@@ -23,4 +31,6 @@ elseif(WIN32)
   ldflags(
     /FORCE:MULTIPLE
   )
+else()
+  target_link_libraries(kernel dl c)
 endif()

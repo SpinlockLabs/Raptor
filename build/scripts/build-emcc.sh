@@ -18,19 +18,18 @@ function ensure_dirs() {
 
 function transform_compile_args() {
   collect_compile_args |
-    sed -E 's/([^ \/]*\.[^\.]+)\.o/\1\.ll/gm'
+    sed -E 's/([^ \/]*\.[^\.]+)\.o/\1\.bc/gm'
 }
 
-find -type f -name '*.ll' -exec rm {} ';'
-
-CLANG=${CLANG:-clang}
+EMCC=${EMCC:-emcc}
 ensure_dirs
 IFS=$'\n' GLOBIGNORE='*' command eval 'CMDS=($(transform_compile_args))'
+find -type f -name '*.bc' -exec rm {} ';'
 for CMD in "${CMDS[@]}"
 do
   ( ((i=i % 4)); ((i++==0)) && wait ) || true
-  ${CLANG} -S ${CMD} "${@}" -emit-llvm ${CLANG_ARGS} 1>&2 &
+  "${EMCC}" ${CMD} "${@}" ${EMCC_ARGS} 1>&2 &
 done
 wait
 
-find -type f -name '*.ll'
+find -type f -name '*.bc'

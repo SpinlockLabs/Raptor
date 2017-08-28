@@ -1,4 +1,6 @@
-﻿function(arch ARCH SRC_DIR)
+set(KERNEL_EXE_NAME "kernel.elf")
+
+function(arch ARCH SRC_DIR)
   set(ARCH "${ARCH}" PARENT_SCOPE)
 
   set(ARCH_SCRIPT "${KERNEL_DIR}/${SRC_DIR}/arch.cmake")
@@ -20,7 +22,7 @@
     target_link_libraries(kernel gcc)
   endif()
   target_link_libraries(kernel lox-kernel)
-  set_target_properties(kernel PROPERTIES OUTPUT_NAME "kernel.elf")
+  set_target_properties(kernel PROPERTIES OUTPUT_NAME "${KERNEL_EXE_NAME}")
 endfunction()
 
 function(arch_include_src DIR)
@@ -91,8 +93,11 @@ endif()
 if(NOT COMPCERT AND NOT MSVC)
   kernel_cflags(
     -ffreestanding
-    -fno-lto
   )
+
+  if(NOT ENABLE_LTO)
+    kernel_cflags(-fno-lto)
+  endif()
 endif()
 
 if(GCC)
