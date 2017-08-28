@@ -7,7 +7,7 @@
 int main() {
     test_start("JSMN Tokenizer");
 
-    jsmn_parser parser = {0};
+    jsmn_parser parser;
     jsmn_init(&parser);
 
     const char* json = "{\"a\": \"b\", \"c\": 3000}";

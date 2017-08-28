@@ -13,7 +13,7 @@ char* test_current_id() {
 }
 
 void test_start(char* id) {
-    if (id != NULL) {
+    if (__current_test != NULL) {
         test_end();
     }
     __current_test = id;

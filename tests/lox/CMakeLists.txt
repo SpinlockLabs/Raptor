@@ -23,5 +23,5 @@ function(test NAME)
   )
 endfunction()
 
-test(test_list_preallocate test_list_preallocate.c)
-test(test_jsmn test_jsmn.c)
+test(LoxListPreallocation test_list_preallocate.c)
+test(LoxJsonTokenizer test_json_tokenizer.c)
