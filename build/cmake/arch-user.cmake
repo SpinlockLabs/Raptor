@@ -5,9 +5,11 @@ add_definitions(
   -DARCH_NO_SPINLOCK
 )
 
-if(NOT WIN32)
+if(CYGWIN)
+  target_link_libraries(kernel cygwin)
+elseif(UNIX)
   target_link_libraries(kernel dl c)
-else()
+elseif(WIN32)
   kernel_cflags(
     /ZW:nostdlib
     /MT
