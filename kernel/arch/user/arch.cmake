@@ -1,13 +1,14 @@
-﻿file(
+file(
   GLOB_RECURSE USER_ARCH_SRC
   "${CMAKE_CURRENT_LIST_DIR}/*.c"
   "${CMAKE_CURRENT_LIST_DIR}/*.h"
 )
 
 foreach(F ${USER_ARCH_SRC})
-  get_filename_component(ENAME "${F}" NAME_WE)
-  if(ENAME MATCHES "env-.*")
-    list(REMOVE_ITEM  USER_ARCH_SRC "${F}")
+  get_filename_component(ENAME "${F}" DIRECTORY)
+  get_filename_component(ENAME "${ENAME}" NAME)
+  if(NOT ENAME MATCHES "user")
+    list(REMOVE_ITEM USER_ARCH_SRC "${F}")
   endif()
 endforeach()
 
