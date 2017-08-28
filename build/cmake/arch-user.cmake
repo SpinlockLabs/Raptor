@@ -14,6 +14,9 @@ if(CYGWIN)
 elseif(WEB)
   kernel_cflags(
     -s ONLY_MY_CODE=1
+    -s EXPORT_ALL=1
+    -s LINKABLE=1
+    -O1
   )
 elseif(UNIX)
   target_link_libraries(kernel dl c)
