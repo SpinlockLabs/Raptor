@@ -3,6 +3,6 @@ set(LINUX_SRC
   init.h
 )
 
-foreach(F ${MAC_SRC})
+foreach(F ${LINUX_SRC})
   add_arch_file(${CMAKE_CURRENT_LIST_DIR}/${F})
 endforeach()
