@@ -13,7 +13,7 @@ mkdir -p ${2}
 
 FF="$(realpath ${2})"
 
-for X in $(find . -type f -name "${P}")
+find . -type f -name "${P}" | while IFS= read -r X
 do
   if realpath ${X} | grep "${FF}" > /dev/null
   then
