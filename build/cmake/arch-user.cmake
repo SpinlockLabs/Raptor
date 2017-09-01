@@ -1,8 +1,6 @@
 if(WEB)
   set(KERNEL_EXE_NAME "kernel.html")
-endif()
-
-if(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm")
+elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm")
   set(REAL_ARCH "arm")
 elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86")
   set(REAL_ARCH "x86")
