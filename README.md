@@ -15,3 +15,6 @@ to enable it to potentially run anywhere that C can be compiled to.
 - Userspace Mac
 - Web Browser
 
+## Future Platforms
+
+- Bare-metal x86_64
