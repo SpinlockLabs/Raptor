@@ -23,6 +23,10 @@ function(arch ARCH SRC_DIR)
   endif()
   target_link_libraries(kernel lox-kernel)
   set_target_properties(kernel PROPERTIES OUTPUT_NAME "${KERNEL_EXE_NAME}")
+
+  if(NOT DEFINED REAL_ARCH)
+    set(REAL_ARCH "${ARCH}" PARENT_SCOPE)
+  endif()
 endfunction()
 
 function(arch_include_src DIR)

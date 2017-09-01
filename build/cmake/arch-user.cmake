@@ -2,6 +2,16 @@ if(WEB)
   set(KERNEL_EXE_NAME "kernel.html")
 endif()
 
+if(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm")
+  set(REAL_ARCH "arm")
+elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86")
+  set(REAL_ARCH "x86")
+elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
+  set(REAL_ARCH "x86_64")
+else()
+  set(REAL_ARCH "user")
+endif()
+
 arch("user" "arch/user")
 
 add_definitions(

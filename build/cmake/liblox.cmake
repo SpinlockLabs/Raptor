@@ -8,8 +8,8 @@ file(GLOB LIBLOX_DIRS
 
 set(LIBLOX_ARCH_DIR "generic")
 
-if(EXISTS "${LIBLOX_SRC_DIR}/arch/${ARCH}")
-  set(LIBLOX_ARCH_DIR "${ARCH}")
+if(EXISTS "${LIBLOX_SRC_DIR}/arch/${REAL_ARCH}")
+  set(LIBLOX_ARCH_DIR "${REAL_ARCH}")
 elseif(ARCH MATCHES "^arm.*")
   set(LIBLOX_ARCH_DIR "arm")
 endif()
