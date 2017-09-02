@@ -1,12 +1,12 @@
 #include "spin.h"
 
 #include <liblox/io.h>
+#include <liblox/string.h>
 
 #include <kernel/entry.h>
 
 #include <kernel/cpu/task.h>
 #include <kernel/interupt.h>
-#include <liblox/string.h>
 
 #ifndef ARCH_NO_SPINLOCK
 void spin_wait(atomic_int32* addr, atomic_int32* waiters) {

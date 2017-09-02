@@ -14,12 +14,19 @@ arch("user" "arch/user")
 
 add_definitions(
   -DARCH_USER
-  -DARCH_NO_SPINLOCK
 )
 
 if(CYGWIN)
+  add_definitions(
+    -DARCH_NO_SPINLOCK
+  )
+
   target_link_libraries(kernel cygwin)
 elseif(WEB)
+  add_definitions(
+    -DARCH_NO_SPINLOCK
+  )
+
   kernel_cflags(
     -s ONLY_MY_CODE=1
     -s EXPORT_ALL=1
@@ -29,6 +36,10 @@ elseif(WEB)
 elseif(UNIX)
   target_link_libraries(kernel dl c)
 elseif(WIN32)
+  add_definitions(
+    -DARCH_NO_SPINLOCK
+  )
+
   kernel_cflags(
     /ZW:nostdlib
     /MT

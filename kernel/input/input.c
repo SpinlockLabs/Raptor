@@ -41,7 +41,7 @@ input_device_t* input_device_get(char* name) {
 input_device_t* input_device_create(char* name, input_device_class_t type) {
     input_device_t* device = zalloc(sizeof(input_device_t));
     device->name = name;
-    device->events = mailbox_create();
+    device->events = epipe_create();
     device->type = type;
     return device;
 }
@@ -52,7 +52,7 @@ bool input_device_register(device_entry_t* parent, input_device_t* device) {
     }
 
     if (device->events == NULL) {
-        device->events = mailbox_create();
+        device->events = epipe_create();
     }
 
     device_entry_t* entry = device_register(
@@ -72,7 +72,7 @@ bool input_device_destroy(input_device_t* device) {
 
     bool result = device_unregister(device->entry);
 
-    mailbox_destroy(device->events);
+    epipe_destroy(device->events);
     device->events = NULL;
 
     if (result) {
