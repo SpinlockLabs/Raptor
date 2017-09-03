@@ -7,7 +7,7 @@ then
   exit 1
 fi
 
-$(dirname ${0})/calculate-deps.sh
+"$(dirname ${0})"/calculate-deps.sh
 
 if [ ! -f "depinfo/${1}/output" ]
 then
@@ -22,4 +22,3 @@ do
   N=$(cat "depinfo/archives/${ARCHIVE}")
   cat depinfo/${N}/objects
 done
-

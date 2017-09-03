@@ -14,11 +14,11 @@ function folist() {
 }
 
 function do_rpd_sum() {
-  f=$(mktemp)
-  fdlist | do_checksum - >> ${f}
+  f="$(mktemp)"
+  fdlist | do_checksum - >> "${f}"
   for p in $(folist)
   do
-    do_checksum "${p}" >> ${f}
+    do_checksum "${p}" >> "${f}"
   done
   do_checksum "${f}"
   rm "${f}"
