@@ -37,10 +37,7 @@ void kernel_setup_devices(void) {
     console_tty->write = raptor_user_console_write;
     console_tty->flags.write_kernel_log = true;
     console_tty->flags.allow_debug_console = true;
-
-#ifndef __unix__
     console_tty->flags.echo = true;
-#endif
 
     tty_register(console_tty);
 
