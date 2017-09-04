@@ -8,11 +8,15 @@ function(program EXE SRCFILES)
     list(APPEND SOURCE_FULL "${CMAKE_CURRENT_LIST_DIR}/${SRC}")
   endforeach()
   add_executable(${EXE} ${SOURCE_FULL})
-  add_dependencies(${EXE} lox)
   target_link_libraries(${EXE} lox crt0)
   target_include_directories(${EXE} PRIVATE ${RAPTOR_DIR})
   if(NOT COMPCERT AND NOT MSVC)
-    target_compile_options(${EXE} PRIVATE "-nostartfiles")
+    set_target_properties(
+      ${EXE}
+      PROPERTIES
+      LINK_FLAGS
+      "-static -nostartfiles -nostdlib"
+    )
   endif()
   install(
     TARGETS ${EXE}

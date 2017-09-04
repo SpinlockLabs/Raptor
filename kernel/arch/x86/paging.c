@@ -323,7 +323,16 @@ void paging_finalize(void) {
 
     current_directory = paging_clone_directory(kernel_directory);
     paging_switch_directory(kernel_directory);
+
+    asm volatile(
+        "mov %%cr0, %%eax\n"
+        "orl $0x80000000, %%eax\n"
+        "mov %%eax, %%cr0\n"
+        :::"eax"
+    );
 }
+
+static bool paging_enabled = false;
 
 void paging_switch_directory(page_directory_t* dir) {
     if (current_directory != NULL &&
@@ -333,18 +342,22 @@ void paging_switch_directory(page_directory_t* dir) {
 
     current_directory = dir;
 
-    printf(DEBUG "Switching to page directory (phys: 0x%x)\n", dir->physicalAddr);
-
-    asm volatile(
-        "mov %0, %%cr3\n"
-        "mov %%cr0, %%eax\n"
-        "orl $0x80000000, %%eax\n"
-        "mov %%eax, %%cr0\n"
-        ::"r"(dir->physicalAddr)
-        : "eax"
-    );
-
-    printf("Switched to page directory.\n");
+    if (paging_enabled) {
+        asm volatile(
+            "mov %0, %%cr3\n"
+            ::"r"(dir->physicalAddr)
+        );
+    } else {
+        paging_enabled = true;
+        asm volatile(
+            "mov %0, %%cr3\n"
+            "mov %%cr0, %%eax\n"
+            "orl $0x80000000, %%eax\n"
+            "mov %%eax, %%cr0\n"
+            ::"r"(dir->physicalAddr)
+            :"eax"
+        );
+    }
 }
 
 page_t* paging_get_page(uintptr_t address, int make, page_directory_t* dir) {
@@ -469,6 +482,7 @@ extern void copy_page_physical(uintptr_t, uintptr_t);
 page_table_t* paging_clone_table(page_table_t* src, uintptr_t* phys) {
     page_table_t* table = (page_table_t*) kpmalloc_ap(sizeof(page_table_t), phys);
     memset(table, 0, sizeof(page_table_t));
+
     uintptr_t i;
     for (i = 0; i < 1024; ++i) {
         if (!src->pages[i].frame) {
@@ -507,8 +521,7 @@ page_directory_t* paging_clone_directory(page_directory_t* src) {
         &phys
     );
 
-    memset(out, 0, sizeof(page_directory_t));
-    out->physicalAddr = phys;
+    out->physicalAddr = phys + 0x1000;
 
     for (uintptr_t i = 0; i < 1024; i++) {
         if (!src->tables[i] ||

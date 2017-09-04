@@ -55,7 +55,7 @@ set(QEMU_CMD
 )
 
 add_custom_target(qemu
-  COMMAND ${QEMU_CMD} -net user
+  COMMAND ${QEMU_CMD} -net user -serial file:kernel.log
   DEPENDS kernel diskimg
 )
 
@@ -85,7 +85,7 @@ add_custom_target(qemu-iso
 
 add_custom_target(bochs
   COMMAND bochs -q -f "${CMAKE_SOURCE_DIR}/build/bochs/raptor.bcfg"
-  DEPENDS diskimg kernel
+  DEPENDS iso kernel
   WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
 )
 

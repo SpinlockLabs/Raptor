@@ -10,15 +10,17 @@
 #include "userspace.h"
 
 #define PUSH(stack, type, item) stack -= sizeof(type); \
-							*((type *) stack) = item
+							*((type *) (stack)) = item
 
 void enter_user_jmp(uintptr_t location, int argc, char ** argv, uintptr_t stack) {
+    printf(DEBUG "Jumping to userspace with entrypoint 0x%x\n", location);
+
     int_disable();
     set_kernel_stack(process_get_current()->image.stack);
 
     PUSH(stack, uintptr_t, (uintptr_t) argv);
     PUSH(stack, int, argc);
-    enter_userspace((void*) location, stack);
+    enter_userspace(location, stack);
 }
 
 bool elf32_execute(
@@ -28,6 +30,8 @@ bool elf32_execute(
     char** argv,
     int envc,
     char** env) {
+    unused(size);
+
     process_t* process = process_get_current();
 
     Elf32_Header* header = (Elf32_Header*) bytes;
@@ -55,9 +59,9 @@ bool elf32_execute(
         }
     }
 
-    process->image.entry = entry;
+    process->image.entry = base_addr;
+    process->image.start = entry;
     process->image.size = end_addr - base_addr;
-
 
     paging_release_directory_for_exec(paging_get_directory());
     paging_invalidate_tables();
@@ -73,7 +77,7 @@ bool elf32_execute(
             memcpy((void*) phdr->p_vaddr, bytes + phdr->p_offset, phdr->p_filesz);
             size_t r = phdr->p_filesz;
             while (r < phdr->p_memsz) {
-                *(char *)(phdr->p_vaddr + r) = 0;
+                *(char*)(phdr->p_vaddr + r) = 0;
                 r++;
             }
         }
@@ -111,7 +115,7 @@ bool elf32_execute(
             paging_allocate_frame(paging_get_page(x, 1, paging_get_directory()), 0, 1);
         }
         paging_invalidate_tables_at(heap);
-        argv_[i] = (char *)heap;
+        argv_[i] = (char*)heap;
         memcpy((void *)heap, argv[i], argsz);
         heap += argsz;
     }

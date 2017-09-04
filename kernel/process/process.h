@@ -47,6 +47,7 @@ struct process_image {
     uintptr_t heap;
     uintptr_t heap_actual;
     uintptr_t user_stack;
+    uintptr_t start;
 };
 
 /* Represents a process that can be scheduled. */

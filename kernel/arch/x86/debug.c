@@ -1,15 +1,14 @@
 #include "debug.h"
 #include "heap.h"
 #include "paging.h"
-#include "elf32load.h"
+
+#include <liblox/memory.h>
 
 #include <kernel/tty.h>
-
 #include <kernel/debug/console.h>
-
 #include <kernel/arch/x86/devices/pci/pci.h>
 #include <kernel/fs/vfs.h>
-#include <liblox/memory.h>
+
 
 static void debug_kpused(tty_t* tty, const char* input) {
     unused(input);
@@ -118,10 +117,10 @@ static void debug_start_true(tty_t* tty, const char* input) {
     char* argv[] = {""};
 
     extern void sysexec(
-        char* name,
-        uint8_t* bytes,
-        size_t size,
-        int argc,
+        char*,
+        uint8_t*,
+        size_t,
+        int,
         char**);
 
     sysexec("true", buff, stat.size, 0, argv);

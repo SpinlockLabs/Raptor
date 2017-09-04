@@ -182,11 +182,5 @@ used void kernel_main(multiboot_t* _mboot, uint32_t mboot_hdr, uintptr_t esp) {
     timer_init(1000);
     puts(DEBUG "PIT initialized.\n");
 
-    if (cmdline_bool_flag("enable-userspace-jump")) {
-        breakpoint("userspace-jump");
-        puts(DEBUG "Jumping to userspace...\n");
-        userspace_jump(NULL, 0xB0000000);
-    }
-
     kernel_init();
 }
