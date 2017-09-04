@@ -19,6 +19,8 @@
 #include <kernel/dispatch/events.h>
 #include <kernel/cpu/task.h>
 #include <kernel/process/scheduler.h>
+#include <kernel/syscall/table.h>
+#include <kernel/syscall/loxcall.h>
 
 #include "paging.h"
 #include "heap.h"
@@ -57,6 +59,9 @@ void kernel_init(void) {
     network_iface_subsystem_init();
     network_stack_init();
     printf(DEBUG "Network initialized.\n");
+
+    syscall_init();
+    syscall_loxcall_init();
 
     process_tree_init();
     scheduler_init();

@@ -11,6 +11,13 @@ function(program EXE SRCFILES)
   target_link_libraries(${EXE} lox crt0)
   target_include_directories(${EXE} PRIVATE ${RAPTOR_DIR})
   if(NOT COMPCERT AND NOT MSVC)
+    target_compile_options(
+      ${EXE}
+      PRIVATE
+      "-fno-builtin"
+      "-nostdlib"
+    )
+
     set_target_properties(
       ${EXE}
       PROPERTIES

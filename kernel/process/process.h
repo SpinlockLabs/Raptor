@@ -7,6 +7,7 @@
 #include <stdint.h>
 
 #include <kernel/arch.h>
+#include <kernel/tty.h>
 
 #define USER_STACK_BOTTOM 0xAFF00000
 #define USER_STACK_TOP    0xB0000000
@@ -74,6 +75,11 @@ struct process {
      * Process tree node.
      */
     tree_node_t* node;
+
+    /**
+     * Process TTY.
+     */
+    tty_t* tty;
 };
 
 /**

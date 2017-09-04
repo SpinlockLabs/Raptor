@@ -71,6 +71,10 @@ void raptor_user_loop(void) {
     raptor_user_process_stdin();
 }
 
+syscall_result_t raptor_user_syscall(syscall_id_t id, uintptr_t* args) {
+    return 0;
+}
+
 #ifndef __EMSCRIPTEN__
 void cpu_run_idle(void) {
     while (true) {
@@ -113,3 +117,4 @@ void (*lox_free_provider)(void*) = raptor_user_free;
 void (*lox_output_char_provider)(char) = raptor_user_output_char;
 void (*lox_output_string_provider)(char*) = raptor_user_output_string;
 char* (*arch_get_cmdline)(void) = raptor_user_get_cmdline;
+syscall_result_t (*lox_syscall_provider)(syscall_id_t, uintptr_t*) = raptor_user_syscall;

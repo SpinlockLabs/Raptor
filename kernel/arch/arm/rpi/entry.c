@@ -47,6 +47,11 @@ void (*lox_output_string_provider)(char*) = lox_output_string_uart;
 void (*lox_output_char_provider)(char) = lox_output_char_uart;
 void (*lox_sleep_provider)(ulong) = delay;
 
+syscall_result_t lox_syscall(syscall_id_t id, uintptr_t* args) {
+    return 0;
+}
+syscall_result_t (*lox_syscall_provider)(syscall_id_t, uintptr_t*) = lox_syscall;
+
 static void uart_tty_write(tty_t* tty, const uint8_t* buf, size_t size) {
     unused(tty);
 

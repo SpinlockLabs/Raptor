@@ -1,10 +1,10 @@
 #include <liblox/common.h>
 #include <liblox/string.h>
 #include <liblox/io.h>
+#include <liblox/lox-internal.h>
 
 #include <kernel/entry.h>
 #include <kernel/tty.h>
-#include <kernel/panic.h>
 #include <kernel/cmdline.h>
 #include <kernel/timer.h>
 #include <kernel/device/driver.h>
@@ -18,7 +18,6 @@
 #include "debug.h"
 #include "irq.h"
 #include "pci_init.h"
-#include "userspace.h"
 #include "io.h"
 #include "vga.h"
 
@@ -73,6 +72,15 @@ used void arch_panic_handler(nullable char* msg) {
 
 void (*lox_output_string_provider)(char*) = lox_output_string_ebl;
 void (*lox_output_char_provider)(char) = lox_output_char_ebl;
+
+syscall_result_t lox_syscall(syscall_id_t id, uintptr_t* args) {
+    return 0;
+}
+
+syscall_result_t (*lox_syscall_provider)(
+    syscall_id_t,
+    uintptr_t*
+) = lox_syscall;
 
 void vga_pty_write(tty_t* tty, const uint8_t* bytes, size_t size) {
     unused(tty);

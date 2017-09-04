@@ -14,3 +14,5 @@ typedef struct arch_process_extensions {
 } arch_process_extensions_t;
 
 void set_kernel_stack(uintptr_t stack);
+
+void syscall_handler(cpu_registers_t* r);

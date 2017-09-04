@@ -1,6 +1,7 @@
 #include <liblox/string.h>
 
 #include <kernel/panic.h>
+#include <kernel/process/process.h>
 
 #include "isr.h"
 
@@ -56,6 +57,12 @@ void isr_init(void) {
 
 used void fault_handler(cpu_registers_t* r) {
     int i = r->int_no;
+
+    if (i == 127) {
+        syscall_handler(r);
+        return;
+    }
+
     irq_handler_t handler = isr_routines[i];
 
     if (handler) {
