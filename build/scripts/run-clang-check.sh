@@ -30,5 +30,9 @@ then
   exit 1
 fi
 
-FILES=$(cat ${cmdir}/compile_commands.json | grep '"file":' | awk '{gsub("\"", ""); print $2}')
+FILES=$(
+  cat ${cmdir}/compile_commands.json |
+  grep '"file":' |
+  awk '{gsub("\"", ""); print $2}'
+)
 exec clang-check -analyze -p=${cmdir} ${FILES}

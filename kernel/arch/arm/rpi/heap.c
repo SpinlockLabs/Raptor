@@ -89,5 +89,6 @@ void* kheap_reallocate(void* ptr, size_t size) {
 }
 
 void* (*lox_allocate_provider)(size_t) = kheap_allocate;
+void* (*lox_aligned_allocate_provider)(size_t) = kheap_allocate;
 void (*lox_free_provider)(void *ptr) = kheap_free;
 void* (*lox_reallocate_provider)(void* ptr, size_t size) = kheap_reallocate;

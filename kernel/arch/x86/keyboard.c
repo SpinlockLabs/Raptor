@@ -96,7 +96,7 @@ static int keyboard_callback(cpu_registers_t* regs) {
             .event.data_size = sizeof(input_event_key_state_t) - sizeof(input_event_t),
             .key = idx
         };
-        mailbox_deliver(kbd->events, &event);
+        epipe_deliver(kbd->events, &event);
     }
 
     switch (kt) {

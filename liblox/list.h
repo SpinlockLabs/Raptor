@@ -1,27 +1,34 @@
+/**
+ * Implements a linked list.
+ */
 #pragma once
 
 #include <stddef.h>
 #include <stdbool.h>
 #include <stdint.h>
 
-typedef struct list_node {
-    struct list* list;
+typedef struct list list_t;
+typedef struct list_node list_node_t;
+
+struct list_node {
+    list_t* list;
     struct list_node* prev;
     struct list_node* next;
     void* value;
-} list_node_t;
+};
 
-typedef struct list {
+struct list {
     list_node_t* head;
     list_node_t* tail;
     size_t size;
     union {
         struct {
             bool free_values : 1;
+            bool free_nodes : 1;
         };
         uint32_t flags;
     };
-} list_t;
+};
 
 typedef int (*list_compare_t)(void* a, void* b);
 
@@ -47,5 +54,6 @@ bool list_contains(list_t* list, void* value);
 void list_merge(list_t* target, list_t* source);
 void list_swap(list_node_t* left, list_node_t* right);
 void list_sort(list_t* list, list_compare_t compare);
+list_t* list_pcreate(size_t count);
 
 #define list_for_each(i, list) for (list_node_t* (i) = (list)->head; (i) != NULL; (i) = (i)->next)

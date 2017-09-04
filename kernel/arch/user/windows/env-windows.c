@@ -1,4 +1,4 @@
-﻿#include "../env.h"
+#include "../env.h"
 #include "../entry.h"
 
 #include "init.h"
@@ -9,8 +9,9 @@ static HMODULE libc;
 static HMODULE kernel32;
 
 void* (*libc_malloc)(size_t);
-void(*libc_free)(void*);
-void* (*libc_realloc)(size_t, void*);
+void* (*libc_valloc)(size_t);
+void (*libc_free)(void*);
+void* (*libc_realloc)(void*, size_t);
 void (*libc_abort)(void);
 void (*libc_exit)(int);
 
@@ -24,12 +25,16 @@ void* raptor_user_malloc(size_t size) {
     return libc_malloc(size);
 }
 
+void* raptor_user_valloc(size_t size) {
+    return libc_valloc(size);
+}
+
 void raptor_user_free(void* ptr) {
     libc_free(ptr);
 }
 
-void* raptor_user_realloc(size_t size, void* ptr) {
-    return libc_realloc(size, ptr);
+void* raptor_user_realloc(void* ptr, size_t size) {
+    return libc_realloc(ptr, size);
 }
 
 void raptor_user_setup_devices(void) {
@@ -148,6 +153,7 @@ int WINAPI mainCRTStartup(void) {
     kernel32 = LoadLibraryA("kernel32.dll");
 
     libc_malloc = libc_sym("malloc");
+    libc_valloc = libc_sym("valloc");
     libc_free = libc_sym("free");
     libc_realloc = libc_sym("realloc");
     libc_abort = libc_sym("abort");

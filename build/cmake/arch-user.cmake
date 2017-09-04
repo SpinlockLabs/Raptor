@@ -1,12 +1,45 @@
+if(WEB)
+  set(KERNEL_EXE_NAME "kernel.html")
+elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm")
+  set(REAL_ARCH "arm")
+elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86")
+  set(REAL_ARCH "x86")
+elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
+  set(REAL_ARCH "x86_64")
+else()
+  set(REAL_ARCH "user")
+endif()
+
 arch("user" "arch/user")
 
 add_definitions(
   -DARCH_USER
 )
 
-if(NOT WIN32)
+if(CYGWIN)
+  add_definitions(
+    -DARCH_NO_SPINLOCK
+  )
+
+  target_link_libraries(kernel cygwin)
+elseif(WEB)
+  add_definitions(
+    -DARCH_NO_SPINLOCK
+  )
+
+  kernel_cflags(
+    -s ONLY_MY_CODE=1
+    -s EXPORT_ALL=1
+    -s LINKABLE=1
+    -O1
+  )
+elseif(UNIX)
   target_link_libraries(kernel dl c)
-else()
+elseif(WIN32)
+  add_definitions(
+    -DARCH_NO_SPINLOCK
+  )
+
   kernel_cflags(
     /ZW:nostdlib
     /MT
@@ -20,4 +53,6 @@ else()
   ldflags(
     /FORCE:MULTIPLE
   )
+else()
+  target_link_libraries(kernel dl c)
 endif()

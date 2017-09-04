@@ -54,14 +54,17 @@ void time_get(rtime_t* time) {
     raptor_user_get_time(time);
 }
 
+#ifndef __EMSCRIPTEN__
 void cpu_run_idle(void) {
     while (true) {
         ktask_queue_flush();
         raptor_user_process_stdin();
     }
 }
+#endif
 
 void* (*lox_allocate_provider)(size_t) = raptor_user_malloc;
+void* (*lox_aligned_allocate_provider)(size_t) = raptor_user_valloc;
 void* (*lox_reallocate_provider)(void*, size_t) = raptor_user_realloc;
 void (*lox_free_provider)(void*) = raptor_user_free;
 void (*lox_output_char_provider)(char) = raptor_user_output_char;

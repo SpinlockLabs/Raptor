@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdint.h>
-#include <kernel/dispatch/mailbox.h>
+#include <kernel/dispatch/pipe.h>
 
 #include "board.h"
 

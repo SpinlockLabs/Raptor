@@ -132,7 +132,7 @@ void* hashmap_remove(hashmap_t* map, void* key) {
         return NULL;
     }
 
-    uint hash = map->hash(key) % map->size;
+    uint hash = (uint) (map->hash(key) % map->size);
 
     hashmap_entry_t* x = map->entries[hash];
     if (!x) {
@@ -169,7 +169,7 @@ bool hashmap_has(hashmap_t* map, void* key) {
         return false;
     }
 
-    uint hash = map->hash(key) % map->size;
+    uint hash = (uint) (map->hash(key) % map->size);
 
     hashmap_entry_t* x = map->entries[hash];
 

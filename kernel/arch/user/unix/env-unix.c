@@ -1,12 +1,18 @@
-﻿#include "env.h"
-#include "entry.h"
+#include "../env.h"
+#include "../entry.h"
 
 #include <dlfcn.h>
 
-#include <liblox/memory.h>
+#include <unistd.h>
+#include <termios.h>
 
-#include <kernel/tty.h>
-#include <kernel/time.h>
+#ifdef __APPLE__
+#include "../mac/init.h"
+#elif __linux__
+#include "../linux/init.h"
+#endif
+
+#include <liblox/memory.h>
 
 #include <time.h>
 
@@ -23,6 +29,7 @@ void (*libc_putc)(char);
 uint (*libc_read)(int, void*, size_t);
 int (*libc_ioctl)(int, ulong, ...);
 void* (*libc_malloc)(size_t);
+void* (*libc_valloc)(size_t);
 void (*libc_exit)(int);
 void (*libc_free)(void*);
 void* (*libc_realloc)(void*, size_t);
@@ -38,6 +45,22 @@ void raptor_user_abort(void) {
 }
 
 void raptor_user_setup_devices(void) {
+    if (isatty(STDIN_FILENO)) {
+        struct termios tattr;
+        tcgetattr(STDIN_FILENO, &tattr);
+        tattr.c_lflag &= ~(ICANON | ECHO);
+        tattr.c_cc[VMIN] = 1;
+        tattr.c_cc[VTIME] = 0;
+        tcsetattr(STDIN_FILENO, TCSAFLUSH, &tattr);
+    } else {
+        console_tty->flags.echo = false;
+    }
+
+#ifdef __APPLE__
+    raptor_user_mac_init();
+#elif __linux__
+    raptor_user_linux_init();
+#endif
 }
 
 ulong raptor_user_ticks(void) {
@@ -75,8 +98,21 @@ void raptor_user_output_string(char* str) {
 }
 
 static bool raptor_user_stdin_has_data(size_t* count) {
+#ifdef __APPLE__
+    fd_set readfds;
+    FD_ZERO(&readfds);
+    FD_SET(STDIN_FILENO, &readfds);
+
+    struct timeval timeout;
+    timeout.tv_sec = 0;
+    timeout.tv_usec = 0;
+
+    *count = 1024;
+    return select(1, &readfds, NULL, NULL, &timeout) != 0;
+#else
     int res = libc_ioctl(0, 0x541B, count);
     return (res == 0 && (*count > 0));
+#endif
 }
 
 void raptor_user_process_stdin(void) {
@@ -85,7 +121,11 @@ void raptor_user_process_stdin(void) {
         console_tty->handle_read != NULL &&
         raptor_user_stdin_has_data(&count)) {
         uint8_t* buff = zalloc(count);
-        if (libc_read(0, buff, count) > 0) {
+        int ret = libc_read(0, buff, count);
+        if (ret > 0) {
+#ifdef __APPLE__
+            count = ret;
+#endif
             console_tty->handle_read(console_tty, buff, count);
         }
         free(buff);
@@ -104,14 +144,24 @@ void* raptor_user_realloc(void* ptr, size_t size) {
     return libc_realloc(ptr, size);
 }
 
+void* raptor_user_valloc(size_t size) {
+    return libc_valloc(size);
+}
+
 void raptor_user_exit(void) {
     libc_exit(0);
 }
 
+#ifdef __APPLE__
+#define LIBC_NAME "libc.dylib"
+#else
+#define LIBC_NAME "libc.so.6"
+#endif
+
 used void _start(void) {
     libc_malloc = dlsym(RTLD_NEXT, "malloc");
 
-    libc = dlopen("libc.so.6", RTLD_LAZY | RTLD_LOCAL);
+    libc = dlopen(LIBC_NAME, RTLD_LAZY | RTLD_LOCAL);
 
     if (libc == NULL) {
         int (*printf_error)(char*, ...) = dlsym(RTLD_NEXT, "printf");
@@ -119,6 +169,7 @@ used void _start(void) {
         return;
     }
 
+    libc_valloc = libc_sym("valloc");
     libc_realloc = libc_sym("realloc");
     libc_free = libc_sym("free");
 
@@ -135,3 +186,10 @@ used void _start(void) {
     kernel_main();
     libc_exit(0);
 }
+
+#ifdef __APPLE__
+int main(void) {
+    _start();
+    return 0;
+}
+#endif

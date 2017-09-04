@@ -17,7 +17,7 @@ fi
 arm-none-eabi-objcopy kernel.elf -O binary kernel.img
 
 function uint32() {
-  printf '0: %.8x' ${1} |
+  printf '0: %.8x' "${1}" |
     sed -E 's/0: (..)(..)(..)(..)/0: \4\3\2\1/' |
     xxd -r -g0
 }
@@ -25,6 +25,6 @@ function uint32() {
 stty -F "${PI_TTY}" raw 115200
 
 /bin/echo -e -n '\x11' > "${PI_TTY}"
-uint32 $(stat -c %s kernel.img) > "${PI_TTY}"
+uint32 "$(stat -c %s kernel.img)" > "${PI_TTY}"
 sleep 0.1
 pv kernel.img > "${PI_TTY}"
