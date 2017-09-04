@@ -1,5 +1,3 @@
-#include <liblox/abort.h>
-#include <stdint.h>
 #include "../string.h"
 
 int strcmp(const char* l, const char* r) {
