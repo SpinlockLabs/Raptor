@@ -1,7 +1,6 @@
 set(MAC_SRC
   init.c
   init.h
-  ui.swift
 )
 
 foreach(F ${MAC_SRC})

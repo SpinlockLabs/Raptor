@@ -4,6 +4,12 @@ file(
   "${CMAKE_CURRENT_LIST_DIR}/*.h"
 )
 
+option(ARCH_USER_RKMALLOC "Use rkmalloc for user arch." OFF)
+
+if(ARCH_USER_RKMALLOC)
+  add_definitions(-DUSER_RKMALLOC)
+endif()
+
 foreach(F ${USER_ARCH_SRC})
   get_filename_component(ENAME "${F}" DIRECTORY)
   get_filename_component(ENAME "${ENAME}" NAME)

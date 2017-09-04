@@ -1,14 +1,13 @@
 #include "../string.h"
 
-#include <stdint.h>
 #include <limits.h>
 
 #define ALIGN (sizeof(size_t))
 #define ONES ((size_t) - 1 / UCHAR_MAX)
-#define HIGHS (ONES * (UCHAR_MAX/2+1))
+#define HIGHS (ONES * (UCHAR_MAX / 2 + 1))
 #define HASZERO(x) (((x) - (ONES)) & ~(x) & (HIGHS))
 
-char *strchrnul(const char *s, int c) {
+char* strchrnul(const char* s, int c) {
     size_t* w, k;
 
     c = (unsigned char) c;
