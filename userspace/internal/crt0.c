@@ -16,11 +16,13 @@ void __abort(char* msg) {
     unused(msg);
 }
 
-used void _start(void) {
+used void __do_main(void) {
     char* args[1] = {
             "exe"
     };
-    main(1, args);
+
+    int code = main(1, args);
+    syscall(SYSCALL_EXIT, code);
 }
 
 extern syscall_result_t __syscall(syscall_id_t id, uintptr_t* args);

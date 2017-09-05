@@ -74,6 +74,8 @@ void (*lox_output_string_provider)(char*) = lox_output_string_ebl;
 void (*lox_output_char_provider)(char) = lox_output_char_ebl;
 
 syscall_result_t lox_syscall(syscall_id_t id, uintptr_t* args) {
+    unused(id);
+    unused(args);
     return 0;
 }
 

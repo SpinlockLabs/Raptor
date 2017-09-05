@@ -8,6 +8,7 @@
 
 #include <kernel/arch.h>
 #include <kernel/tty.h>
+#include <kernel/syscall/table.h>
 
 #define USER_STACK_BOTTOM 0xAFF00000
 #define USER_STACK_TOP    0xB0000000
@@ -35,7 +36,10 @@ typedef enum process_status {
     PROCESS_READY,
 
     /* The process is loading. */
-    PROCESS_LOADING
+    PROCESS_LOADING,
+
+    /* The process is stopped. */
+    PROCESS_STOPPED
 } process_status_t;
 
 /**
@@ -80,6 +84,11 @@ struct process {
      * Process TTY.
      */
     tty_t* tty;
+
+    /**
+     * System call set.
+     */
+    syscall_set_t callset;
 };
 
 /**

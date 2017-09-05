@@ -20,7 +20,12 @@ add_library(
 )
 
 if(NOT COMPCERT)
-  target_compile_options(crt0 PRIVATE "-fno-builtin")
+  target_compile_options(
+    crt0
+    PRIVATE
+    "-fno-builtin"
+    "-fno-stack-protector"
+  )
 endif()
 
 target_link_libraries(crt0 lox)

@@ -2,15 +2,19 @@
 #include "table.h"
 
 #include <kernel/process/process.h>
+#include <kernel/process/scheduler.h>
 
-syscall_result_t loxcall_exit(int code) {
-    unused(code);
+syscall_result_t loxcall_exit(uintptr_t* args) {
+    int code = args[0];
     process_t* process = process_get_current();
-    process->status = PROCESS_WAITING;
+    process->status = PROCESS_STOPPED;
+    scheduler_switch_next();
     return 0;
 }
 
-syscall_result_t loxcall_console_write(uint8_t* bytes, size_t size) {
+syscall_result_t loxcall_console_write(uintptr_t* args) {
+    uint8_t* bytes = (uint8_t*) args[0];
+    size_t size = args[1];
     process_t* process = process_get_current();
     if (process->tty != NULL) {
         tty_write(process->tty, bytes, size);

@@ -15,6 +15,7 @@ static uintptr_t frozen_stack;
 extern uintptr_t initial_esp;
 
 void sysexec(
+    tty_t* tty,
     char* name,
     uint8_t* bytes,
     size_t size,
@@ -23,6 +24,7 @@ void sysexec(
     int_disable();
 
     process_t* proc = zalloc(sizeof(process_t));
+    proc->tty = tty;
     proc->name = name;
     proc->node = process_get_tree()->root;
     proc->pid = process_get_next_pid();

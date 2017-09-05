@@ -6,7 +6,9 @@
 /**
  * A handler for a system call.
  */
-typedef syscall_result_t (*syscall_handler_t)();
+typedef syscall_result_t (*syscall_handler_t)(
+    uintptr_t* args
+);
 
 /**
  * System call set identifier.
@@ -41,13 +43,13 @@ bool syscall_remove(
  * Runs the given system call.
  * @param set system call set
  * @param id system call id
- * @param ... parameters
+ * @param args null-terminated array of parameters
  * @return system call result
  */
 syscall_result_t syscall_run(
     syscall_set_t set,
     syscall_id_t id,
-    ...
+    uintptr_t* args
 );
 
 /**

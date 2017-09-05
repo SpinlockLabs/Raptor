@@ -23,6 +23,8 @@ static process_t* create_kidle(void) {
     proc->status = PROCESS_RUNNING;
 
     arch_process_init_kidle(proc);
+    list_add(process_list, proc);
+    spin_unlock(&tree_lock);
 
     return proc;
 }

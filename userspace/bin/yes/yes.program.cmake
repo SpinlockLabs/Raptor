@@ -1,0 +1,1 @@
+program(yes yes.c)

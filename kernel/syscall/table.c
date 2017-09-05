@@ -52,3 +52,23 @@ bool syscall_remove(
     }
     return true;
 }
+
+syscall_result_t syscall_run(
+    syscall_set_t set,
+    syscall_id_t id,
+    uintptr_t* args
+) {
+    hashmap_t* set_table = hashmap_get(syscall_table, (void*) set);
+
+    if (set_table == NULL) {
+        return -1;
+    }
+
+    syscall_handler_t handler = hashmap_get(set_table, (void*) id);
+
+    if (handler == NULL) {
+        return -1;
+    }
+
+    return handler(args);
+}

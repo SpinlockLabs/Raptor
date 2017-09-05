@@ -5,7 +5,17 @@
 syscall_result_t syscall(syscall_id_t id, ...) {
     va_list args;
     va_start(args, id);
-    syscall_result_t result = lox_syscall_provider(id, &args);
+
+    uintptr_t array[] = {
+        va_arg(args, uintptr_t),
+        va_arg(args, uintptr_t),
+        va_arg(args, uintptr_t),
+        va_arg(args, uintptr_t),
+        va_arg(args, uintptr_t),
+        va_arg(args, uintptr_t),
+        0
+    };
     va_end(args);
-    return result;
+
+    return lox_syscall_provider(id, array);
 }

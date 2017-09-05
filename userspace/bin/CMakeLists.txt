@@ -16,6 +16,8 @@ function(program EXE SRCFILES)
       PRIVATE
       "-fno-builtin"
       "-nostdlib"
+      "-static"
+      "-nostartfiles"
     )
 
     set_target_properties(
