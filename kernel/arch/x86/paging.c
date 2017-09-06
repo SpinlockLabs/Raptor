@@ -9,7 +9,6 @@
 #include "heap.h"
 #include "irq.h"
 #include "paging.h"
-#include "arch-x86.h"
 
 #define INDEX_FROM_BIT(a) ((a) / (8 * 4))
 #define OFFSET_FROM_BIT(a) ((a) % (8 * 4))
@@ -332,8 +331,6 @@ void paging_finalize(void) {
     );
 }
 
-static bool paging_enabled = false;
-
 void paging_switch_directory(page_directory_t* dir) {
     if (current_directory != NULL &&
         dir->physicalAddr == current_directory->physicalAddr) {
@@ -342,22 +339,14 @@ void paging_switch_directory(page_directory_t* dir) {
 
     current_directory = dir;
 
-    if (paging_enabled) {
-        asm volatile(
-            "mov %0, %%cr3\n"
-            ::"r"(dir->physicalAddr)
-        );
-    } else {
-        paging_enabled = true;
-        asm volatile(
-            "mov %0, %%cr3\n"
-            "mov %%cr0, %%eax\n"
-            "orl $0x80000000, %%eax\n"
-            "mov %%eax, %%cr0\n"
-            ::"r"(dir->physicalAddr)
-            :"eax"
-        );
-    }
+    asm volatile(
+        "mov %0, %%cr3\n"
+        "mov %%cr0, %%eax\n"
+        "orl $0x80000000, %%eax\n"
+        "mov %%eax, %%cr0\n"
+        :: "r"(dir->physicalAddr)
+        : "eax"
+    );
 }
 
 page_t* paging_get_page(uintptr_t address, int make, page_directory_t* dir) {

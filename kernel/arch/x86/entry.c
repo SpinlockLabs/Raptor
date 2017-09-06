@@ -65,7 +65,7 @@ used void arch_panic_handler(nullable char* msg) {
         lox_output_char_vga('\n');
     }
 
-    while (1) {
+    while (true) {
         asm("hlt;");
     }
 }

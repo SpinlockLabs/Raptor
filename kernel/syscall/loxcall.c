@@ -8,6 +8,7 @@ syscall_result_t loxcall_exit(uintptr_t* args) {
     int code = args[0];
     process_t* process = process_get_current();
     process->status = PROCESS_STOPPED;
+    process->exit_code = code;
     scheduler_switch_next();
     return 0;
 }

@@ -1,11 +1,11 @@
 #include <liblox/memory.h>
 
 #include <kernel/process/process.h>
-#include <kernel/cpu/idle.h>
 #include <kernel/paging.h>
+#include <kernel/cpu/idle.h>
 
-#include "paging.h"
 #include "elf32load.h"
+#include "paging.h"
 #include "irq.h"
 
 #define KERNEL_STACK_SIZE 0x8000
@@ -57,10 +57,11 @@ void sysexec(
 }
 
 void arch_process_init_kidle(process_t* proc) {
+    uintptr_t stack = (uintptr_t) malloc(KERNEL_STACK_SIZE) + KERNEL_STACK_SIZE;
     proc->arch.registers.eip = (uintptr_t) &cpu_run_idle;
-    proc->arch.registers.esp = (uintptr_t) malloc(KERNEL_STACK_SIZE) + KERNEL_STACK_SIZE;
-    proc->arch.registers.ebp = proc->arch.registers.esp;
-    proc->image.stack = proc->arch.registers.esp;
+    proc->arch.registers.esp = stack;
+    proc->arch.registers.ebp = stack;
+    proc->image.stack = stack;
 
     extern page_directory_t* kernel_directory;
     proc->arch.paging = kernel_directory;
@@ -75,11 +76,11 @@ void scheduler_switch_next(void) {
     uintptr_t eip = process->arch.registers.eip;
 
     process_set_current(process);
-
     process->status = PROCESS_RUNNING;
 
     page_directory_t* dir = process->arch.paging;
     paging_switch_directory(dir);
+
     set_kernel_stack(process->image.stack);
 
     asm volatile (
@@ -90,11 +91,30 @@ void scheduler_switch_next(void) {
         "mov $0x10000, %%eax\n"
         "jmp *%%ebx"
         : : "r" (eip), "r" (esp), "r" (ebp), "r" (dir->physicalAddr)
-        : "%ebx", "%esp", "%eax"
+        : "ebx", "esp", "eax"
     );
 }
 
 void scheduler_switch_task(bool reschedule) {
+    uintptr_t esp, ebp, eip;
+    asm volatile ("mov %%esp, %0" : "=r" (esp));
+    asm volatile ("mov %%ebp, %0" : "=r" (ebp));
+    eip = read_eip();
+
+    process_t* current = process_get_current();
+    if (current == NULL) {
+        return;
+    }
+
+    if (current->status != PROCESS_RUNNING) {
+        scheduler_switch_next();
+        return;
+    }
+
+    if (eip == 0x10000) {
+        return;
+    }
+
     process_t* process = process_get_current();
     if (process == NULL) {
         return;
@@ -105,14 +125,7 @@ void scheduler_switch_task(bool reschedule) {
         return;
     }
 
-    uintptr_t esp, ebp, eip;
-    asm volatile ("mov %%esp, %0" : "=r" (esp));
-    asm volatile ("mov %%ebp, %0" : "=r" (ebp));
-    eip = read_eip();
-
-    if (eip == 0x10000) {
-        return;
-    }
+    process->status = PROCESS_WAITING;
 
     process->arch.registers.esp = esp;
     process->arch.registers.ebp = ebp;

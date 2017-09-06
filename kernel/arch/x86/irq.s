@@ -43,6 +43,7 @@ irq_common:
     mov %ax, %es
     mov %ax, %fs
     mov %ax, %gs
+    cld
 
     push %esp
     call irq_handler

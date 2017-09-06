@@ -16,7 +16,7 @@ void __abort(char* msg) {
     unused(msg);
 }
 
-used void __do_main(void) {
+used void _start(void) {
     char* args[1] = {
             "exe"
     };

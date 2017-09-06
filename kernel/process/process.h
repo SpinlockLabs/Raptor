@@ -72,6 +72,9 @@ struct process {
     /* Current process status. */
     process_status_t status;
 
+    /* Process exit code. */
+    int exit_code;
+
     /* Process image. */
     process_image_t image;
 

@@ -124,7 +124,7 @@ static void debug_start_process(tty_t* tty, const char* input) {
         char**
     );
 
-    sysexec(tty, "true", buff, stat.size, 0, argv);
+    sysexec(tty, (char*) input, buff, stat.size, 0, argv);
 }
 
 void debug_x86_init(void) {

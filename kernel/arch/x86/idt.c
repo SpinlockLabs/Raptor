@@ -5,7 +5,7 @@
 #include "idt.h"
 #include "isr.h"
 
-#define isr(i) idt_set_gate(i, (uint32_t)_isr##i, 0x08, 0x8E)
+#define isr(i) idt_set_gate((i), (uint32_t) _isr##i, 0x08, 0x8E)
 
 // Initializes the IDT.
 void idt_init(void) {

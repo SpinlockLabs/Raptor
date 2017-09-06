@@ -13,9 +13,8 @@
                             *((type *) (stack)) = item
 
 void enter_user_jmp(uintptr_t location, int argc, char** argv, uintptr_t stack) {
-    printf(DEBUG "Jumping to userspace with entrypoint 0x%x\n", location);
-
     int_disable();
+
     set_kernel_stack(process_get_current()->image.stack);
 
     PUSH(stack, uintptr_t, (uintptr_t) argv);

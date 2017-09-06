@@ -9,7 +9,7 @@ static struct {
     gdt_entry_t entries[6];
     gdt_pointer_t pointer;
     tss_entry_t tss;
-} packed gdt;
+} gdt;
 
 #define ENTRY(X) (gdt.entries[(X)])
 
@@ -19,7 +19,7 @@ static void write_tss(int32_t num, uint16_t ss0, uint32_t esp0) {
     uintptr_t base = (uintptr_t) tss;
     uintptr_t limit = base + sizeof(*tss);
 
-    // Add to GDT
+    /* Add the TSS descriptor to the GDT */
     gdt_set_gate(num, base, limit, 0xE9, 0x00);
 
     memset(tss, 0x0, sizeof(*tss));
