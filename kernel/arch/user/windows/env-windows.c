@@ -143,7 +143,7 @@ void raptor_user_process_stdin(void) {
                 .size = 1
             };
 
-            epipe_deliver(&tty->reads, &event);
+            epipe_deliver(&console_tty->reads, &event);
         }
     }
 }

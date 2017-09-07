@@ -27,14 +27,14 @@ if(NOT COMPCERT)
     cflags(-march=${OPTIMIZE_FOR})
   endif()
 
-  kernel_cflags(
+  cflags(
     -fno-stack-protector
     -fno-pic
   )
 endif()
 
 if(GCC)
-  kernel_cflags(-fno-pie)
+  cflags(-fno-pie)
 endif()
 
 if(EXISTS ${RAPTOR_DIR}/kernel/arch/x86/acpi/include)
