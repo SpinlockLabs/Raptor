@@ -136,6 +136,10 @@ used does_not_return void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags_a
     kernel_init();
 }
 
+void arch_process_init_kidle(process_t* process) {
+    unused(process);
+}
+
 void cpu_run_idle(void) {
     while (true) {
         delay(50000);

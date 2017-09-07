@@ -78,6 +78,10 @@ syscall_result_t raptor_user_syscall(syscall_id_t id, uintptr_t* args) {
     return 0;
 }
 
+void arch_process_init_kidle(process_t* process) {
+    unused(process);
+}
+
 #ifndef __EMSCRIPTEN__
 void cpu_run_idle(void) {
     while (true) {
