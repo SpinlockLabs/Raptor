@@ -1,8 +1,8 @@
 #include "loxcall.h"
-#include "table.h"
 
-#include <kernel/process/process.h>
 #include <kernel/process/scheduler.h>
+#include <kernel/syscall/table.h>
+#include <kernel/process/process.h>
 
 syscall_result_t loxcall_exit(uintptr_t* args) {
     int code = args[0];
@@ -25,6 +25,6 @@ syscall_result_t loxcall_console_write(uintptr_t* args) {
 }
 
 void syscall_loxcall_init(void) {
-    syscall_add(0, SYSCALL_EXIT, loxcall_exit);
-    syscall_add(0, SYSCALL_CONSOLE_WRITE, loxcall_console_write);
+    syscall_add(LOXCALL_TABLE, SYSCALL_EXIT, loxcall_exit);
+    syscall_add(LOXCALL_TABLE, SYSCALL_CONSOLE_WRITE, loxcall_console_write);
 }

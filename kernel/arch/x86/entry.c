@@ -121,7 +121,7 @@ void kernel_setup_devices(void) {
     pci_init();
 
     vga_pty = tty_create("vga");
-    vga_pty->write = vga_pty_write;
+    vga_pty->ops.write = vga_pty_write;
     vga_pty->flags.allow_debug_console = true;
     vga_pty->flags.write_kernel_log = true;
     vga_pty->flags.echo = true;

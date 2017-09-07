@@ -48,8 +48,11 @@ void (*lox_output_char_provider)(char) = lox_output_char_uart;
 void (*lox_sleep_provider)(ulong) = delay;
 
 syscall_result_t lox_syscall(syscall_id_t id, uintptr_t* args) {
+    unused(id);
+    unused(args);
     return 0;
 }
+
 syscall_result_t (*lox_syscall_provider)(syscall_id_t, uintptr_t*) = lox_syscall;
 
 static void uart_tty_write(tty_t* tty, const uint8_t* buf, size_t size) {
@@ -80,18 +83,23 @@ static void uart_poll_read_task(void* extra) {
             return;
         }
 
-        if (uart_tty->handle_read != NULL) {
-            if (!uart_tty->flags.raw) {
-                c = (uint8_t) uart_conv((char) c);
-            }
-            uart_tty->handle_read(uart_tty, &c, 1);
+        if (!uart_tty->flags.raw) {
+            c = (uint8_t) uart_conv((char) c);
         }
+
+        tty_read_event_t event = {
+            .tty = uart_tty,
+            .size = 1,
+            .data = &c
+        };
+
+        epipe_deliver(&uart_tty->reads, &event);
     }
 }
 
 void kernel_setup_devices(void) {
     uart_tty = tty_create("uart");
-    uart_tty->write = uart_tty_write;
+    uart_tty->ops.write = uart_tty_write;
     uart_tty->flags.allow_debug_console = true;
     uart_tty->flags.write_kernel_log = true;
     uart_tty->flags.echo = true;

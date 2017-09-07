@@ -75,9 +75,13 @@ static void serial_poll(void* data) {
             c = convert_recv(c);
         }
 
-        if (tty->handle_read != NULL) {
-            tty->handle_read(tty, &c, 1);
-        }
+        tty_read_event_t event = {
+            .data = &c,
+            .size = 1,
+            .tty = tty
+        };
+
+        epipe_deliver(&tty->reads, &event);
     }
 }
 
@@ -90,8 +94,8 @@ tty_serial_t* tty_create_serial(char* name, uint index) {
     serial_enable(serial->port);
 
     tty->internal.provider = serial;
-    tty->write = tty_serial_write;
-    tty->destroy = tty_serial_destroy;
+    tty->ops.write = tty_serial_write;
+    tty->ops.destroy = tty_serial_destroy;
     serial->poll_task = ktask_repeat(1, serial_poll, tty);
     return serial;
 }

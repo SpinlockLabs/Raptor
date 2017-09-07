@@ -63,12 +63,14 @@ void raptor_user_process_stdin(void) {
     if (_stdin_has_data) {
         _stdin_has_data = false;
         size_t len = strlen(_stdin_data);
-        if (console_tty != NULL && console_tty->handle_read != NULL) {
-            console_tty->handle_read(
-                console_tty,
-                (const uint8_t*) _stdin_data,
-                len
-            );
+        if (console_tty != NULL) {
+            tty_read_event_t event = {
+                .tty = console_tty,
+                .data = (uint8_t*) _stdin_data,
+                .size = len
+            };
+
+            epipe_deliver(&tty->reads, &event);
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿#include <liblox/io.h>
+#include <liblox/io.h>
 
 #include <kernel/tty.h>
 #include <kernel/time.h>
@@ -49,7 +49,7 @@ void irq_wait(void) {
 
 void kernel_setup_devices(void) {
     console_tty = tty_create("console");
-    console_tty->write = raptor_user_console_write;
+    console_tty->ops.write = raptor_user_console_write;
     console_tty->flags.write_kernel_log = true;
     console_tty->flags.allow_debug_console = true;
     console_tty->flags.echo = true;

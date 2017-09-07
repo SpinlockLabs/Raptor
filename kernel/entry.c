@@ -20,7 +20,7 @@
 #include <kernel/cpu/task.h>
 #include <kernel/process/scheduler.h>
 #include <kernel/syscall/table.h>
-#include <kernel/syscall/loxcall.h>
+#include <kernel/syscall/lox/loxcall.h>
 
 #include "paging.h"
 #include "heap.h"

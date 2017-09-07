@@ -1,13 +1,36 @@
 #include "table.h"
 
-static hashmap_t* syscall_table;
-
-static void nop_value_free(void* val) {
-    unused(val);
-}
+/**
+ * The system call table is defined as the theoretical type
+ * array(SYSCALL_TABLE_MAX_SETS)<array(SYSCALL_TABLE_MAX_CALLS)<syscall_handler_t>>
+ *
+ * These parameters will be tuned as development progresses.
+ */
+static syscall_handler_t syscall_table[SYSCALL_TABLE_MAX_SETS][SYSCALL_TABLE_MAX_CALLS];
 
 void syscall_init(void) {
-    syscall_table = hashmap_create_int(2);
+}
+
+static bool do_check_set_and_id(syscall_set_t set, syscall_id_t id, bool add) {
+    if (set >= SYSCALL_TABLE_MAX_SETS) {
+        return false;
+    }
+
+    if (id > SYSCALL_TABLE_MAX_CALLS) {
+        return false;
+    }
+
+    if (add) {
+        if (syscall_table[set][id] != NULL) {
+            return false;
+        }
+    } else {
+        if (syscall_table[set][id] == NULL) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 bool syscall_add(
@@ -15,20 +38,11 @@ bool syscall_add(
     syscall_id_t id,
     syscall_handler_t handler
 ) {
-    hashmap_t* set_table = NULL;
-    if (!hashmap_has(syscall_table, (void*) set)) {
-        set_table = hashmap_create_int(16);
-        set_table->value_free = nop_value_free;
-        hashmap_set(syscall_table, (void*) set, set_table);
-    } else {
-        set_table = hashmap_get(syscall_table, (void*) set);
-    }
-
-    if (hashmap_has(set_table, (void*) id)) {
+    if (!do_check_set_and_id(set, id, true)) {
         return false;
     }
 
-    hashmap_set(set_table, (void*) id, handler);
+    syscall_table[set][id] = handler;
     return true;
 }
 
@@ -36,20 +50,11 @@ bool syscall_remove(
     syscall_set_t set,
     syscall_id_t id
 ) {
-    if (!hashmap_has(syscall_table, (void*) set)) {
+    if (!do_check_set_and_id(set, id, false)) {
         return false;
     }
 
-    hashmap_t* set_table = hashmap_get(syscall_table, (void*) set);
-    if (!hashmap_has(set_table, (void*) id)) {
-        return false;
-    }
-
-    hashmap_remove(set_table, (void*) id);
-
-    if (hashmap_count(set_table) == 0) {
-        hashmap_remove(syscall_table, (void*) set);
-    }
+    syscall_table[set][id] = NULL;
     return true;
 }
 
@@ -58,17 +63,9 @@ syscall_result_t syscall_run(
     syscall_id_t id,
     uintptr_t* args
 ) {
-    hashmap_t* set_table = hashmap_get(syscall_table, (void*) set);
-
-    if (set_table == NULL) {
+    if (!do_check_set_and_id(set, id, false)) {
         return -1;
     }
 
-    syscall_handler_t handler = hashmap_get(set_table, (void*) id);
-
-    if (handler == NULL) {
-        return -1;
-    }
-
-    return handler(args);
+    return syscall_table[set][id](args);
 }

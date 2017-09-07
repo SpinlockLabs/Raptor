@@ -3,6 +3,19 @@
 #include <liblox/hashmap.h>
 #include <liblox/syscall.h>
 
+/* Lox system call table. */
+#define LOXCALL_TABLE 0
+
+/**
+ * Defines the maximum number of system calls in a given set.
+ */
+#define SYSCALL_TABLE_MAX_CALLS 512
+
+/**
+ * Defines the maximum number of system call sets.
+ */
+#define SYSCALL_TABLE_MAX_SETS 16
+
 /**
  * A handler for a system call.
  */

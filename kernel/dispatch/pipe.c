@@ -98,12 +98,16 @@ void epipe_deliver_async(epipe_t* pipe, void* event) {
 
 epipe_t* epipe_create(void) {
     epipe_t* pipe = zalloc(sizeof(epipe_t));
+    epipe_init(pipe);
+    return pipe;
+}
+
+void epipe_init(epipe_t* pipe) {
     list_t* list = list_create();
     list->free_values = true;
     pipe->internal = list;
 
     spin_init(&pipe->lock);
-    return pipe;
 }
 
 void epipe_destroy(epipe_t* pipe) {

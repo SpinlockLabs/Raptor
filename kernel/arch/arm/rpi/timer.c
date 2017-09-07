@@ -1,10 +1,7 @@
 #include <liblox/common.h>
-#include <stdint.h>
 
-#include "delay.h"
 #include "mmio.h"
 #include "board.h"
-#include "irq.h"
 
 void timer_init(uint32_t freq) {
     unused(freq);

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(raptor-host)
+project(raptor-host C)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
