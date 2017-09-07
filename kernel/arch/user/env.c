@@ -3,6 +3,7 @@
 #include <kernel/tty.h>
 #include <kernel/time.h>
 #include <kernel/cpu/task.h>
+#include <kernel/syscall/table.h>
 
 #include <kernel/rkmalloc/rkmalloc.h>
 
@@ -72,6 +73,8 @@ void raptor_user_loop(void) {
 }
 
 syscall_result_t raptor_user_syscall(syscall_id_t id, uintptr_t* args) {
+    unused(id);
+    unused(args);
     return 0;
 }
 
