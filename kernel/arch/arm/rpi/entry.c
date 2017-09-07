@@ -2,6 +2,8 @@
 #include <liblox/io.h>
 #include <liblox/lox-internal.h>
 
+#include <kernel/process/process.h>
+
 #include <kernel/entry.h>
 #include <kernel/tty.h>
 #include <kernel/timer.h>

@@ -4,6 +4,7 @@
 #include <kernel/time.h>
 #include <kernel/cpu/task.h>
 #include <kernel/syscall/table.h>
+#include <kernel/process/process.h>
 
 #include <kernel/rkmalloc/rkmalloc.h>
 
