@@ -31,7 +31,7 @@ kernel_ldscript("${KERNEL_DIR}/arch/arm/rpi/linker.ld")
 
 set(QEMU_CMD
   qemu-system-arm
-    -kernel "${CMAKE_BINARY_DIR}/kernel.elf"
+    -kernel "$<TARGET_FILE:kernel>"
     -m 1024
     -M raspi2
     -serial stdio

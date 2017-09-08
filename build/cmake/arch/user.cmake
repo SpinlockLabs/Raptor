@@ -56,3 +56,10 @@ elseif(WIN32)
 else()
   target_link_libraries(kernel dl c)
 endif()
+
+add_custom_target(run-kernel
+  COMMAND $<TARGET_FILE:kernel>
+  DEPENDS kernel
+  USES_TERMINAL
+  WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+)

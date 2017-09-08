@@ -70,7 +70,7 @@ add_custom_target(
   DEPENDS kernel filesystem
   COMMAND bash
             ${CMAKE_SOURCE_DIR}/build/scripts/mkgrubiso.sh
-            "${CMAKE_BINARY_DIR}/kernel.elf"
+            "$<TARGET_FILE:kernel>"
   WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
 )
 
@@ -108,7 +108,7 @@ if(RAPTOR_WINDOWS)
             -m 1024
             -M q35
             -serial file:kernel.log
-            -kernel "${CMAKE_BINARY_DIR}/kernel.elf"
+            -kernel "$<TARGET_FILE:kernel>"
       DEPENDS kernel
     )
 endif()
