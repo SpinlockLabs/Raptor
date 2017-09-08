@@ -1,7 +1,6 @@
 #include <liblox/version.h>
 #include <liblox/io.h>
 
-#include <kernel/cpu/idle.h>
 #include <kernel/tty.h>
 #include <kernel/modload.h>
 #include <kernel/debug/console.h>
@@ -15,8 +14,13 @@
 #include <kernel/network/iface.h>
 #include <kernel/network/stack/stack.h>
 
+#include <kernel/process/process.h>
+
 #include <kernel/dispatch/events.h>
 #include <kernel/cpu/task.h>
+#include <kernel/process/scheduler.h>
+#include <kernel/syscall/table.h>
+#include <kernel/syscall/lox/loxcall.h>
 
 #include "paging.h"
 #include "heap.h"
@@ -56,6 +60,12 @@ void kernel_init(void) {
     network_stack_init();
     printf(DEBUG "Network initialized.\n");
 
+    syscall_init();
+    syscall_loxcall_init();
+
+    process_tree_init();
+    scheduler_init();
+
     debug_console_init();
     printf(DEBUG "Debug console initialized.\n");
     kernel_setup_devices();
@@ -85,5 +95,5 @@ void kernel_init(void) {
 
     mount_rootfs();
 
-    cpu_run_idle();
+    scheduler_switch_next();
 }

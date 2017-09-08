@@ -48,6 +48,8 @@ if(ENABLE_LTO)
   cflags(-flto)
 endif()
 
+cflags(-fno-stack-protector)
+
 include_directories(${RAPTOR_DIR})
 
 include(${RAPTOR_DIR}/build/cmake/kernel.cmake)

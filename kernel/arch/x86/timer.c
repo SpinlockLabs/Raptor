@@ -2,8 +2,10 @@
 
 #include <kernel/timer.h>
 
-#include <kernel/cpu/task.h>
 #include <kernel/entry.h>
+#include <kernel/process/process.h>
+#include <kernel/process/scheduler.h>
+#include <kernel/cpu/task.h>
 
 #include "io.h"
 #include "irq.h"
@@ -16,6 +18,7 @@ static int timer_callback(cpu_registers_t* regs) {
     timer_ticks++;
     if (kernel_initialized) {
         ktask_queue_flush();
+        scheduler_switch_task(true);
     }
 
     return 1;

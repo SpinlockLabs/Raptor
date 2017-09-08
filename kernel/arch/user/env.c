@@ -1,8 +1,10 @@
-﻿#include <liblox/io.h>
+#include <liblox/io.h>
 
 #include <kernel/tty.h>
 #include <kernel/time.h>
 #include <kernel/cpu/task.h>
+#include <kernel/syscall/table.h>
+#include <kernel/process/process.h>
 
 #include <kernel/rkmalloc/rkmalloc.h>
 
@@ -49,7 +51,7 @@ void irq_wait(void) {
 
 void kernel_setup_devices(void) {
     console_tty = tty_create("console");
-    console_tty->write = raptor_user_console_write;
+    console_tty->ops.write = raptor_user_console_write;
     console_tty->flags.write_kernel_log = true;
     console_tty->flags.allow_debug_console = true;
     console_tty->flags.echo = true;
@@ -69,6 +71,16 @@ void time_get(rtime_t* time) {
 void raptor_user_loop(void) {
     ktask_queue_flush();
     raptor_user_process_stdin();
+}
+
+syscall_result_t raptor_user_syscall(syscall_id_t id, uintptr_t* args) {
+    unused(id);
+    unused(args);
+    return 0;
+}
+
+void arch_process_init_kidle(process_t* process) {
+    unused(process);
 }
 
 #ifndef __EMSCRIPTEN__
@@ -113,3 +125,4 @@ void (*lox_free_provider)(void*) = raptor_user_free;
 void (*lox_output_char_provider)(char) = raptor_user_output_char;
 void (*lox_output_string_provider)(char*) = raptor_user_output_string;
 char* (*arch_get_cmdline)(void) = raptor_user_get_cmdline;
+syscall_result_t (*lox_syscall_provider)(syscall_id_t, uintptr_t*) = raptor_user_syscall;

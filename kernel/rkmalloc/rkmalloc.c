@@ -164,6 +164,27 @@ static bool is_block_usable(rkmalloc_entry* entry, size_t block_size) {
     return false;
 }
 
+void* rkmalloc_allocate_align(rkmalloc_heap* heap, size_t size, size_t align) {
+    size_t mask = align - 1;
+    size_t true_size = size + align;
+
+    if ((get_block_size(heap->types, size) - size) >= align) {
+        true_size = size;
+    }
+
+    uintptr_t result = (uintptr_t) rkmalloc_allocate(heap, true_size);
+
+    if (result == 0) {
+        return (void*) result;
+    }
+
+    if ((result % align) == 0) {
+        return (void*) result;
+    }
+
+    return (void*) ((result + mask) & ~mask);
+}
+
 void* rkmalloc_allocate(rkmalloc_heap* heap, size_t size) {
     if (size == 0) {
         return NULL;

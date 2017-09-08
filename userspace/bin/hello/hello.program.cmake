@@ -1,0 +1,1 @@
+program(hello hello.c)

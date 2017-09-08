@@ -23,12 +23,12 @@ void* heap_start(void) {
     return kheap_started_at;
 }
 
-void* kheap_allocate(size_t size) {
-    return rkmalloc_allocate(kheap, size);
+void* kheap_allocate_align(size_t size) {
+    return rkmalloc_allocate_align(kheap, size, 0x1000);
 }
 
-void* kheap_aligned_allocate(size_t size) {
-    return (void*) kpmalloc_a(size);
+void* kheap_allocate(size_t size) {
+    return rkmalloc_allocate(kheap, size);
 }
 
 void* kheap_reallocate(void* ptr, size_t size) {
@@ -41,11 +41,12 @@ void kheap_free(void* ptr) {
 
 static uintptr_t _kpmalloc_int(size_t size, int align, uintptr_t* phys) {
     if (kheap_end != 0) {
-        uintptr_t address = (uintptr_t) kheap_allocate(size + 0x1000);
+        uintptr_t address;
 
         if (align) {
-            size_t mask = 0x1000 - 1;
-            address = (address + mask) & ~mask;
+            address = (uintptr_t) kheap_allocate_align(size);
+        } else {
+            address = (uintptr_t) kheap_allocate(size);
         }
 
         if (phys) {
@@ -160,4 +161,4 @@ size_t kpused(void) {
 void* (*lox_allocate_provider)(size_t) = kheap_allocate;
 void* (*lox_reallocate_provider)(void* ptr, size_t size) = kheap_reallocate;
 void (*lox_free_provider)(void* ptr) = kheap_free;
-void* (*lox_aligned_allocate_provider)(size_t) = kheap_aligned_allocate;
+void* (*lox_aligned_allocate_provider)(size_t) = kheap_allocate_align;

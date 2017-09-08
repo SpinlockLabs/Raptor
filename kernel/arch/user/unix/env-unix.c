@@ -136,7 +136,6 @@ static bool raptor_user_stdin_has_data(size_t* count) {
 void raptor_user_process_stdin(void) {
     size_t count = 0;
     if (console_tty != NULL &&
-        console_tty->handle_read != NULL &&
         raptor_user_stdin_has_data(&count)) {
         uint8_t* buff = zalloc(count);
         int ret = libc_read(0, buff, count);
@@ -144,7 +143,12 @@ void raptor_user_process_stdin(void) {
 #ifdef __APPLE__
             count = ret;
 #endif
-            console_tty->handle_read(console_tty, buff, count);
+            tty_read_event_t event = {
+                .tty = console_tty,
+                .data = buff,
+                .size = count
+            };
+            epipe_deliver(&console_tty->reads, &event);
         }
         free(buff);
     }

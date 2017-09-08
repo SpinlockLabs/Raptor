@@ -11,6 +11,7 @@ void tty_init(tty_t* tty, char* name) {
     memset(tty, 0, sizeof(tty_t));
     tty->name = name;
     tty->status.execute_post_write = true;
+    epipe_init(&tty->reads);
 }
 
 tty_t* tty_create(char* name) {
@@ -28,13 +29,13 @@ void tty_register(tty_t* tty) {
 }
 
 void tty_write(tty_t* tty, uint8_t* buf, size_t size) {
-    if (tty->write != NULL) {
-        tty->write(tty, buf, size);
+    if (tty->ops.write != NULL) {
+        tty->ops.write(tty, buf, size);
     }
 
-    if (tty->status.execute_post_write && tty->post_write != NULL) {
+    if (tty->status.execute_post_write && tty->ops.post_write != NULL) {
         tty->status.execute_post_write = false;
-        tty->post_write(tty, buf, size);
+        tty->ops.post_write(tty, buf, size);
         tty->status.execute_post_write = true;
     }
 }
@@ -54,8 +55,8 @@ void tty_printf(tty_t* tty, char* fmt, ...) {
 }
 
 void tty_destroy(tty_t* tty) {
-    if (tty->destroy != NULL) {
-        tty->destroy(tty);
+    if (tty->ops.destroy != NULL) {
+        tty->ops.destroy(tty);
     }
 }
 

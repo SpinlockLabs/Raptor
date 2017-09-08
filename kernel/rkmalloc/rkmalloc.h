@@ -77,7 +77,10 @@ typedef struct rkmalloc_heap {
 } rkmalloc_heap;
 
 rkmalloc_error rkmalloc_init_heap(rkmalloc_heap* heap);
+
 void* rkmalloc_allocate(rkmalloc_heap* heap, size_t size);
+void* rkmalloc_allocate_align(rkmalloc_heap* heap, size_t size, size_t align);
+
 void* rkmalloc_resize(rkmalloc_heap* heap, void* ptr, size_t new_size);
 void rkmalloc_free(rkmalloc_heap* heap, void* ptr);
 

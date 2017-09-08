@@ -7,6 +7,7 @@ set(QEMU_NIC "e1000" CACHE STRING "QEMU NIC Model")
 
 cflags(
   -DARCH_X86
+  -DARCH_HAS_SCHEDULER
 )
 
 if(ENABLE_X64 AND NOT COMPCERT)
@@ -26,14 +27,14 @@ if(NOT COMPCERT)
     cflags(-march=${OPTIMIZE_FOR})
   endif()
 
-  kernel_cflags(
+  cflags(
     -fno-stack-protector
     -fno-pic
   )
 endif()
 
 if(GCC)
-  kernel_cflags(-fno-pie)
+  cflags(-fno-pie)
 endif()
 
 if(EXISTS ${RAPTOR_DIR}/kernel/arch/x86/acpi/include)
@@ -55,7 +56,7 @@ set(QEMU_CMD
 )
 
 add_custom_target(qemu
-  COMMAND ${QEMU_CMD} -net user
+  COMMAND ${QEMU_CMD} -net user -serial file:kernel.log
   DEPENDS kernel diskimg
 )
 
@@ -85,7 +86,7 @@ add_custom_target(qemu-iso
 
 add_custom_target(bochs
   COMMAND bochs -q -f "${CMAKE_SOURCE_DIR}/build/bochs/raptor.bcfg"
-  DEPENDS iso
+  DEPENDS iso kernel
   WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
 )
 

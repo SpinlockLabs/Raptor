@@ -5,7 +5,7 @@
 #include "idt.h"
 #include "isr.h"
 
-#define isr(i) idt_set_gate(i, (uint32_t)_isr##i, 0x08, 0x8E)
+#define isr(i) idt_set_gate((i), (uint32_t) _isr##i, 0x08, 0x8E)
 
 // Initializes the IDT.
 void idt_init(void) {
@@ -57,7 +57,5 @@ void idt_set_gate(uint8_t num, uint32_t base, uint16_t sel, uint8_t flags) {
 
     idt_entries[num].sel = sel;
     idt_entries[num].zero = 0;
-    // Uncomment when we get user-mode.
-    // Sets the interrupt gate privilege level to 3.
-    idt_entries[num].flags = flags /* | 0x60 */;
+    idt_entries[num].flags = (uint8_t) (flags | 0x60);
 }

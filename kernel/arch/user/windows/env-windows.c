@@ -136,13 +136,14 @@ char (*getch)(void);
 void raptor_user_process_stdin(void) {
     if (kbhit()) {
         char c = getch();
-        if (console_tty != NULL &&
-            console_tty->handle_read != NULL) {
-            console_tty->handle_read(
-                console_tty,
-                (uint8_t*) &c,
-                1
-            );
+        if (console_tty != NULL) {
+            tty_read_event_t event = {
+                .tty = console_tty,
+                .data = (uint8_t*) &c,
+                .size = 1
+            };
+
+            epipe_deliver(&console_tty->reads, &event);
         }
     }
 }
