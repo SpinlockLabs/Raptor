@@ -6,9 +6,9 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(RAPTOR_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
-include(build/cmake/common.cmake)
-include(build/cmake/filesystem.cmake)
-include(build/cmake/cflags.cmake)
+include(${RAPTOR_DIR}/build/cmake/common.cmake)
+include(${RAPTOR_DIR}/build/cmake/filesystem.cmake)
+include(${RAPTOR_DIR}/build/cmake/cflags.cmake)
 
 include_directories(${RAPTOR_DIR})
 

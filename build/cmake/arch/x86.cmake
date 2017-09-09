@@ -17,7 +17,17 @@ elseif(NOT COMPCERT)
 endif()
 
 if(CLANG)
-  cflags(-target i686-pc-elf)
+  set(
+    CLANG_TARGET
+    "i686-pc-elf"
+    CACHE STRING
+    "Clang Target"
+  )
+
+  cflags(
+    -target "${CLANG_TARGET}"
+    -mno-sse
+  )
 endif()
 
 if(NOT COMPCERT)

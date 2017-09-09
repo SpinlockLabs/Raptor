@@ -52,7 +52,7 @@ ISR_NOERR 30
 ISR_NOERR 31
 
 # Syscall interrupt.
-ISR_NOERR 127
+ISR_NOERR 128
 
 .extern fault_handler
 .type fault_handler, @function

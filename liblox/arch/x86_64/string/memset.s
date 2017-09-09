@@ -1,5 +1,5 @@
 .global memset
-.type memset,@function
+.type memset, @function
 memset:
 	and $0xff,%esi
 	mov $0x101010101010101,%rax

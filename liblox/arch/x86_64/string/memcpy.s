@@ -1,5 +1,5 @@
 .global memcpy
-.type memcpy,@function
+.type memcpy, @function
 memcpy:
 	mov %rdi,%rax
 	cmp $8,%rdx

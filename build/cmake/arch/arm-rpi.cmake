@@ -1,7 +1,12 @@
 arch("arm-rpi" "arch/arm/rpi")
 arch_include_src("${KERNEL_DIR}/arch/arm/common")
 
-option(RPI_BOOT_PART "Raspberry Pi Boot Partition" "")
+set(
+  RPI_BOOT_PART
+  ""
+  CACHE STRING
+  "Raspberry Pi Boot Partition"
+)
 
 cflags(
   -march=armv6zk

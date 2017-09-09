@@ -46,7 +46,7 @@ void idt_init(void) {
     isr(29);
     isr(30);
     isr(31);
-    isr(127);
+    isr(128);
 
     idt_flush((uint32_t*) (uint32_t) &idt_ptr);
 }

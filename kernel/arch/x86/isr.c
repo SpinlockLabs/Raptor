@@ -58,7 +58,7 @@ void isr_init(void) {
 used void fault_handler(cpu_registers_t* r) {
     int i = r->int_no;
 
-    if (i == 127) {
+    if (i == 0x80) {
         syscall_handler(r);
         return;
     }
