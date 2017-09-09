@@ -221,7 +221,9 @@ void* rkmalloc_allocate(rkmalloc_heap* heap, size_t size) {
      */
     if (entry != NULL) {
         drop_sitter(heap, entry);
-        rkmalloc_index_entry* index = (rkmalloc_index_entry*) ((uintptr_t) entry - sizeof(list_node_t));
+        rkmalloc_index_entry* index = (rkmalloc_index_entry*) (
+            (uintptr_t) entry - sizeof(list_node_t)
+        );
         entry->free = false;
         entry->used_size = size;
         heap->total_allocated_blocks_size += entry->block_size;

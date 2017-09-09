@@ -9,7 +9,8 @@ extern char __link_mem_end;
 
 static spin_lock_t kheap_lock;
 
-uintptr_t kp_placement_pointer = (uintptr_t) &__link_mem_end;
+uintptr_t kp_placement_pointer = (uintptr_t) &__link_mem_end; // NOLINT
+
 static volatile uintptr_t kheap_end = (uintptr_t) NULL;
 uintptr_t kheap_alloc_point = KERNEL_HEAP_START;
 

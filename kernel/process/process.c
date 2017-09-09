@@ -2,9 +2,6 @@
 
 #include <liblox/memory.h>
 
-#include <kernel/spin.h>
-#include <liblox/io.h>
-
 static tree_t* process_tree = NULL;
 static list_t* process_list = NULL;
 static list_t* wait_queue = NULL;
