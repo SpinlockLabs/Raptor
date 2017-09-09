@@ -74,10 +74,11 @@ rkmalloc_heap* heap_get(void) {
 }
 
 void* kheap_allocate(size_t size) {
-    if (size == 0) {
-        return (void*) kheap_placement_address;
-    }
     return rkmalloc_allocate(kheap, size);
+}
+
+void* kheap_allocate_align(size_t size) {
+    return rkmalloc_allocate_align(kheap, size, 0x1000);
 }
 
 void kheap_free(void *ptr) {
@@ -89,6 +90,6 @@ void* kheap_reallocate(void* ptr, size_t size) {
 }
 
 void* (*lox_allocate_provider)(size_t) = kheap_allocate;
-void* (*lox_aligned_allocate_provider)(size_t) = kheap_allocate;
+void* (*lox_aligned_allocate_provider)(size_t) = kheap_allocate_align;
 void (*lox_free_provider)(void *ptr) = kheap_free;
 void* (*lox_reallocate_provider)(void* ptr, size_t size) = kheap_reallocate;

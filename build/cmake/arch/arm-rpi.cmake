@@ -8,10 +8,17 @@ set(
   "Raspberry Pi Boot Partition"
 )
 
+
+set(
+  RPI_TTY
+  ""
+  CACHE STRING
+  "Raspberry Pi TTY"
+)
+
 cflags(
-  -march=armv6zk
-  -mcpu=arm1176jzf-s
-  -mfpu=vfp
+  -march=armv7-a
+  -mtune=cortex-a7
   -mfloat-abi=hard
   --specs=nosys.specs
   -O2
@@ -34,12 +41,16 @@ add_definitions(
 
 kernel_ldscript("${KERNEL_DIR}/arch/arm/rpi/linker.ld")
 
+include(${RAPTOR_DIR}/external/uspi/CMakeLists.txt)
+
 set(QEMU_CMD
   qemu-system-arm
     -kernel "$<TARGET_FILE:kernel>"
     -m 1024
     -M raspi2
     -serial stdio
+    -usb
+    -s
 )
 
 add_custom_target(qemu

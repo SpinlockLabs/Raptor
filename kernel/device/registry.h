@@ -26,7 +26,7 @@ typedef struct device_entry {
     /**
      * A device classification.
      */
-    uint classifier;
+    device_class_t classifier;
 
     /**
      * Pointer to the device.

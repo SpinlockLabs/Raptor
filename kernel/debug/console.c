@@ -3,6 +3,7 @@
 #include <liblox/string.h>
 #include <liblox/memory.h>
 #include <liblox/strbuf/strbuf.h>
+#include <liblox/io.h>
 
 #include "commands.h"
 

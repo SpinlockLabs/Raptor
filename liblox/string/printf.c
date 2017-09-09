@@ -101,6 +101,7 @@ size_t vasprintf(char* buf, const char* fmt, va_list args) {
             case 'c': /* Single character */
                 *b++ = (char) va_arg(args, int);
                 break;
+            case 'X':
             case 'x': /* Hexadecimal number */
                 i = (int) ((uintptr_t) b - (uintptr_t) buf);
                 print_hex((unsigned int) va_arg(args, unsigned long), arg_width,

@@ -11,8 +11,8 @@ typedef struct tree_node {
 } tree_node_t;
 
 typedef struct {
-    size_t nodes;
     tree_node_t* root;
+    size_t nodes;
 } tree_t;
 
 typedef uint8_t (*tree_comparator_t)(void*, void*);

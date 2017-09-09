@@ -28,9 +28,7 @@ static uint32_t* pi_fb;
 static framebuffer_t* fb;
 
 void framebuffer_init(uint32_t w, uint32_t h) {
-    uintptr_t ptr = (uintptr_t) zalloc(0x1000 + sizeof(fb_mbox_init_t));
-    ptr &= 0xFFFFF000;
-    ptr += 0x1000;
+    uintptr_t ptr = (uintptr_t) valloc(sizeof(fb_mbox_init_t));
 
     pi_fbinfo = (fb_mbox_init_t*) ptr;
 

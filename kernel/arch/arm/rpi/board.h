@@ -47,4 +47,3 @@ enum {
 #define BOARD_BUS_ADDRESS(phys) (((phys) & ~0xC0000000) | PI_FIRMWARE_BASE)
 
 extern void dmb(void);
-

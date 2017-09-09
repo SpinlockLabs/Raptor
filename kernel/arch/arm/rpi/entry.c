@@ -5,9 +5,7 @@
 #include <kernel/process/process.h>
 
 #include <kernel/entry.h>
-#include <kernel/tty.h>
 #include <kernel/timer.h>
-
 #include <kernel/cpu/task.h>
 #include <liblox/string.h>
 
@@ -16,6 +14,8 @@
 #include "uart.h"
 #include "fb.h"
 #include "delay.h"
+
+#include "usb/usb.h"
 
 void lox_output_string_uart(char *str) {
     uart_puts(str);
@@ -109,6 +109,8 @@ void kernel_setup_devices(void) {
 
     ktask_repeat(1, uart_poll_read_task, NULL);
     framebuffer_init(640, 480);
+
+    usb_rpi_init();
 }
 
 void* atags = NULL;
