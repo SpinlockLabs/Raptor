@@ -27,4 +27,8 @@ if(TESTS)
   include(${RAPTOR_DIR}/build/cmake/tests.cmake)
 endif()
 
-add_subdirectory(host)
+option(BUILD_HOST_TOOLS "Enable Building Host Tools" OFF)
+
+if(BUILD_HOST_TOOLS)
+  add_subdirectory(host)
+endif()
