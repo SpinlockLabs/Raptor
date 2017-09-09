@@ -12,11 +12,11 @@ char AdapterList[32][1024] = {0};
 uint AdapterCount = 0;
 
 struct npcap_adapter {
-    network_iface_t* iface;
+    netif_t* iface;
     uint8_t mac[6];
 };
 
-static uint8_t* npcap_get_mac(network_iface_t* iface) {
+static uint8_t* npcap_get_mac(netif_t* iface) {
     struct npcap_adapter* a = iface->data;
     return a->mac;
 }
@@ -28,7 +28,7 @@ void npcap_add_adapter(char* id) {
         return;
     }
     struct npcap_adapter* a = zalloc(sizeof(struct npcap_adapter));
-    network_iface_t* iface = network_iface_create(id);
+    netif_t* iface = netif_create(id);
     a->iface = iface;
     iface->data = a;
     iface->get_mac = npcap_get_mac;
@@ -44,7 +44,7 @@ void npcap_add_adapter(char* id) {
         free(oid_data);
     }
 
-    network_iface_register(device_root(), iface);
+    netif_register(device_root(), iface);
 }
 
 void raptor_user_network_init(void) {

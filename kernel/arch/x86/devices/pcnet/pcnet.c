@@ -44,7 +44,7 @@ typedef struct pcnet_state {
 #define PCNET_TX_COUNT 8
 
 typedef struct pcnet_network_iface {
-    network_iface_t* iface;
+    netif_t* iface;
     ktask_id poll_task;
     pcnet_state_t* state;
 } pcnet_network_iface_t;
@@ -102,7 +102,7 @@ static void set_promiscuous_mode(pcnet_state_t* state, bool val) {
     write_csr32(state, 15, csr15);
 }
 
-static int pcnet_ioctl(network_iface_t* iface, ulong req, void* data) {
+static int pcnet_ioctl(netif_t* iface, ulong req, void* data) {
     unused(data);
 
     pcnet_network_iface_t* net = iface->data;
@@ -167,7 +167,7 @@ static void enqueue_packet(pcnet_state_t* state, pcnet_netbuf_t* buffer) {
 static void dequeue_packet_task(void* extra) {
     pcnet_network_iface_t* net = extra;
     pcnet_state_t* state = net->state;
-    network_iface_t* iface = net->iface;
+    netif_t* iface = net->iface;
 
     if (state->net_queue->size == 0) {
         return;
@@ -190,8 +190,8 @@ static void dequeue_packet_task(void* extra) {
     free(value);
 }
 
-static network_iface_error_t pcnet_send_packet(
-    network_iface_t* iface,
+static netif_error_t pcnet_send_packet(
+    netif_t* iface,
     uint8_t* payload,
     size_t payload_size) {
     unused(iface);
@@ -227,7 +227,7 @@ static network_iface_error_t pcnet_send_packet(
     return IFACE_ERR_OK;
 }
 
-static network_iface_t* pcnet_iface = NULL;
+static netif_t* pcnet_iface = NULL;
 static list_t* pcnet_list = NULL;
 
 static void pcnet_interrupt(pcnet_network_iface_t* iface) {
@@ -262,7 +262,7 @@ static int pcnet_irq_handler(cpu_registers_t* r) {
     return 0;
 }
 
-static uint8_t* pcnet_get_iface_mac(network_iface_t* iface) {
+static uint8_t* pcnet_get_iface_mac(netif_t* iface) {
     unused(iface);
 
     pcnet_network_iface_t* net = iface->data;
@@ -271,7 +271,7 @@ static uint8_t* pcnet_get_iface_mac(network_iface_t* iface) {
     return state->mac;
 }
 
-static network_iface_error_t pcnet_iface_destroy(network_iface_t* iface) {
+static netif_error_t pcnet_iface_destroy(netif_t* iface) {
     pcnet_network_iface_t* net = iface->data;
     ktask_cancel(net->poll_task);
 
@@ -430,7 +430,7 @@ static void pcnet_init(device_entry_t* parent, pci_device_t* pci) {
     int_enable();
     char* name = zalloc(16);
     sprintf(name, "pcnet%d", (int) idx);
-    pcnet_iface = network_iface_create(name);
+    pcnet_iface = netif_create(name);
 
     pcnet_network_iface_t* dat = zalloc(sizeof(pcnet_network_iface_t));
     dat->state = state;
@@ -446,7 +446,7 @@ static void pcnet_init(device_entry_t* parent, pci_device_t* pci) {
     pcnet_iface->destroy = pcnet_iface_destroy;
     pcnet_iface->data = dat;
 
-    network_iface_register(
+    netif_register(
         parent,
         pcnet_iface
     );

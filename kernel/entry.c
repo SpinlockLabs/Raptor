@@ -56,7 +56,7 @@ void kernel_init(void) {
     block_device_subsystem_init();
     printf(DEBUG "VFS initialized.\n");
 
-    network_iface_subsystem_init();
+    netif_subsystem_init();
     network_stack_init();
     printf(DEBUG "Network initialized.\n");
 

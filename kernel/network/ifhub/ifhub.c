@@ -9,18 +9,18 @@
 
 static uint ifhub_id = 0;
 
-static network_iface_error_t ifhub_destroy(
-    network_iface_t* iface
+static netif_error_t ifhub_destroy(
+    netif_t* iface
 ) {
     ifhub_cfg_t* cfg = iface->data;
 
-    network_iface_ioctl(
+    netif_ioctl(
         cfg->left,
         NET_IFACE_IOCTL_DISABLE_PROMISCUOUS,
         NULL
     );
 
-    network_iface_ioctl(
+    netif_ioctl(
         cfg->left,
         NET_IFACE_IOCTL_DISABLE_PROMISCUOUS,
         NULL
@@ -49,18 +49,18 @@ static network_iface_error_t ifhub_destroy(
     return IFACE_ERR_OK;
 }
 
-static network_iface_error_t ifhub_handle_member_receive(
-    network_iface_t* iface,
+static netif_error_t ifhub_handle_member_receive(
+    netif_t* iface,
     uint8_t* buffer,
     size_t size) {
-    network_iface_t* target = iface->manager_data;
-    return network_iface_send(target, buffer, size);
+    netif_t* target = iface->manager_data;
+    return netif_send(target, buffer, size);
 }
 
-network_iface_t* ifhub_create(
+netif_t* ifhub_create(
     char* name,
-    network_iface_t* left,
-    network_iface_t* right
+    netif_t* left,
+    netif_t* right
 ) {
     if (left == NULL || right == NULL) {
         return NULL;
@@ -87,13 +87,13 @@ network_iface_t* ifhub_create(
     cfg->left->manager_data = cfg->right;
     cfg->right->manager_data = cfg->left;
 
-    network_iface_ioctl(
+    netif_ioctl(
         cfg->left,
         NET_IFACE_IOCTL_ENABLE_PROMISCUOUS,
         NULL
     );
 
-    network_iface_ioctl(
+    netif_ioctl(
         cfg->right,
         NET_IFACE_IOCTL_ENABLE_PROMISCUOUS,
         NULL
@@ -102,13 +102,13 @@ network_iface_t* ifhub_create(
     cfg->left->handle_receive = ifhub_handle_member_receive;
     cfg->right->handle_receive = ifhub_handle_member_receive;
 
-    network_iface_t* hub = network_iface_create(name);
+    netif_t* hub = netif_create(name);
     hub->class_type = IFACE_CLASS_VIRTUAL;
     hub->flags.stackless = true;
     hub->flags.stub = true;
     hub->data = cfg;
     hub->destroy = ifhub_destroy;
-    network_iface_register(
+    netif_register(
         device_root(),
         hub
     );

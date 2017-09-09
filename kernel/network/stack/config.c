@@ -5,7 +5,7 @@
 
 #include <kernel/dispatch/events.h>
 
-netconf_t* netconf_get(network_iface_t* iface) {
+netconf_t* netconf_get(netif_t* iface) {
     if (iface == NULL) {
         return NULL;
     }
@@ -28,7 +28,7 @@ void netconf_unlock(netconf_t* conf) {
 static void handle_interface_up(void* event, void* extra) {
     unused(extra);
 
-    network_iface_t* iface = event;
+    netif_t* iface = event;
     netconf_t* conf = zalloc(sizeof(netconf_t));
     spin_init(&conf->lock);
     hashmap_set(iface->manager_data, "config", conf);
@@ -37,7 +37,7 @@ static void handle_interface_up(void* event, void* extra) {
 static void handle_interface_down(void* event, void* extra) {
     unused(extra);
 
-    network_iface_t* iface = event;
+    netif_t* iface = event;
     netconf_t* conf = netconf_get(iface);
     free(conf);
 }

@@ -34,4 +34,4 @@ typedef struct dhcp_packet {
     uint8_t options[];
 } packed dhcp_packet_t;
 
-void dhcp_create_generic_request(network_iface_t* iface, dhcp_packet_t* dhcp);
+void dhcp_create_generic_request(netif_t* iface, dhcp_packet_t* dhcp);

@@ -15,9 +15,9 @@
 #include <kernel/network/ethernet.h>
 #include <kernel/dispatch/events.h>
 
-static bool is_ours(network_iface_t* iface, ethernet_packet_t* packet) {
+static bool is_ours(netif_t* iface, ethernet_packet_t* packet) {
     uint8_t our_mac[6];
-    network_iface_get_mac(iface, our_mac);
+    netif_get_mac(iface, our_mac);
     uint8_t* dest = packet->destination;
 
     if (dest[0] == 255 && dest[1] == 255 &&
@@ -49,7 +49,7 @@ static void handle_ethernet_packet_received(void* event, void* extra) {
     }
 
     uint8_t* buffer = raw->buffer;
-    network_iface_t* iface = network_iface_get(raw->iface);
+    netif_t* iface = netif_get(raw->iface);
     if (iface == NULL) {
         return;
     }
@@ -79,7 +79,7 @@ static void handle_ethernet_packet_send(void* event, void* extra) {
         return;
     }
 
-    network_iface_t* iface = network_iface_get(out->iface);
+    netif_t* iface = netif_get(out->iface);
     if (iface == NULL) {
         return;
     }
@@ -103,7 +103,7 @@ static void handle_ethernet_packet_send(void* event, void* extra) {
     arp_lookup(iface, gw, dest);
 
     uint8_t mac[6] = {0};
-    network_iface_get_mac(iface, mac);
+    netif_get_mac(iface, mac);
     size_t payload_size = out->length;
     size_t total_size = sizeof(ethernet_packet_t) + payload_size;
     ethernet_packet_t* ether = zalloc(total_size);
@@ -112,7 +112,7 @@ static void handle_ethernet_packet_send(void* event, void* extra) {
     memcpy(&ether->destination, dest, 6);
     memcpy(&ether->payload, out->buffer, payload_size);
 
-    network_iface_error_t error = network_iface_send(
+    netif_error_t error = netif_send(
         iface,
         (uint8_t*) ether,
         total_size

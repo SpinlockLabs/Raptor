@@ -19,7 +19,7 @@ typedef struct arp_state {
     hashmap_t* table;
 } arp_state_t;
 
-static arp_state_t* get_state(network_iface_t* iface) {
+static arp_state_t* get_state(netif_t* iface) {
     if (iface == NULL) {
         return NULL;
     }
@@ -31,7 +31,7 @@ typedef struct arp_entry {
     uint8_t mac[6];
 } arp_entry_t;
 
-static void ask(network_iface_t* iface, uint32_t addr) {
+static void ask(netif_t* iface, uint32_t addr) {
     if (iface->class_type != IFACE_CLASS_ETHERNET) {
         return;
     }
@@ -57,7 +57,7 @@ static void ask(network_iface_t* iface, uint32_t addr) {
     pkt->oper = ntohs(1);
 
     uint8_t mac[6] = {0};
-    network_iface_error_t error = network_iface_get_mac(iface, mac);
+    netif_error_t error = netif_get_mac(iface, mac);
 
     if (error != IFACE_ERR_OK) {
         return;
@@ -83,7 +83,7 @@ static void ask(network_iface_t* iface, uint32_t addr) {
     );
 }
 
-static void tell(network_iface_t* iface, uint32_t who, const uint8_t who_hw[6]) {
+static void tell(netif_t* iface, uint32_t who, const uint8_t who_hw[6]) {
     if (iface->class_type != IFACE_CLASS_ETHERNET) {
         return;
     }
@@ -109,7 +109,7 @@ static void tell(network_iface_t* iface, uint32_t who, const uint8_t who_hw[6]) 
     pkt->oper = ntohs(2);
 
     uint8_t mac[6] = {0};
-    network_iface_error_t error = network_iface_get_mac(iface, mac);
+    netif_error_t error = netif_get_mac(iface, mac);
 
     if (error != IFACE_ERR_OK) {
         return;
@@ -133,7 +133,7 @@ static void tell(network_iface_t* iface, uint32_t who, const uint8_t who_hw[6]) 
 static void handle_config_change(void* event, void* extra) {
     unused(extra);
 
-    network_iface_t* iface = event;
+    netif_t* iface = event;
     netconf_t* conf = netconf_get(iface);
     netconf_lock(conf);
     uint32_t gw = conf->ipv4.gateway;
@@ -156,7 +156,7 @@ static void handle_potential_arp(void* event, void* extra) {
     }
 
     char* iface_name = raw->iface;
-    network_iface_t* iface = network_iface_get(iface_name);
+    netif_t* iface = netif_get(iface_name);
 
     if (iface == NULL) {
         return;
@@ -198,7 +198,7 @@ static void handle_potential_arp(void* event, void* extra) {
 static void handle_interface_up(void* event, void* extra) {
     unused(extra);
 
-    network_iface_t* iface = event;
+    netif_t* iface = event;
     arp_state_t* state = zalloc(sizeof(arp_state_t));
     state->table = hashmap_create_int(2);
     hashmap_set(iface->manager_data, "arp", state);
@@ -207,7 +207,7 @@ static void handle_interface_up(void* event, void* extra) {
 static void handle_interface_down(void* event, void* extra) {
     unused(extra);
 
-    network_iface_t* iface = event;
+    netif_t* iface = event;
     hashmap_remove(iface->manager_data, "arp");
 }
 
@@ -237,7 +237,7 @@ void network_stack_arp_init(void) {
     );
 }
 
-void arp_lookup(network_iface_t* iface, uint32_t addr, uint8_t* hw) {
+void arp_lookup(netif_t* iface, uint32_t addr, uint8_t* hw) {
     arp_state_t* state = get_state(iface);
     if (state == NULL) {
         return;
@@ -251,7 +251,7 @@ void arp_lookup(network_iface_t* iface, uint32_t addr, uint8_t* hw) {
     copy_mac(hw, entry->mac);
 }
 
-list_t* arp_get_known(network_iface_t* iface) {
+list_t* arp_get_known(netif_t* iface) {
     arp_state_t* state = get_state(iface);
     if (state == NULL) {
         return NULL;
@@ -260,6 +260,6 @@ list_t* arp_get_known(network_iface_t* iface) {
     return hashmap_keys(state->table);
 }
 
-void arp_ask(network_iface_t* iface, uint32_t addr) {
+void arp_ask(netif_t* iface, uint32_t addr) {
     ask(iface, htonl(addr));
 }

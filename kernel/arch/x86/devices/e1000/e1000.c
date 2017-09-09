@@ -65,7 +65,7 @@ typedef struct e1000_state {
 } e1000_state_t;
 
 typedef struct e1000_iface {
-    network_iface_t* iface;
+    netif_t* iface;
     e1000_state_t* state;
     ktask_id poll_task;
 } e1000_iface_t;
@@ -104,7 +104,7 @@ static void dequeue_packet_task(void* data) {
     free(n);
     spin_unlock(&state->net_queue_lock);
 
-    network_iface_t* iface = net->iface;
+    netif_t* iface = net->iface;
     if (iface->handle_receive != NULL) {
         iface->handle_receive(iface, value->buffer, value->size);
     }
@@ -167,7 +167,7 @@ static bool get_promisc(e1000_state_t* state) {
     return false;
 }
 
-static int e1000_ioctl(network_iface_t* iface, ulong req, void* data) {
+static int e1000_ioctl(netif_t* iface, ulong req, void* data) {
     unused(data);
 
     e1000_iface_t* net = iface->data;
@@ -265,8 +265,8 @@ static int e1000_irq_handler(cpu_registers_t* r) {
     return 0;
 }
 
-static network_iface_error_t send_packet(
-    network_iface_t* iface,
+static netif_error_t send_packet(
+    netif_t* iface,
     uint8_t* payload,
     size_t payload_size) {
     e1000_iface_t* net = iface->data;
@@ -323,14 +323,14 @@ static void init_tx(e1000_state_t* state) {
                   TCTL_EN | TCTL_PSP | read_command(state, E1000_REG_TCTRL));
 }
 
-static uint8_t* get_iface_mac(network_iface_t* iface) {
+static uint8_t* get_iface_mac(netif_t* iface) {
     e1000_iface_t* net = iface->data;
     e1000_state_t* state = net->state;
 
     return state->mac;
 }
 
-static network_iface_error_t iface_destroy(network_iface_t* iface) {
+static netif_error_t iface_destroy(netif_t* iface) {
     e1000_iface_t* net = iface->data;
     ktask_cancel(net->poll_task);
 
@@ -458,7 +458,7 @@ static void e1000_device_init(device_entry_t* parent, pci_device_t* pci) {
     char* name = zalloc(16);
     sprintf(name, "intel-gig%d", (int) idx);
 
-    network_iface_t* iface = network_iface_create(name);
+    netif_t* iface = netif_create(name);
     iface->class_type = IFACE_CLASS_ETHERNET;
     iface->get_mac = get_iface_mac;
     iface->send = send_packet;
@@ -467,7 +467,7 @@ static void e1000_device_init(device_entry_t* parent, pci_device_t* pci) {
     iface->data = net;
     net->iface = iface;
 
-    network_iface_register(
+    netif_register(
         parent,
         iface
     );

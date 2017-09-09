@@ -19,7 +19,7 @@ typedef struct netconf {
     spin_lock_t lock;
 } netconf_t;
 
-netconf_t* netconf_get(network_iface_t*);
+netconf_t* netconf_get(netif_t*);
 void netconf_lock(netconf_t* conf);
 void netconf_unlock(netconf_t* conf);
 
