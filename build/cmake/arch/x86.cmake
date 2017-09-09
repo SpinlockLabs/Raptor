@@ -59,6 +59,7 @@ set(QEMU_CMD_BASE
     -m 1024
     -net nic,model=${QEMU_NIC}
     -drive "file=${CMAKE_BINARY_DIR}/raptor.img,format=raw,if=ide,media=disk"
+    -usb
 )
 
 set(QEMU_CMD
