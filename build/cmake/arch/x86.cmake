@@ -19,7 +19,7 @@ endif()
 if(CLANG)
   set(
     CLANG_TARGET
-    "i686-pc-elf"
+    "i686-pc-linux-gnu"
     CACHE STRING
     "Clang Target"
   )

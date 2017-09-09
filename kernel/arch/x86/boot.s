@@ -5,7 +5,7 @@
 .set MB_FLAGS, MB_FLAG_PAGE_ALIGN | MB_FLAG_MEMORY_INFO
 .set MB_CHECKSUM, -(MB_MAGIC + MB_FLAGS)
 
-.section .multiboot
+.section .multiboot, "a"
 .align 4
 .long MB_MAGIC
 .long MB_FLAGS
