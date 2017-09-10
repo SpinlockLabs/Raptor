@@ -19,3 +19,5 @@ CTestTestfile.cmake
 
 CMakeSettings.json
 .vs/
+
+.DS_Store

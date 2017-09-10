@@ -26,6 +26,15 @@ if(NOT COMPCERT)
     "-fno-builtin"
     "-fno-stack-protector"
   )
+
+  if(APPLE)
+    target_compile_options(
+      crt0
+      PRIVATE
+      "-e"
+      "__start"
+    )
+  endif()
 endif()
 
 target_link_libraries(crt0 lox)

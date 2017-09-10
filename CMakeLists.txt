@@ -19,7 +19,9 @@ include(${RAPTOR_DIR}/build/cmake/liblox.cmake)
 
 arch_post_init()
 
-add_subdirectory(userspace)
+if(NOT DISABLE_USERSPACE)
+  add_subdirectory(userspace)
+endif()
 
 option(TESTS "Enable Tests" OFF)
 
