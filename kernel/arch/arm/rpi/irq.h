@@ -19,3 +19,7 @@
 void irq_init(void);
 void irq_unmask(uint32_t irq);
 void irq_mask(uint32_t irq);
+
+typedef void irq_handler_t(void* data);
+
+void irq_set_handler(uint32_t irq, irq_handler_t handler, void* data);

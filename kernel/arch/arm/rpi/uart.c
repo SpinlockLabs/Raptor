@@ -2,7 +2,7 @@
 #include <kernel/kexec.h>
 
 #include "gpio.h"
-#include "mmio.h"
+#include "kernel/arch/arm/common/mmio.h"
 #include "uart.h"
 
 tty_t* uart_tty = NULL;

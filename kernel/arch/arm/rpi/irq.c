@@ -1,9 +1,10 @@
 #include "irq.h"
+#include "../common/mmio.h"
 
-#include <liblox/io.h>
 #include <kernel/interupt.h>
 
-#include "mmio.h"
+#include <liblox/io.h>
+#include <liblox/common.h>
 
 #define ARM_OPCODE_BRANCH(distance)	(0xEA000000 | ((uint32_t) distance))
 #define ARM_DISTANCE(from, to) ((void*) (((void*) to) - ((void*) from) - 2))
@@ -42,10 +43,21 @@ void irq_wait(void) {
 }
 
 extern void IRQStub(void);
+extern void DataAbortStub(void);
+extern void PrefetchAbortStub(void);
+extern void DataAbortStub(void);
+extern void UndefinedInstructionStub(void);
 
 void irq_init(void) {
     exception_table_t* table = (exception_table_t*) BOARD_EXCEPTION_TABLE_BASE;
-    table->irq = ARM_OPCODE_BRANCH(ARM_DISTANCE(&table->irq, IRQStub));
+
+    #define SET_TABLE_STUB(id, func) \
+        id = ARM_OPCODE_BRANCH(ARM_DISTANCE(&(id), #func))
+
+    SET_TABLE_STUB(table->irq, IRQStub);
+    SET_TABLE_STUB(table->data_abort, DataAbortStub);
+    SET_TABLE_STUB(table->data_abort, PrefetchAbortStub);
+    SET_TABLE_STUB(table->undefined_instruction, UndefinedInstructionStub);
 
     mmio_write(BOARD_IC_FIQ_CTL, 0);
     mmio_write(BOARD_IC_DISABLE_IRQS_1, (uint32_t) -1);
@@ -69,40 +81,29 @@ void irq_mask(uint32_t irq) {
     mmio_write(IRQS_DISABLE(irq), mask);
 }
 
-void irq_handler(void) {
-    printf(DEBUG "Handle IRQ\n");
+typedef struct irq_handler_info {
+    irq_handler_t* handler;
+    void* data;
+} irq_handler_info_t;
+
+static irq_handler_info_t irq_handlers[BOARD_IRQ_LINES];
+
+used void irq_handler(void) {
     for (uint32_t irq = 0; irq < BOARD_IRQ_LINES; irq++) {
         uint32_t pending = IRQ_PENDING(irq);
         uint32_t irq_mask = (uint32_t) IRQ_MASK(irq);
         if (mmio_read(pending) & irq_mask) {
-            printf(DEBUG "IRQ %d\n", irq);
+            printf(DEBUG "[IRQ] %d\n", irq);
+            if (irq_handlers[irq].handler != NULL) {
+                irq_handlers[irq].handler(irq_handlers[irq].data);
+            }
         }
     }
 }
 
-typedef struct AbortFrame
-{
-    uint32_t	sp_irq;
-    uint32_t	lr_irq;
-    uint32_t	r0;
-    uint32_t	r1;
-    uint32_t	r2;
-    uint32_t	r3;
-    uint32_t	r4;
-    uint32_t	r5;
-    uint32_t	r6;
-    uint32_t	r7;
-    uint32_t	r8;
-    uint32_t	r9;
-    uint32_t	r10;
-    uint32_t	r11;
-    uint32_t	r12;
-    uint32_t	sp;
-    uint32_t	lr;
-    uint32_t	spsr;
-    uint32_t	pc;
-} AbortFrame;
+void irq_set_handler(uint32_t irq, irq_handler_t handler, void* data) {
+    irq_handlers[irq].handler = handler;
+    irq_handlers[irq].data = data;
 
-void exception_handler(uint32_t exception_id, AbortFrame* frame) {
-    puts("Exception.\n");
+    irq_unmask(irq);
 }

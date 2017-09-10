@@ -1,11 +1,10 @@
 #include "mailbox.h"
-#include "mmio.h"
 #include "board.h"
 
-#include <stdbool.h>
+#include "../common/mmio.h"
+
 #include <liblox/memory.h>
 #include <liblox/string.h>
-#include <liblox/io.h>
 
 #define MAIL_FULL 0x80000000
 #define MAIL_EMPTY 0x40000000
@@ -87,8 +86,6 @@ bool bcm_get_property_tag(uint32_t tag_id, void* tag, uint32_t tag_size, uint32_
     if (bcm_mailbox_write_read(8, buff_addr) != buff_addr) {
         return false;
     }
-
-    printf("Read.\n");
 
     dmb();
 

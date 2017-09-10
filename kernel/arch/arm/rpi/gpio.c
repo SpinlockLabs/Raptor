@@ -1,7 +1,7 @@
 #include <stdint.h>
 
 #include "gpio.h"
-#include "mmio.h"
+#include "kernel/arch/arm/common/mmio.h"
 
 #define GPIO_ACT_LED_SEL_BIT 21
 #define GPIO_ACT_LED_BIT 15

@@ -7,8 +7,10 @@
 
 #include <liblox/string.h>
 #include <liblox/printf.h>
+#include <kernel/arch/arm/rpi/irq.h>
+#include <kernel/arch/arm/rpi/delay.h>
 
-#include <kernel/arch/arm/rpi/mailbox.h>
+#include "../mailbox.h"
 
 void UspiLogWrite(const char* pSource,
                   unsigned Severity,
@@ -21,8 +23,13 @@ void UspiLogWrite(const char* pSource,
     va_end(list);
 }
 
-void UspiMsDelay(unsigned nMilliSeconds) {}
-void UspiUsDelay(unsigned nMicroSeconds) {}
+void UspiMsDelay(unsigned nMilliSeconds) {
+    delay(500 * nMilliSeconds);
+}
+
+void UspiUsDelay(unsigned nMicroSeconds) {
+    delay(50 * nMicroSeconds);
+}
 
 unsigned UspiStartKernelTimer(unsigned nHzDelay,
                               TKernelTimerHandler* pHandler,
@@ -36,7 +43,11 @@ void UspiCancelKernelTimer(unsigned hTimer) {
 }
 
 void UspiConnectInterrupt(unsigned nIRQ, TInterruptHandler* pHandler, void* pParam) {
-    printf("Connect Interrupt %d\n", nIRQ);
+    irq_set_handler(
+        nIRQ,
+        pHandler,
+        pParam
+    );
 }
 
 int UspiSetPowerStateOn(unsigned nDeviceId) {
@@ -88,6 +99,18 @@ void usb_rpi_init(void) {
 
     if (USPiEthernetAvailable()) {
         printf(DEBUG "Ethernet is available.\n");
+    }
+
+    if (USPiMouseAvailable()) {
+        printf(DEBUG "Mouse is available.\n");
+    }
+
+    if (USPiKeyboardAvailable()) {
+        printf(DEBUG "Keyboard is available.\n");
+    }
+
+    if (USPiMassStorageDeviceAvailable()) {
+        printf(DEBUG "Mass Storage is available.\n");
     }
 
     printf(DEBUG "USB initialized.\n");

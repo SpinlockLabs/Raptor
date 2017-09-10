@@ -1,6 +1,6 @@
 #include <liblox/common.h>
 
-#include "mmio.h"
+#include "kernel/arch/arm/common/mmio.h"
 #include "board.h"
 
 void timer_init(uint32_t freq) {
