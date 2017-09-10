@@ -13,12 +13,12 @@ return_to_userspace:
     iret
 
 /* Enter userspace (ring3) */
-.global enter_userspace
-.type enter_userspace, @function
+.global do_enter_userspace
+.type do_enter_userspace, @function
 
 .set MAGIC, 0xDECADE21
 
-enter_userspace:
+do_enter_userspace:
     pushl %ebp
     mov %esp, %ebp
     mov 0xC(%ebp), %edx

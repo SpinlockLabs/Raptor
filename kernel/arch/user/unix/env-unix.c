@@ -45,6 +45,7 @@ void raptor_user_abort(void) {
     libc_abort();
 }
 
+#if defined(__GLIBC__) || defined(__APPLE__)
 static void unset_term_echo(void) {
     struct termios tattr;
     tcgetattr(STDIN_FILENO, &tattr);
@@ -54,7 +55,6 @@ static void unset_term_echo(void) {
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &tattr);
 }
 
-#ifdef __GLIBC__
 extern void __cxa_atexit(void*, void*, void*);
 #endif
 
@@ -67,7 +67,7 @@ void raptor_user_setup_devices(void) {
         tattr.c_cc[VTIME] = 0;
         tcsetattr(STDIN_FILENO, TCSAFLUSH, &tattr);
 
-#ifdef __GLIBC__
+#if defined(__GLIBC__) || defined(__APPLE__)
         __cxa_atexit(unset_term_echo, NULL, NULL);
 #endif
     } else {

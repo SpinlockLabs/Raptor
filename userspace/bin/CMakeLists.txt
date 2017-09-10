@@ -17,16 +17,25 @@ function(program EXE SRCFILES)
       "-fno-builtin"
       "-nostdlib"
       "-static"
-      "-nostartfiles"
     )
 
     set_target_properties(
       ${EXE}
       PROPERTIES
       LINK_FLAGS
-      "-static -nostartfiles -nostdlib"
+      "-static -nostdlib"
     )
   endif()
+
+  if(APPLE)
+    set_target_properties(
+      ${EXE}
+      PROPERTIES
+      LINK_FLAGS
+      "-static -nostdlib -e __start"
+    )
+  endif()
+
   install(
     TARGETS ${EXE}
     RUNTIME DESTINATION bin

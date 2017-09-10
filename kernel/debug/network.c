@@ -1,5 +1,7 @@
 #include "console.h"
 
+#include <liblox/string.h>
+
 #include <kernel/network/iface.h>
 #include <kernel/network/ip.h>
 
@@ -7,7 +9,6 @@
 #include <kernel/network/stack/arp.h>
 
 #include <kernel/network/ifhub/ifhub.h>
-#include <liblox/string.h>
 
 static void debug_network_iface_list(tty_t* tty, const char* input) {
     unused(input);
