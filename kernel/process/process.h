@@ -7,7 +7,7 @@
 #include <stdint.h>
 
 #include <kernel/arch.h>
-#include <kernel/tty.h>
+#include <kernel/tty/tty.h>
 #include <kernel/syscall/table.h>
 
 #define USER_STACK_BOTTOM 0xAFF00000

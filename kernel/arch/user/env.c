@@ -1,6 +1,6 @@
 #include <liblox/io.h>
 
-#include <kernel/tty.h>
+#include <kernel/tty/tty.h>
 #include <kernel/time.h>
 #include <kernel/cpu/task.h>
 #include <kernel/syscall/table.h>

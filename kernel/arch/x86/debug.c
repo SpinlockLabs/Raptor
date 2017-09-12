@@ -5,7 +5,7 @@
 
 #include <liblox/memory.h>
 
-#include <kernel/tty.h>
+#include <kernel/tty/tty.h>
 #include <kernel/debug/console.h>
 #include <kernel/arch/x86/devices/pci/pci.h>
 #include <kernel/fs/vfs.h>

@@ -3,7 +3,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include <kernel/tty.h>
+#include <kernel/tty/tty.h>
 #include <kernel/time.h>
 
 extern tty_t* console_tty;
