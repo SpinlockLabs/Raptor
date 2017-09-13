@@ -16,6 +16,7 @@ include(${RAPTOR_DIR}/build/cmake/kernel.cmake)
 include(${RAPTOR_DIR}/build/cmake/arch.cmake)
 include(${RAPTOR_DIR}/build/cmake/arch-select.cmake)
 include(${RAPTOR_DIR}/build/cmake/liblox.cmake)
+include(${RAPTOR_DIR}/build/cmake/docs.cmake)
 
 arch_post_init()
 
