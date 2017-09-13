@@ -155,6 +155,7 @@ static char* twoway_strstr(const unsigned char* h, const unsigned char* n) {
         h += p;
         mem = mem0;
     }
+    return 0;
 }
 
 char* strstr(const char* h, const char* n) {

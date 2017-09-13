@@ -53,9 +53,6 @@
 // Declares that an entity is used.
 #define used __attribute__((used))
 
-// Declares that a function never modifies its arguments.
-#define constfunc __attribute__((const))
-
 // Declares that a given function argument is unused.
 #define unused(name) (void) name
 
@@ -71,26 +68,11 @@
 // Declares that a function should always be inlined.
 #define always_inline __attribute__((always_inline))
 
-// Declares that a function will be called often.
-#define hotfunc __attribute__((hot))
-
-// Declares that a function will not be called often.
-#define coldfunc __attribute__((cold))
-
 // Declares that the location in the program is unreachable.
 #define unreachable() __builtin_unreachable()
 
 // Checks if x is null, and if it is, returns null.
 #define ensure_allocated(x) if ((x) == NULL) return NULL
-
-// Allocate the amount given by size on the stack.
-#define stack_allocate(size) __builtin_alloca(size)
-
-// Allows you to use case ranges.
-#define case_range(a, b) case a ... b
-
-// Computes the offset of the given member in the given type.
-#define offset_of_member(type, member) __builtin_offsetof(type, member)
 
 // Specifies that a value can be null.
 #define nullable
