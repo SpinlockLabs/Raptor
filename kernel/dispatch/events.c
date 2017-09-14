@@ -11,24 +11,28 @@ typedef struct event_dispatch_info {
     void* extra;
 } event_dispatch_info_t;
 
-static hashmap_t* registry = NULL;
-static spin_lock_t registry_lock;
+static struct {
+    hashmap_t registry;
+    spin_lock_t lock;
+} event_state;
+
+#define LOCK() spin_lock(&event_state.lock)
+#define UNLOCK() spin_unlock(&event_state.lock)
 
 void events_subsystem_init(void) {
-    registry = hashmap_create_int(10);
-
-    spin_init(&registry_lock);
+    hashmap_init_int(&event_state.registry, 10);
+    spin_init(&event_state.lock);
 }
 
 void event_add_handler(event_type_t type, event_handler_t handler, void* extra) {
-    spin_lock(&registry_lock);
+    LOCK();
 
     list_t* list;
-    if (!hashmap_has(registry, (void*) (uintptr_t) type)) {
+    if (!hashmap_has(&event_state.registry, (void*) (uintptr_t) type)) {
         list = list_create();
-        hashmap_set(registry, (void*) (uintptr_t) type, list);
+        hashmap_set(&event_state.registry, (void*) (uintptr_t) type, list);
     } else {
-        list = hashmap_get(registry, (void*) (uintptr_t) type);
+        list = hashmap_get(&event_state.registry, (void*) (uintptr_t) type);
     }
 
     event_dispatch_info_t* info = zalloc(sizeof(event_dispatch_info_t));
@@ -37,17 +41,17 @@ void event_add_handler(event_type_t type, event_handler_t handler, void* extra) 
 
     list_add(list, info);
 
-    spin_unlock(&registry_lock);
+    UNLOCK();
 }
 
 void event_remove_handler(event_type_t type, event_handler_t handler) {
-    spin_lock(&registry_lock);
-    if (!hashmap_has(registry, (void*) (uintptr_t) type)) {
-        spin_unlock(&registry_lock);
+    LOCK();
+    if (!hashmap_has(&event_state.registry, (void*) (uintptr_t) type)) {
+        UNLOCK();
         return;
     }
 
-    list_t* list = hashmap_get(registry, (void*) (uintptr_t) type);
+    list_t* list = hashmap_get(&event_state.registry, (void*) (uintptr_t) type);
 
     list_for_each(node, list) {
         event_dispatch_info_t* info = node->value;
@@ -58,29 +62,29 @@ void event_remove_handler(event_type_t type, event_handler_t handler) {
         list_remove(node);
         free(node);
         free(info);
-        spin_unlock(&registry_lock);
+        UNLOCK();
         return;
     }
 
-    spin_unlock(&registry_lock);
+    UNLOCK();
 }
 
  void event_dispatch(event_type_t type, void* event) {
-    spin_lock(&registry_lock);
+     LOCK();
 
-    if (!hashmap_has(registry, (void*) (uintptr_t) type)) {
-        spin_unlock(&registry_lock);
+    if (!hashmap_has(&event_state.registry, (void*) (uintptr_t) type)) {
+        UNLOCK();
         return;
     }
 
-    list_t* list = hashmap_get(registry, (void*) (uintptr_t) type);
+    list_t* list = hashmap_get(&event_state.registry, (void*) (uintptr_t) type);
 
     if (list == NULL) {
-        spin_unlock(&registry_lock);
+        UNLOCK();
         return;
     }
 
-    spin_unlock(&registry_lock);
+    UNLOCK();
 
     list_for_each(node, list) {
         event_dispatch_info_t* info = node->value;
