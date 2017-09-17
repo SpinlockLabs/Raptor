@@ -19,7 +19,8 @@ static rkmalloc_heap kheap;
 
 void heap_init(void) {
 #ifdef USER_RKMALLOC
-    kheap.expand = raptor_user_sbrk;
+    kheap.grab_block = raptor_user_malloc;
+    kheap.return_block = raptor_user_free;
     rkmalloc_init_heap(&kheap);
 #endif
 }
@@ -92,29 +93,29 @@ void cpu_run_idle(void) {
 #endif
 
 #ifdef USER_RKMALLOC
-void* raptor_malloc(size_t size) {
-    if (kheap.expand == NULL) {
+void* raptor_kernel_malloc(size_t size) {
+    if (kheap.grab_block == NULL) {
         heap_init();
     }
     return rkmalloc_allocate(&kheap, size);
 }
 
-void* raptor_valloc(size_t size) {
-    return rkmalloc_allocate(&kheap, size);
+void* raptor_kernel_valloc(size_t size) {
+    return rkmalloc_allocate_align(&kheap, size, 0x1000);
 }
 
-void* raptor_realloc(void* ptr, size_t size) {
+void* raptor_kernel_realloc(void* ptr, size_t size) {
     return rkmalloc_resize(&kheap, ptr, size);
 }
 
-void raptor_free(void* ptr) {
+void raptor_kernel_free(void* ptr) {
     rkmalloc_free(&kheap, ptr);
 }
 
-void* (*lox_allocate_provider)(size_t) = raptor_malloc;
-void* (*lox_aligned_allocate_provider)(size_t) = raptor_valloc;
-void* (*lox_reallocate_provider)(void*, size_t) = raptor_realloc;
-void (*lox_free_provider)(void*) = raptor_free;
+void* (*lox_allocate_provider)(size_t) = raptor_kernel_malloc;
+void* (*lox_aligned_allocate_provider)(size_t) = raptor_kernel_valloc;
+void* (*lox_reallocate_provider)(void*, size_t) = raptor_kernel_realloc;
+void (*lox_free_provider)(void*) = raptor_kernel_free;
 #else
 void* (*lox_allocate_provider)(size_t) = raptor_user_malloc;
 void* (*lox_aligned_allocate_provider)(size_t) = raptor_user_valloc;
