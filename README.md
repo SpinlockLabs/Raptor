@@ -18,5 +18,6 @@ to enable it to potentially run anywhere that C can be compiled to.
 ## Future Platforms
 
 - Bare-metal x86_64
+- Bare-metal Google Glass
 
 [TeamCity_Status_Badge]: https://img.shields.io/teamcity/https/ci.fork.run/s/Raptor_X86_Git.svg?label=build "TeamCity"
