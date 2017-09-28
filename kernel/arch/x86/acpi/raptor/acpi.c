@@ -8,6 +8,7 @@
 #include <kernel/arch/x86/io.h>
 #include <kernel/spin.h>
 #include <kernel/interupt.h>
+#include <kernel/arch/x86/irq.h>
 
 ACPI_STATUS AcpiOsInitialize(void) {
     return AE_OK;
@@ -173,7 +174,7 @@ void AcpiOsUnmapMemory(void* Where, ACPI_SIZE Length) {
 }
 
 void AcpiOsPrintf(const char* fmt, ...) {
-#if !RAPTOR_ACPI_DEBUG
+#ifndef RAPTOR_ACPI_NO_DEBUG
     va_list args;
     va_start(args, fmt);
     char buffer[1024] = {0};
@@ -184,7 +185,7 @@ void AcpiOsPrintf(const char* fmt, ...) {
 }
 
 void AcpiOsVprintf(const char* fmt, va_list vargs) {
-#if !RAPTOR_ACPI_DEBUG
+#ifndef RAPTOR_ACPI_NO_DEBUG
     char buffer[1024] = {0};
     vasprintf(buffer, fmt, vargs);
     puts(buffer);
@@ -246,15 +247,45 @@ void AcpiOsReleaseLock(ACPI_SPINLOCK Handle, ACPI_CPU_FLAGS Flags) {
     spin_unlock(Handle);
 }
 
+struct AcpiIrqHandler {
+    ACPI_OSD_HANDLER Handler;
+    void* Context;
+    bool Registered;
+};
+
+static struct AcpiIrqHandler AcpiIrqHandlers[IRQ_CHAIN_SIZE];
+
+int AcpiHandleIrq(cpu_registers_t* r) {
+    uint32_t interrupt = r->int_no - 32;
+
+    if (interrupt >= IRQ_CHAIN_SIZE) {
+        return 0;
+    }
+
+    if (AcpiIrqHandlers[interrupt].Registered) {
+        return AcpiIrqHandlers[interrupt].Handler(AcpiIrqHandlers[interrupt].Context);
+    }
+    return 0;
+}
+
 ACPI_STATUS AcpiOsInstallInterruptHandler(
     UINT32 InterruptNumber,
     ACPI_OSD_HANDLER Handler,
     void* Context) {
+    AcpiIrqHandlers[InterruptNumber].Context = Context;
+    AcpiIrqHandlers[InterruptNumber].Handler = Handler;
+    if (!AcpiIrqHandlers[InterruptNumber].Registered) {
+        AcpiIrqHandlers[InterruptNumber].Registered = true;
+        irq_add_handler(InterruptNumber, AcpiHandleIrq);
+    }
+    printf(DEBUG "[ACPI] Installed IRQ handler for %d\n", InterruptNumber);
     return AE_OK;
 }
 
 ACPI_STATUS AcpiOsRemoveInterruptHandler(
     UINT32 InterruptNumber,
     ACPI_OSD_HANDLER Handler) {
+    AcpiIrqHandlers[InterruptNumber].Registered = false;
+    irq_remove_handler(InterruptNumber);
     return AE_OK;
 }

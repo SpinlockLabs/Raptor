@@ -98,7 +98,7 @@ typedef struct raw_packet {
     /**
      * The relevant network interface class type.
      */
-    network_iface_class_type_t iface_class_type;
+    netif_class_type_t iface_class_type;
 } raw_packet_t;
 
 /**
@@ -122,13 +122,13 @@ typedef struct raw_ipv4_packet {
 void network_stack_init(void);
 
 /* Lets the network stack takeover the given interface. */
-bool network_stack_takeover(network_iface_t* iface);
+bool network_stack_takeover(netif_t* iface);
 
 /* Lets the network stack takeover the given interface. */
-void network_stack_takeover_async(network_iface_t* iface);
+void network_stack_takeover_async(netif_t* iface);
 
 /* Lets the network stack disown the given interface. */
-bool network_stack_disown(network_iface_t* iface);
+bool network_stack_disown(netif_t* iface);
 
 /**
  * Triggers the network stack to send the given buffer through the
@@ -141,7 +141,7 @@ bool network_stack_disown(network_iface_t* iface);
  * to allow further specifics if necessary.
  */
 void network_stack_send_packet(
-    network_iface_t* iface,
+    netif_t* iface,
     uint8_t* buffer,
     size_t size,
     packet_class_t packet_class,

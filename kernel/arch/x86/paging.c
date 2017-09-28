@@ -1,8 +1,10 @@
 #include <liblox/common.h>
 #include <liblox/hex.h>
+#include <liblox/memory.h>
 
 #include <kernel/spin.h>
 #include <kernel/paging.h>
+#include <kernel/process/process.h>
 
 #include "heap.h"
 #include "irq.h"
@@ -89,7 +91,7 @@ static bool first_frame(uintptr_t* val) {
     return false;
 }
 
-static bool alloc_frame(page_t* page, int is_kernel, int is_writable) {
+bool paging_allocate_frame(page_t* page, int is_kernel, int is_writable) {
     bool made = false;
     if (page->frame == 0) {
         spin_lock(&frame_alloc_lock);
@@ -107,6 +109,15 @@ static bool alloc_frame(page_t* page, int is_kernel, int is_writable) {
     page->rw = (is_writable == 1) ? 1 : 0;
     page->user = (is_kernel == 1) ? 0 : 1;
     return made;
+}
+
+void paging_invalidate_tables_at(uintptr_t addr) {
+    asm volatile (
+        "movl %0,%%eax\n"
+        "invlpg (%%eax)\n"
+        :: "r"(addr)
+        : "%eax"
+    );
 }
 
 static void dma_frame(page_t* page, int is_kernel,
@@ -232,8 +243,8 @@ uintptr_t paging_allocate_aligned_large(uintptr_t address, size_t size, uintptr_
         }
 
         page->frame = index + i;
-        page->accessed = 1;
-        page->dirty = 1;
+        page->writethrough = 1;
+        page->nocache = 1;
     }
 
     spin_unlock(&frame_alloc_lock);
@@ -246,7 +257,7 @@ bool paging_heap_expand_into(uintptr_t addr) {
     if (page == NULL) {
         panic("Failed to get the page while expanding kernel heap.");
     }
-    return alloc_frame(page, 1, 0);
+    return paging_allocate_frame(page, 1, 0);
 }
 
 void paging_mark_system(uintptr_t addr) {
@@ -301,7 +312,7 @@ void paging_finalize(void) {
 
     /* Allocate starting kernel heap. */
     for (uintptr_t i = kp_placement_pointer + 0x3000; i < tmp_heap_start; i += PAGE_SIZE) {
-        alloc_frame(paging_get_page(i, 1, kernel_directory), 1, 0);
+        paging_allocate_frame(paging_get_page(i, 1, kernel_directory), 1, 0);
     }
 
     /* Create pages for an extended heap allocation. */
@@ -311,9 +322,21 @@ void paging_finalize(void) {
 
     current_directory = paging_clone_directory(kernel_directory);
     paging_switch_directory(kernel_directory);
+
+    asm volatile(
+        "mov %%cr0, %%eax\n"
+        "orl $0x80000000, %%eax\n"
+        "mov %%eax, %%cr0\n"
+        :::"eax"
+    );
 }
 
 void paging_switch_directory(page_directory_t* dir) {
+    if (current_directory != NULL &&
+        dir->physicalAddr == current_directory->physicalAddr) {
+        return;
+    }
+
     current_directory = dir;
 
     asm volatile(
@@ -321,7 +344,7 @@ void paging_switch_directory(page_directory_t* dir) {
         "mov %%cr0, %%eax\n"
         "orl $0x80000000, %%eax\n"
         "mov %%eax, %%cr0\n"
-        ::"r"(dir->physicalAddr)
+        :: "r"(dir->physicalAddr)
         : "eax"
     );
 }
@@ -348,6 +371,28 @@ page_t* paging_get_page(uintptr_t address, int make, page_directory_t* dir) {
     return NULL;
 }
 
+void paging_release_directory_for_exec(page_directory_t* dir) {
+    uint32_t i;
+    /* This better be the only owner of this directory... */
+    for (i = 0; i < 1024; ++i) {
+        if (!dir->tables[i] || (uintptr_t)dir->tables[i] == (uintptr_t)0xFFFFFFFF) {
+            continue;
+        }
+        if (kernel_directory->tables[i] != dir->tables[i]) {
+            if (i * 0x1000 * 1024 < USER_STACK_BOTTOM) {
+                for (uint32_t j = 0; j < 1024; ++j) {
+                    if (dir->tables[i]->pages[j].frame) {
+                        free_frame(&(dir->tables[i]->pages[j]));
+                    }
+                }
+                dir->tablesPhysical[i] = 0;
+                free(dir->tables[i]);
+                dir->tables[i] = 0;
+            }
+        }
+    }
+}
+
 void paging_map_dma(uintptr_t virt, uintptr_t phys) {
     page_t* page = paging_get_page(virt, 1, kernel_directory);
     if (page == NULL) {
@@ -364,7 +409,7 @@ void paging_unmap_dma(uintptr_t virt) {
         return;
     }
 
-    alloc_frame(page, 1, 1);
+    paging_allocate_frame(page, 1, 1);
 }
 
 uintptr_t paging_get_physical_address(uintptr_t virt) {
@@ -455,12 +500,13 @@ extern void copy_page_physical(uintptr_t, uintptr_t);
 page_table_t* paging_clone_table(page_table_t* src, uintptr_t* phys) {
     page_table_t* table = (page_table_t*) kpmalloc_ap(sizeof(page_table_t), phys);
     memset(table, 0, sizeof(page_table_t));
+
     uintptr_t i;
     for (i = 0; i < 1024; ++i) {
         if (!src->pages[i].frame) {
             continue;
         }
-        alloc_frame(&table->pages[i], 0, 0);
+        paging_allocate_frame(&table->pages[i], 0, 0);
         if (src->pages[i].present) {
             table->pages[i].present = 1;
         }
@@ -473,12 +519,12 @@ page_table_t* paging_clone_table(page_table_t* src, uintptr_t* phys) {
             table->pages[i].user = 1;
         }
 
-        if (src->pages[i].dirty) {
-            table->pages[i].dirty = 1;
+        if (src->pages[i].nocache) {
+            table->pages[i].nocache = 1;
         }
 
-        if (src->pages[i].accessed) {
-            table->pages[i].accessed = 1;
+        if (src->pages[i].writethrough) {
+            table->pages[i].writethrough = 1;
         }
 
         copy_page_physical(src->pages[i].frame * PAGE_SIZE, table->pages[i].frame * PAGE_SIZE);
@@ -493,8 +539,7 @@ page_directory_t* paging_clone_directory(page_directory_t* src) {
         &phys
     );
 
-    memset(out, 0, sizeof(page_directory_t));
-    out->physicalAddr = phys;
+    out->physicalAddr = phys + 0x1000;
 
     for (uintptr_t i = 0; i < 1024; i++) {
         if (!src->tables[i] ||

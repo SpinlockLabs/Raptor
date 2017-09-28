@@ -6,12 +6,12 @@
 #include <kernel/network/iface.h>
 
 typedef struct ifhub_cfg {
-    network_iface_t* left;
-    network_iface_t* right;
+    netif_t* left;
+    netif_t* right;
 } ifhub_cfg_t;
 
-network_iface_t* ifhub_create(
+netif_t* ifhub_create(
     char* name,
-    network_iface_t* left,
-    network_iface_t* right
+    netif_t* left,
+    netif_t* right
 );

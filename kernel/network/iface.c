@@ -18,9 +18,9 @@ static inline void ensure_subsystem(void) {
     }
 }
 
-void network_iface_register(
+void netif_register(
     device_entry_t* parent,
-    network_iface_t* iface
+    netif_t* iface
 ) {
     ensure_subsystem();
     spin_lock(&network_subsystem_lock);
@@ -37,12 +37,12 @@ void network_iface_register(
     );
 }
 
-list_t* network_iface_get_all(void) {
+list_t* netif_get_all(void) {
     ensure_subsystem();
     return hashmap_values(network_iface_subsystem_registry);
 }
 
-network_iface_error_t network_iface_destroy(network_iface_t* iface) {
+netif_error_t netif_destroy(netif_t* iface) {
     if (network_iface_subsystem_registry == NULL) {
         return IFACE_ERR_NO_SUBSYS;
     }
@@ -57,7 +57,7 @@ network_iface_error_t network_iface_destroy(network_iface_t* iface) {
 
     spin_lock(&network_subsystem_lock);
 
-    network_iface_error_t error = IFACE_ERR_OK;
+    netif_error_t error = IFACE_ERR_OK;
 
     char* name = strdup(iface->name);
     if (iface->destroy != NULL) {
@@ -75,7 +75,7 @@ network_iface_error_t network_iface_destroy(network_iface_t* iface) {
     return error;
 }
 
-network_iface_error_t network_iface_get_mac(network_iface_t* iface, uint8_t mac[6]) {
+netif_error_t netif_get_mac(netif_t* iface, uint8_t* mac) {
     if (iface == NULL) {
         return IFACE_ERR_BAD_IFACE;
     }
@@ -93,25 +93,25 @@ network_iface_error_t network_iface_get_mac(network_iface_t* iface, uint8_t mac[
     return IFACE_ERR_OK;
 }
 
-network_iface_t* network_iface_create(char* name) {
+netif_t* netif_create(char* name) {
     ensure_subsystem();
 
-    network_iface_t* iface = zalloc(sizeof(network_iface_t));
+    netif_t* iface = zalloc(sizeof(netif_t));
     ensure_allocated(iface);
     iface->name = name;
     return iface;
 }
 
-network_iface_t* network_iface_get(char* name) {
+netif_t* netif_get(char* name) {
     ensure_subsystem();
 
     spin_lock(&network_subsystem_lock);
-    network_iface_t* iface = hashmap_get(network_iface_subsystem_registry, name);
+    netif_t* iface = hashmap_get(network_iface_subsystem_registry, name);
     spin_unlock(&network_subsystem_lock);
     return iface;
 }
 
-void network_iface_each(network_iface_handle_iter_t handle, void* data) {
+void netif_each(netif_handle_iter_t handle, void* data) {
     ensure_subsystem();
 
     spin_lock(&network_subsystem_lock);
@@ -136,8 +136,8 @@ void network_iface_each(network_iface_handle_iter_t handle, void* data) {
     spin_unlock(&network_subsystem_lock);
 }
 
-network_iface_error_t network_iface_send(network_iface_t* iface,
-                                         uint8_t* buffer, size_t size) {
+netif_error_t netif_send(netif_t* iface,
+                         uint8_t* buffer, size_t size) {
     if (iface == NULL) {
         return IFACE_ERR_BAD_IFACE;
     }
@@ -148,7 +148,7 @@ network_iface_error_t network_iface_send(network_iface_t* iface,
     return IFACE_ERR_NO_HANDLER;
 }
 
-int network_iface_ioctl(network_iface_t* iface, ulong request, void* data) {
+int netif_ioctl(netif_t* iface, ulong request, void* data) {
     if (iface == NULL) {
         return -IFACE_ERR_BAD_IFACE;
     }
@@ -160,7 +160,7 @@ int network_iface_ioctl(network_iface_t* iface, ulong request, void* data) {
     return iface->handle_ioctl(iface, request, data);
 }
 
-void network_iface_subsystem_init(void) {
+void netif_subsystem_init(void) {
     network_iface_subsystem_registry = hashmap_create(10);
     spin_init(&network_subsystem_lock);
     event_dispatch(EVENT_NETWORK_IFACE_SUBSYSTEM_INIT, NULL);

@@ -1,5 +1,8 @@
 #include "e1000.h"
 
+#include "devices.h"
+#include "defs.h"
+
 #include <liblox/common.h>
 #include <liblox/list.h>
 #include <liblox/string.h>
@@ -24,9 +27,6 @@ static void mmio_write32(uintptr_t addr, uint32_t val) {
     (*((volatile uint32_t*) (addr))) = val;
 }
 
-#define E1000_NUM_RX_DESC 32
-#define E1000_NUM_TX_DESC 8
-
 struct rx_desc {
     volatile uint64_t addr;
     volatile uint16_t length;
@@ -34,7 +34,7 @@ struct rx_desc {
     volatile uint8_t status;
     volatile uint8_t errors;
     volatile uint16_t special;
-} packed; /* this looks like it should pack fine as-is */
+} packed;
 
 struct tx_desc {
     volatile uint64_t addr;
@@ -65,7 +65,7 @@ typedef struct e1000_state {
 } e1000_state_t;
 
 typedef struct e1000_iface {
-    network_iface_t* iface;
+    netif_t* iface;
     e1000_state_t* state;
     ktask_id poll_task;
 } e1000_iface_t;
@@ -104,77 +104,12 @@ static void dequeue_packet_task(void* data) {
     free(n);
     spin_unlock(&state->net_queue_lock);
 
-    network_iface_t* iface = net->iface;
+    netif_t* iface = net->iface;
     if (iface->handle_receive != NULL) {
         iface->handle_receive(iface, value->buffer, value->size);
     }
     free(value);
 }
-
-#define E1000_REG_CTRL 0x0000
-#define E1000_REG_STATUS 0x0008
-#define E1000_REG_EEPROM 0x0014
-#define E1000_REG_CTRL_EXT 0x0018
-
-#define E1000_REG_RCTRL 0x0100
-#define E1000_REG_RXDESCLO 0x2800
-#define E1000_REG_RXDESCHI 0x2804
-#define E1000_REG_RXDESCLEN 0x2808
-#define E1000_REG_RXDESCHEAD 0x2810
-#define E1000_REG_RXDESCTAIL 0x2818
-
-#define E1000_REG_TCTRL 0x0400
-#define E1000_REG_TXDESCLO 0x3800
-#define E1000_REG_TXDESCHI 0x3804
-#define E1000_REG_TXDESCLEN 0x3808
-#define E1000_REG_TXDESCHEAD 0x3810
-#define E1000_REG_TXDESCTAIL 0x3818
-
-#define RCTL_EN (1 << 1)            /* Receiver Enable */
-#define RCTL_SBP (1 << 2)           /* Store Bad Packets */
-#define RCTL_UPE (1 << 3)           /* Unicast Promiscuous Enabled */
-#define RCTL_MPE (1 << 4)           /* Multicast Promiscuous Enabled */
-#define RCTL_LPE (1 << 5)           /* Long Packet Reception Enable */
-#define RCTL_LBM_NONE (0 << 6)      /* No Loopback */
-#define RCTL_LBM_PHY (3 << 6)       /* PHY or external SerDesc loopback */
-#define RTCL_RDMTS_HALF (0 << 8)    /* Free Buffer Threshold is 1/2 of RDLEN */
-#define RTCL_RDMTS_QUARTER (1 << 8) /* Free Buffer Threshold is 1/4 of RDLEN   \
-                                       */
-#define RTCL_RDMTS_EIGHTH (2 << 8)  /* Free Buffer Threshold is 1/8 of RDLEN */
-#define RCTL_MO_36 (0 << 12)        /* Multicast Offset - bits 47:36 */
-#define RCTL_MO_35 (1 << 12)        /* Multicast Offset - bits 46:35 */
-#define RCTL_MO_34 (2 << 12)        /* Multicast Offset - bits 45:34 */
-#define RCTL_MO_32 (3 << 12)        /* Multicast Offset - bits 43:32 */
-#define RCTL_BAM (1 << 15)          /* Broadcast Accept Mode */
-#define RCTL_VFE (1 << 18)          /* VLAN Filter Enable */
-#define RCTL_CFIEN (1 << 19)        /* Canonical Form Indicator Enable */
-#define RCTL_CFI (1 << 20)          /* Canonical Form Indicator Bit Value */
-#define RCTL_DPF (1 << 22)          /* Discard Pause Frames */
-#define RCTL_PMCF (1 << 23)         /* Pass MAC Control Frames */
-#define RCTL_SECRC (1 << 26)        /* Strip Ethernet CRC */
-
-#define RCTL_BSIZE_256 (3 << 16)
-#define RCTL_BSIZE_512 (2 << 16)
-#define RCTL_BSIZE_1024 (1 << 16)
-#define RCTL_BSIZE_2048 (0 << 16)
-#define RCTL_BSIZE_4096 ((3 << 16) | (1 << 25))
-#define RCTL_BSIZE_8192 ((2 << 16) | (1 << 25))
-#define RCTL_BSIZE_16384 ((1 << 16) | (1 << 25))
-
-#define TCTL_EN (1 << 1)      /* Transmit Enable */
-#define TCTL_PSP (1 << 3)     /* Pad Short Packets */
-#define TCTL_CT_SHIFT 4       /* Collision Threshold */
-#define TCTL_COLD_SHIFT 12    /* Collision Distance */
-#define TCTL_SWXOFF (1 << 22) /* Software XOFF Transmission */
-#define TCTL_RTLC (1 << 24)   /* Re-transmit on Late Collision */
-
-#define CMD_EOP (1 << 0)  /* End of Packet */
-#define CMD_IFCS (1 << 1) /* Insert FCS */
-#define CMD_IC (1 << 2)   /* Insert Checksum */
-#define CMD_RS (1 << 3)   /* Report Status */
-#define CMD_RPS (1 << 4)  /* Report Packet Sent */
-#define CMD_VLE (1 << 6)  /* VLAN Packet Enable */
-#define CMD_IDE (1 << 7)  /* Interrupt Delay Enable */
 
 static int eeprom_detect(e1000_state_t* state) {
     write_command(state, E1000_REG_EEPROM, 1);
@@ -212,8 +147,8 @@ static void enable_promisc(e1000_state_t* state) {
 static void disable_promisc(e1000_state_t* state) {
     uint32_t rctl = read_command(state, E1000_REG_RCTRL);
 
-    rctl |= ~(RCTL_UPE);
-    rctl |= ~(RCTL_MPE);
+    rctl &= ~(RCTL_UPE);
+    rctl &= ~(RCTL_MPE);
 
     write_command(
         state,
@@ -232,7 +167,7 @@ static bool get_promisc(e1000_state_t* state) {
     return false;
 }
 
-static int e1000_ioctl(network_iface_t* iface, ulong req, void* data) {
+static int e1000_ioctl(netif_t* iface, ulong req, void* data) {
     unused(data);
 
     e1000_iface_t* net = iface->data;
@@ -330,8 +265,8 @@ static int e1000_irq_handler(cpu_registers_t* r) {
     return 0;
 }
 
-static network_iface_error_t send_packet(
-    network_iface_t* iface,
+static netif_error_t send_packet(
+    netif_t* iface,
     uint8_t* payload,
     size_t payload_size) {
     e1000_iface_t* net = iface->data;
@@ -361,11 +296,14 @@ static void init_rx(e1000_state_t* state) {
 
     state->rx_index = 0;
 
+    uint32_t rctl = read_command(state, E1000_REG_RCTRL);
+    rctl |= RCTL_EN;
+    rctl |= RCTL_BSIZE_EXT;
+    rctl &= ~(RCTL_BSIZE_16384);
     write_command(
         state,
         E1000_REG_RCTRL,
-        RCTL_EN | (read_command(state, E1000_REG_RCTRL) & (
-            ~((1 << 17) | (1 << 16))))
+        rctl
     );
 }
 
@@ -385,14 +323,14 @@ static void init_tx(e1000_state_t* state) {
                   TCTL_EN | TCTL_PSP | read_command(state, E1000_REG_TCTRL));
 }
 
-static uint8_t* get_iface_mac(network_iface_t* iface) {
+static uint8_t* get_iface_mac(netif_t* iface) {
     e1000_iface_t* net = iface->data;
     e1000_state_t* state = net->state;
 
     return state->mac;
 }
 
-static network_iface_error_t iface_destroy(network_iface_t* iface) {
+static netif_error_t iface_destroy(netif_t* iface) {
     e1000_iface_t* net = iface->data;
     ktask_cancel(net->poll_task);
 
@@ -425,7 +363,8 @@ static void e1000_device_init(device_entry_t* parent, pci_device_t* pci) {
 
     state->rx = (void*) kpmalloc_ap(
         sizeof(struct rx_desc) * E1000_NUM_RX_DESC + 16,
-        &state->rx_phys);
+        &state->rx_phys
+    );
 
     for (int i = 0; i < E1000_NUM_RX_DESC; ++i) {
         state->rx_virt[i] = (void*) kpmalloc_ap(
@@ -437,7 +376,8 @@ static void e1000_device_init(device_entry_t* parent, pci_device_t* pci) {
 
     state->tx = (void*) kpmalloc_ap(
         sizeof(struct tx_desc) * E1000_NUM_TX_DESC + 16,
-        &state->tx_phys);
+        &state->tx_phys
+    );
 
     for (int i = 0; i < E1000_NUM_TX_DESC; ++i) {
         state->tx_virt[i] = (void*) kpmalloc_ap(
@@ -518,7 +458,7 @@ static void e1000_device_init(device_entry_t* parent, pci_device_t* pci) {
     char* name = zalloc(16);
     sprintf(name, "intel-gig%d", (int) idx);
 
-    network_iface_t* iface = network_iface_create(name);
+    netif_t* iface = netif_create(name);
     iface->class_type = IFACE_CLASS_ETHERNET;
     iface->get_mac = get_iface_mac;
     iface->send = send_packet;
@@ -527,7 +467,7 @@ static void e1000_device_init(device_entry_t* parent, pci_device_t* pci) {
     iface->data = net;
     net->iface = iface;
 
-    network_iface_register(
+    netif_register(
         parent,
         iface
     );
@@ -536,12 +476,20 @@ static void e1000_device_init(device_entry_t* parent, pci_device_t* pci) {
 }
 
 static bool is_device_e1000(uint16_t vid, uint16_t did) {
-    return (vid == 0x8086) &&
-           (did == 0x100e ||
-            did == 0x1004 ||
-            did == 0x100f ||
-            did == 0x10d3 ||
-            did == 0x15b8);
+    // Check for Intel Vendor.
+    if (vid != 0x8086) {
+        return false;
+    }
+
+    uint16_t* checks = e1000_device_ids;
+    while (*checks != 0) {
+        if (*checks == did) {
+            return true;
+        }
+        checks++;
+    }
+
+    return false;
 }
 
 void e1000_driver_setup(void) {

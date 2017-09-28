@@ -1,4 +1,5 @@
 #include "../abort.h"
+#include "../string.h"
 #include "../lox-internal.h"
 #include "../debug/backtrace.h"
 #include "../io.h"
@@ -6,7 +7,8 @@
 #define STACK_TRACE_SIZE 6
 
 void abort(char* msg) {
-    trace_t traces[STACK_TRACE_SIZE] = {0};
+    trace_t traces[STACK_TRACE_SIZE];
+    memset(&traces, 0, sizeof(traces));
 
     backtrace(NULL, traces, STACK_TRACE_SIZE);
 

@@ -2,7 +2,7 @@
 
 #include <liblox/common.h>
 
-#include <kernel/tty.h>
+#include <kernel/tty/tty.h>
 #include <kernel/cpu/task.h>
 
 typedef struct tty_serial {

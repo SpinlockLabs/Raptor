@@ -15,7 +15,7 @@
 #include "stack.h"
 #include "log.h"
 
-static dhcp_internal_state_t* get_state(network_iface_t* iface) {
+static dhcp_internal_state_t* get_state(netif_t* iface) {
     if (iface == NULL) {
         return NULL;
     }
@@ -25,7 +25,7 @@ static dhcp_internal_state_t* get_state(network_iface_t* iface) {
 static ipv4_address_t dhcp_request_src = {{0, 0, 0, 0}};
 static ipv4_address_t dhcp_request_dest = {{255, 255, 255, 255}};
 
-static void dhcp_send(network_iface_t* iface, uint8_t* opts, size_t optsize) {
+static void dhcp_send(netif_t* iface, uint8_t* opts, size_t optsize) {
     size_t payload_size = sizeof(dhcp_packet_t) + optsize;
     udp_ipv4_packet_t *pkt = ipv4_create_udp_packet(payload_size);
 
@@ -55,7 +55,7 @@ static void dhcp_send(network_iface_t* iface, uint8_t* opts, size_t optsize) {
 static void dhcp_handle_interface_up(void* event, void* extra) {
     unused(extra);
 
-    network_iface_t* iface = event;
+    netif_t* iface = event;
 
     dhcp_internal_state_t* state = zalloc(sizeof(dhcp_internal_state_t));
     hashmap_set(iface->manager_data, "dhcp", state);
@@ -66,14 +66,14 @@ static void dhcp_handle_interface_up(void* event, void* extra) {
 static void dhcp_handle_interface_down(void* event, void* extra) {
     unused(extra);
 
-    network_iface_t* iface = event;
+    netif_t* iface = event;
     dhcp_internal_state_t* state = get_state(iface);
     if (state != NULL) {
         free(state);
     }
 }
 
-static void dhcp_accept_offer(network_iface_t* iface, uint32_t offer) {
+static void dhcp_accept_offer(netif_t* iface, uint32_t offer) {
     dhcp_internal_state_t* state = get_state(iface);
     state->offer = offer;
 
@@ -110,7 +110,7 @@ static void handle_potential_dhcp_reply(void* event, void* extra) {
 
     raw_ipv4_packet_t* pkt = event;
 
-    network_iface_t* iface = network_iface_get(pkt->iface);
+    netif_t* iface = netif_get(pkt->iface);
     if (iface == NULL) {
         return;
     }
@@ -204,7 +204,7 @@ void network_stack_dhcp_init(void) {
     );
 }
 
-void dhcp_send_request(network_iface_t* iface) {
+void dhcp_send_request(netif_t* iface) {
     dbg("Sending DHCP discovery request on interface %s...\n", iface->name);
 
     uint8_t options[] = {

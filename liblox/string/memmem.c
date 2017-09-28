@@ -149,6 +149,7 @@ static char* twoway_memmem(const unsigned char* h, const unsigned char* z, const
         h += p;
         mem = mem0;
     }
+    return 0;
 }
 
 void* memmem(const void* h0, size_t k, const void* n0, size_t l) {

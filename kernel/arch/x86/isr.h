@@ -45,4 +45,4 @@ extern void _isr28(void);
 extern void _isr29(void);
 extern void _isr30(void);
 extern void _isr31(void);
-extern void _isr127(void);
+extern void _isr128(void);

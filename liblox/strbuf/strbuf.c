@@ -89,7 +89,7 @@ bool strbuf_backspace(strbuf_t* buf) {
         return true;
     }
 
-    strdelcat(buf->buffer, buf->cursor.position - 1);
+    strdelcat(buf->buffer, (uint) (buf->cursor.position - 1));
     buf->term--;
     buf->cursor.position--;
     return true;

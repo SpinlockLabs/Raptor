@@ -1,3 +1,5 @@
+set(KERNEL_EXE_NAME "kernel.elf")
+
 function(arch ARCH SRC_DIR)
   set(ARCH "${ARCH}" PARENT_SCOPE)
 
@@ -13,14 +15,22 @@ function(arch ARCH SRC_DIR)
       "${KERNEL_DIR}/${SRC_DIR}/*.hpp"
     )
 
-    add_executable(kernel ${ARCH_SRC} ${KERNEL_COMMON_SRC})
+    if(IOS)
+      add_executable(kernel MACOSX_BUNDLE ${ARCH_SRC} ${KERNEL_COMMON_SRC})
+    else()
+      add_executable(kernel ${ARCH_SRC} ${KERNEL_COMMON_SRC})
+    endif()
   endif()
 
   if(GCC)
     target_link_libraries(kernel gcc)
   endif()
   target_link_libraries(kernel lox-kernel)
-  set_target_properties(kernel PROPERTIES OUTPUT_NAME "kernel.elf")
+  set_target_properties(kernel PROPERTIES OUTPUT_NAME "${KERNEL_EXE_NAME}")
+
+  if(NOT DEFINED REAL_ARCH)
+    set(REAL_ARCH "${ARCH}" PARENT_SCOPE)
+  endif()
 endfunction()
 
 function(arch_include_src DIR)
@@ -78,16 +88,21 @@ function(arch_post_init)
   )
 endfunction()
 
-kernel_cflags(
-  -nostdlib
-  -nostartfiles
-)
+if(NOT MSVC)
+  kernel_cflags(
+    -nostdlib
+    -nostartfiles
+  )
+endif()
 
-if(NOT COMPCERT)
+if(NOT COMPCERT AND NOT MSVC)
   kernel_cflags(
     -ffreestanding
-    -fno-lto
   )
+
+  if(NOT ENABLE_LTO)
+    kernel_cflags(-fno-lto)
+  endif()
 endif()
 
 if(GCC)

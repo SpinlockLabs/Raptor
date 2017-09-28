@@ -5,7 +5,7 @@
 #include <liblox/common.h>
 #include <liblox/list.h>
 
-#include <kernel/dispatch/mailbox.h>
+#include <kernel/dispatch/pipe.h>
 #include <kernel/device/registry.h>
 
 typedef struct input_device input_device_t;
@@ -118,12 +118,12 @@ struct input_device {
     input_device_class_t type;
 
     /**
-     * Mailbox for the input events.
+     * Pipe for the input events.
      *
-     * This mailbox delivers events with
+     * This pipe delivers events with
      * the type input_event_t.
      */
-    mailbox_t* events;
+    epipe_t* events;
 
     /**
      * Input device operations.

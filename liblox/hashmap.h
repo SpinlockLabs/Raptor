@@ -32,6 +32,10 @@ typedef struct hashmap {
 
 hashmap_t* hashmap_create(size_t size);
 hashmap_t* hashmap_create_int(size_t size);
+
+void hashmap_init(hashmap_t* map, size_t size);
+void hashmap_init_int(hashmap_t* map, size_t size);
+
 void* hashmap_set(hashmap_t* map, void* key, void* value);
 void* hashmap_get(hashmap_t* map, void* key);
 bool hashmap_has(hashmap_t* map, void* key);

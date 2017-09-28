@@ -9,5 +9,10 @@
 #endif
 
 typedef struct arch_process_extensions {
-    void* _unused;
+    page_directory_t* paging;
+    cpu_registers_t registers;
 } arch_process_extensions_t;
+
+void set_kernel_stack(uintptr_t stack);
+
+void syscall_handler(cpu_registers_t* r);

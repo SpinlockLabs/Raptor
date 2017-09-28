@@ -1,5 +1,3 @@
-option(TESTS "Enable Tests" OFF)
-
 function(cflags)
   set(ARGLIST "")
   foreach(ARG ${ARGV})
@@ -22,12 +20,17 @@ function(ldflags)
 endfunction()
 
 if(CMAKE_C_COMPILER_ID MATCHES "Clang")
-  message(WARNING "Using Clang is experimental.")
   set(CLANG ON)
 elseif(CMAKE_C_COMPILER_ID MATCHES "GNU")
   set(GCC ON)
 elseif(CMAKE_C_COMPILER_ID MATCHES "CompCert")
   set(COMPCERT ON)
+elseif(CMAKE_C_COMPILER_ID MATCHES "Intel")
+  set(ICC ON)
+endif()
+
+if(CMAKE_SYSTEM_NAME MATCHES "Darwin")
+  set(APPLE ON)
 endif()
 
 add_definitions(-DRAPTOR)

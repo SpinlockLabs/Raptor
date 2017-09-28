@@ -18,4 +18,4 @@ void network_stack_dhcp_init(void);
 /**
  * Sends a DHCP request on the given network interface.
  */
-void dhcp_send_request(network_iface_t*);
+void dhcp_send_request(netif_t*);

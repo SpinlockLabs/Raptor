@@ -96,7 +96,7 @@ static int keyboard_callback(cpu_registers_t* regs) {
             .event.data_size = sizeof(input_event_key_state_t) - sizeof(input_event_t),
             .key = idx
         };
-        mailbox_deliver(kbd->events, &event);
+        epipe_deliver(kbd->events, &event);
     }
 
     switch (kt) {
@@ -104,8 +104,13 @@ static int keyboard_callback(cpu_registers_t* regs) {
             if (!up) {
                 uint8_t cc = (uint8_t) (shift ? kb_usu[idx] : kb_usl[idx]);
 
-                if (vga_pty != NULL && vga_pty->handle_read != NULL) {
-                    vga_pty->handle_read(vga_pty, &cc, 1);
+                if (vga_pty != NULL) {
+                    tty_read_event_t event = {
+                        .data = &cc,
+                        .size = 1,
+                        .tty = vga_pty
+                    };
+                    epipe_deliver(&vga_pty->reads, &event);
                 }
             }
 
@@ -123,11 +128,22 @@ static int keyboard_callback(cpu_registers_t* regs) {
             break;
     }
 
-    if (!up && vga_pty != NULL && vga_pty->handle_read != NULL) {
+    if (!up && vga_pty != NULL) {
+
         if (c == 0x4b) {
-            vga_pty->handle_read(vga_pty, (const uint8_t*) "\x1b[D", 3);
+            tty_read_event_t event = {
+                .data = (uint8_t*) "\x1b[D",
+                .size = 3,
+                .tty = vga_pty
+            };
+            epipe_deliver(&vga_pty->reads, &event);
         } else if (c == 0x4d) {
-            vga_pty->handle_read(vga_pty, (const uint8_t*) "\x1b[C", 3);
+            tty_read_event_t event = {
+                .data = (uint8_t*)  "\x1b[C",
+                .size = 3,
+                .tty = vga_pty
+            };
+            epipe_deliver(&vga_pty->reads, &event);
         }
     }
 

@@ -9,7 +9,7 @@
 #include <liblox/string.h>
 
 static void ping_reply(
-    network_iface_t* iface,
+    netif_t* iface,
     uint32_t addr,
     uint16_t id,
     uint16_t seq,
@@ -54,7 +54,7 @@ static void handle_ipv4_packet(void* event, void* extra) {
 
     raw_ipv4_packet_t* pkt = event;
     char* iface_name = pkt->iface;
-    network_iface_t* iface = network_iface_get(iface_name);
+    netif_t* iface = netif_get(iface_name);
 
     if (iface == NULL) {
         return;

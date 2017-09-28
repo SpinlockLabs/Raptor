@@ -1,12 +1,14 @@
 #include "debug.h"
 #include "heap.h"
 #include "paging.h"
+#include "process.h"
 
-#include <kernel/tty.h>
+#include <liblox/memory.h>
 
+#include <kernel/tty/tty.h>
 #include <kernel/debug/console.h>
-
 #include <kernel/arch/x86/devices/pci/pci.h>
+#include <kernel/fs/vfs.h>
 
 static void debug_kpused(tty_t* tty, const char* input) {
     unused(input);
@@ -77,14 +79,43 @@ static void debug_page_dump(tty_t* tty, const char* input) {
             if (p->frame) {
                 tty_printf(
                     tty,
-                    "page 0x%x 0x%x %s\n",
+                    "page 0x%x 0x%x %s%s%s%s%s\n",
                     (i * 1024 + j) * 0x1000,
                     p->frame * 0x1000,
-                    p->present ? "[present]" : ""
+                    p->present ? "[present]" : "",
+                    p->rw ? "[rw]" : "",
+                    p->user ? "[user]" : "[kernel]",
+                    p->writethrough ? "[writethrough]" : "",
+                    p->nocache ? "[nocache]" : ""
                 );
             }
         }
     }
+}
+
+static void debug_start_process(tty_t* tty, const char* input) {
+    unused(tty);
+
+    fs_node_t* node = fs_resolve((char*) input);
+    if (node == NULL) {
+        tty_printf(tty, "Failed to resolve '%s' executable.\n", input);
+        return;
+    }
+
+    fs_stat_t stat;
+    if (fs_stat(node, &stat) != FS_ERROR_OK) {
+        tty_printf(tty, "Failed to stat '%s' executable.\n", input);
+        return;
+    }
+    uint8_t* buff = zalloc(stat.size);
+    if (fs_read(node, 0, buff, stat.size) != FS_ERROR_OK) {
+        tty_printf(tty, "Failed to read '%s' executable.\n", input);
+        return;
+    }
+
+    char* argv[] = {""};
+
+    sysexec(tty, (char*) input, buff, stat.size, 0, argv);
 }
 
 void debug_x86_init(void) {
@@ -92,4 +123,5 @@ void debug_x86_init(void) {
     debug_register_command("pci-list", debug_pci_list);
     debug_register_command("page-stats", debug_page_stats);
     debug_register_command("page-dump", debug_page_dump);
+    debug_register_command("start", debug_start_process);
 }

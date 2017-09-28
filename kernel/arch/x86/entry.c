@@ -1,10 +1,10 @@
 #include <liblox/common.h>
 #include <liblox/string.h>
 #include <liblox/io.h>
+#include <liblox/lox-internal.h>
 
 #include <kernel/entry.h>
-#include <kernel/tty.h>
-#include <kernel/panic.h>
+#include <kernel/tty/tty.h>
 #include <kernel/cmdline.h>
 #include <kernel/timer.h>
 #include <kernel/device/driver.h>
@@ -18,7 +18,6 @@
 #include "debug.h"
 #include "irq.h"
 #include "pci_init.h"
-#include "userspace.h"
 #include "io.h"
 #include "vga.h"
 
@@ -68,13 +67,24 @@ used void arch_panic_handler(nullable char* msg) {
         lox_output_char_vga('\n');
     }
 
-    while (1) {
+    while (true) {
         asm("hlt;");
     }
 }
 
 void (*lox_output_string_provider)(char*) = lox_output_string_ebl;
 void (*lox_output_char_provider)(char) = lox_output_char_ebl;
+
+syscall_result_t lox_syscall(syscall_id_t id, uintptr_t* args) {
+    unused(id);
+    unused(args);
+    return 0;
+}
+
+syscall_result_t (*lox_syscall_provider)(
+    syscall_id_t,
+    uintptr_t*
+) = lox_syscall;
 
 void vga_pty_write(tty_t* tty, const uint8_t* bytes, size_t size) {
     unused(tty);
@@ -114,7 +124,7 @@ void kernel_setup_devices(void) {
     pci_init();
 
     vga_pty = tty_create("vga");
-    vga_pty->write = vga_pty_write;
+    vga_pty->ops.write = vga_pty_write;
     vga_pty->flags.allow_debug_console = true;
     vga_pty->flags.write_kernel_log = true;
     vga_pty->flags.echo = true;
@@ -184,12 +194,6 @@ used void kernel_main(multiboot_t* _mboot, uint32_t mboot_hdr, uintptr_t esp) {
     puts(DEBUG "IRQs initialized.\n");
     timer_init(1000);
     puts(DEBUG "PIT initialized.\n");
-
-    if (cmdline_bool_flag("enable-userspace-jump")) {
-        breakpoint("userspace-jump");
-        puts(DEBUG "Jumping to userspace...\n");
-        userspace_jump(NULL, 0xB0000000);
-    }
 
     kernel_init();
 }

@@ -10,7 +10,8 @@ extern char __link_mem_end;
 
 static spin_lock_t kheap_lock;
 
-uintptr_t kp_placement_pointer = (uintptr_t) &__link_mem_end;
+uintptr_t kp_placement_pointer = (uintptr_t) &__link_mem_end; // NOLINT
+
 static volatile uintptr_t kheap_end = (uintptr_t) NULL;
 uintptr_t kheap_alloc_point = KERNEL_HEAP_START;
 
@@ -22,6 +23,10 @@ static void* kheap_started_at = NULL;
 
 void* heap_start(void) {
     return kheap_started_at;
+}
+
+void* kheap_allocate_align(size_t size) {
+    return rkmalloc_allocate_align(kheap, size, PAGE_SIZE);
 }
 
 void* kheap_allocate(size_t size) {
@@ -38,14 +43,12 @@ void kheap_free(void* ptr) {
 
 static uintptr_t _kpmalloc_int(size_t size, int align, uintptr_t* phys) {
     if (kheap_end != 0) {
-        uintptr_t address = (uintptr_t) kheap_allocate(size + PAGE_SIZE);
-
-        if (address == 0) {
-            return address;
-        }
+        uintptr_t address;
 
         if (align) {
-            address = (address + PAGE_OFFSET_MASK) & ~PAGE_OFFSET_MASK;
+            address = (uintptr_t) kheap_allocate_align(size);
+        } else {
+            address = (uintptr_t) kheap_allocate(size);
         }
 
         if (phys) {
@@ -90,11 +93,7 @@ void kpmalloc_start_at(uintptr_t addr) {
     kp_placement_pointer = addr;
 }
 
-void* kpmalloc_kheap_expand(size_t size) {
-    if (size == 0) {
-        return (void*) kheap_end;
-    }
-
+void* kpmalloc_kheap_grab_block(size_t size) {
     spin_lock(&kheap_lock);
     uintptr_t address = kheap_end;
 
@@ -141,22 +140,11 @@ void* kpmalloc_kheap_expand(size_t size) {
 void heap_init(void) {
     /* Initialize kheap start point. */
     kheap_end = (kp_placement_pointer + 0x1000) & ~0xFFF;
-    kheap = (rkmalloc_heap*) kpmalloc_kheap_expand(sizeof(rkmalloc_heap));
+    kheap = (rkmalloc_heap*) kpmalloc_kheap_grab_block(sizeof(rkmalloc_heap));
     kheap_started_at = kheap;
 
-    kheap->expand = kpmalloc_kheap_expand;
-    kheap->types.atomic = 8; // 8 bytes
-    kheap->types.molecular = 16; // 16 bytes
-    kheap->types.nano = 64; // 64 bytes
-    kheap->types.micro = 256; // 256 bytes
-    kheap->types.mini = 512; // 512 bytes
-    kheap->types.tiny = 1 * 1024; // 1 kb
-    kheap->types.small = 2 * 1024; // 2 kb
-    kheap->types.medium = 4 * 1024; // 4 kb
-    kheap->types.moderate = 16 * 1024; // 16 kb
-    kheap->types.fair = 64 * 1024; // 64 kb
-    kheap->types.large = 1024 * 1024; // 1 mb
-    kheap->types.huge = 5 * 1024 * 1024; // 5 mb
+    kheap->grab_block = kpmalloc_kheap_grab_block;
+    kheap->return_block = NULL;
 
     rkmalloc_error error = rkmalloc_init_heap(kheap);
 
@@ -172,3 +160,4 @@ size_t kpused(void) {
 void* (*lox_allocate_provider)(size_t) = kheap_allocate;
 void* (*lox_reallocate_provider)(void* ptr, size_t size) = kheap_reallocate;
 void (*lox_free_provider)(void* ptr) = kheap_free;
+void* (*lox_aligned_allocate_provider)(size_t) = kheap_allocate_align;

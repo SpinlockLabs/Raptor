@@ -56,16 +56,20 @@ static void debug_console_trigger(tty_t* tty, char* str) {
     handle(tty, args);
 }
 
-static void debug_console_handle_data(tty_t* tty, const uint8_t* buffer, size_t size) {
-    unused(tty);
+static void debug_console_handle_data(epipe_t* pipe, void* event, void* extra) {
+    unused(pipe);
+    unused(extra);
 
-    if (size == 0) {
+    tty_read_event_t* read = event;
+    tty_t* tty = read->tty;
+
+    if (read->size == 0) {
         return;
     }
 
-    debug_console_t* console = tty->internal.controller;
+    debug_console_t* console = read->tty->internal.controller;
 
-    if (size == 1 && buffer[0] == '\b') {
+    if (read->size == 1 && (read->data[0] == '\b' || read->data[0] == 0x7f)) {
         if (strbuf_backspace(&console->buffer)) {
             if (tty->flags.echo) {
                 tty_write_string(tty, "\b");
@@ -75,8 +79,8 @@ static void debug_console_handle_data(tty_t* tty, const uint8_t* buffer, size_t 
         return;
     }
 
-    if (size >= 3 && buffer[0] == '\x1b' && buffer[1] == '[') {
-        char c = buffer[2];
+    if (read->size >= 3 && read->data[0] == '\x1b' && read->data[1] == '[') {
+        char c = read->data[2];
         if (c == 'D') {
             if (strbuf_move_left(&console->buffer)) {
                 if (tty->flags.echo) {
@@ -98,8 +102,8 @@ static void debug_console_handle_data(tty_t* tty, const uint8_t* buffer, size_t 
 
     bool triggered = false;
 
-    for (uint i = 0; i < size; i++) {
-        char c = buffer[i];
+    for (uint i = 0; i < read->size; i++) {
+        char c = read->data[i];
 
         tty->status.execute_post_write = false;
         if (tty->flags.echo) {
@@ -176,8 +180,8 @@ void debug_console_start(void) {
             debug_console_t* console = zalloc(sizeof(debug_console_t) + CONSOLE_BUFFER_SIZE + 1);
             tty->internal.controller = console;
             strbuf_init(&console->buffer, CONSOLE_BUFFER_SIZE);
-            tty->handle_read = debug_console_handle_data;
-            tty->post_write = debug_console_post_write;
+            epipe_add_handler(&tty->reads, debug_console_handle_data, NULL);
+            tty->ops.post_write = debug_console_post_write;
             tty_write_string(tty, "[[Raptor Debug Console Started]]\n> ");
         }
     }

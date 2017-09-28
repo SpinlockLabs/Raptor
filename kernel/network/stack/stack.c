@@ -39,8 +39,8 @@ static void network_stack_handle_untranslated_send(
     unused(pkt);
 }
 
-static network_iface_error_t network_stack_handle_interface_receive(
-    network_iface_t* iface, uint8_t* buffer, size_t size) {
+static netif_error_t network_stack_handle_interface_receive(
+    netif_t* iface, uint8_t* buffer, size_t size) {
     unused(buffer);
     unused(size);
 
@@ -72,7 +72,7 @@ static void network_stack_on_interface_registered(void* event, void* extra) {
     unused(extra);
 
     char* name = event;
-    network_iface_t* iface = network_iface_get(name);
+    netif_t* iface = netif_get(name);
 
     if (iface == NULL) {
         return;
@@ -88,7 +88,7 @@ static void network_stack_on_interface_registered(void* event, void* extra) {
 static void network_stack_on_interface_destroying(void* event, void* extra) {
     unused(extra);
 
-    network_iface_t* iface = event;
+    netif_t* iface = event;
 
     if (iface->flags.stackless) {
         return;
@@ -98,7 +98,7 @@ static void network_stack_on_interface_destroying(void* event, void* extra) {
 }
 
 void network_stack_send_packet(
-    network_iface_t* iface,
+    netif_t* iface,
     uint8_t* buffer,
     size_t size,
     packet_class_t packet_class,
@@ -146,7 +146,7 @@ void network_stack_init(void) {
     );
 }
 
-bool network_stack_takeover(network_iface_t* iface) {
+bool network_stack_takeover(netif_t* iface) {
     if (iface->manager != NULL) {
         warn(
             "Failed to takeover interface %s: '%s' already owns it.\n",
@@ -166,7 +166,7 @@ bool network_stack_takeover(network_iface_t* iface) {
     return true;
 }
 
-bool network_stack_disown(network_iface_t* iface) {
+bool network_stack_disown(netif_t* iface) {
     if (iface->manager == NULL ||
         strcmp(iface->manager, "stack") != 0) {
         return true;
@@ -189,6 +189,6 @@ static void stack_takeover_later(void* iface) {
     network_stack_takeover(iface);
 }
 
-void network_stack_takeover_async(network_iface_t* iface) {
+void network_stack_takeover_async(netif_t* iface) {
     ktask_queue(stack_takeover_later, iface);
 }
