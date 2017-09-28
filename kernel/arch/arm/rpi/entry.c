@@ -151,4 +151,3 @@ void cpu_run_idle(void) {
 
 void pm_power_off(void) {}
 void pm_reboot(void) {}
-
