@@ -1,4 +1,5 @@
 #include "../memory.h"
+
 #include "jsmn.h"
 
 /**
@@ -44,6 +45,7 @@ static int jsmn_parse_primitive(jsmn_parser* parser, const char* js,
                 if (parser->flags.strict) {
                     break;
                 }
+                /* no break */
             case '\t':
             case '\r':
             case '\n':
@@ -291,8 +293,8 @@ int jsmn_parse_stage(jsmn_parser* parser, const char* js, size_t len,
                     }
                     break;
                 }
-
-                /* Falls through. */
+                /* fallthrough */
+                /* no break */
             default:
                 if (parser->flags.strict) {
                     return JSMN_ERROR_INVAL;

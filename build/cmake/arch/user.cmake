@@ -1,3 +1,7 @@
+if(NOT DEFINED DISABLE_USERSPACE)
+  set(DISABLE_USERSPACE ON)
+endif()
+
 if(WEB)
   set(KERNEL_EXE_NAME "kernel.html")
 elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm")
@@ -12,6 +16,10 @@ elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
   endif()
 else()
   set(REAL_ARCH "user")
+endif()
+
+if(APPLE)
+  set(REAL_ARCH "generic")
 endif()
 
 arch("user" "arch/user")
@@ -44,21 +52,27 @@ elseif(WIN32)
     -DARCH_NO_SPINLOCK
   )
 
-  kernel_cflags(
-    /ZW:nostdlib
-    /MT
-    /nodefaultlib
-    /GS-
-    /Oi-
-  )
+  if(MSVC)
+    kernel_cflags(
+      /ZW:nostdlib
+      /MT
+      /nodefaultlib
+      /GS-
+      /Oi-
+    )
 
-  string(REPLACE "/RTC1" "" CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
+    string(REPLACE "/RTC1" "" CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
 
-  ldflags(
-    /FORCE:MULTIPLE
-  )
+    ldflags(
+      /FORCE:MULTIPLE
+    )
+  endif()
 else()
   target_link_libraries(kernel dl c)
+endif()
+
+if(APPLE)
+  ldflags(-e __start)
 endif()
 
 add_custom_target(run-kernel

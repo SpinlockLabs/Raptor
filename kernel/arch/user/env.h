@@ -1,19 +1,19 @@
-﻿#pragma once
+#pragma once
 
 #include <stddef.h>
 #include <stdint.h>
 
-#include <kernel/tty.h>
+#include <kernel/tty/tty.h>
 #include <kernel/time.h>
 
 extern tty_t* console_tty;
 
 void raptor_user_loop(void);
 
-#ifdef USER_RKMALLOC
-void* raptor_user_sbrk(size_t size);
-#else
 void* raptor_user_malloc(size_t size);
+void raptor_user_free(void* ptr);
+
+#ifndef USER_RKMALLOC
 void* raptor_user_valloc(size_t size);
 void raptor_user_free(void* ptr);
 void* raptor_user_realloc(void* ptr, size_t size);

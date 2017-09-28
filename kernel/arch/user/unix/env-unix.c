@@ -30,7 +30,6 @@ uint (*libc_read)(int, void*, size_t);
 int (*libc_ioctl)(int, ulong, ...);
 void* (*libc_malloc)(size_t);
 void* (*libc_valloc)(size_t);
-void* (*libc_sbrk)(size_t);
 void (*libc_exit)(int);
 void (*libc_free)(void*);
 void* (*libc_realloc)(void*, size_t);
@@ -45,6 +44,7 @@ void raptor_user_abort(void) {
     libc_abort();
 }
 
+#if defined(__GLIBC__) || defined(__APPLE__)
 static void unset_term_echo(void) {
     struct termios tattr;
     tcgetattr(STDIN_FILENO, &tattr);
@@ -54,7 +54,6 @@ static void unset_term_echo(void) {
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &tattr);
 }
 
-#ifdef __GLIBC__
 extern void __cxa_atexit(void*, void*, void*);
 #endif
 
@@ -67,7 +66,7 @@ void raptor_user_setup_devices(void) {
         tattr.c_cc[VTIME] = 0;
         tcsetattr(STDIN_FILENO, TCSAFLUSH, &tattr);
 
-#ifdef __GLIBC__
+#if defined(__GLIBC__) || defined(__APPLE__)
         __cxa_atexit(unset_term_echo, NULL, NULL);
 #endif
     } else {
@@ -154,11 +153,6 @@ void raptor_user_process_stdin(void) {
     }
 }
 
-#ifdef USER_RKMALLOC
-void* raptor_user_sbrk(size_t size) {
-    return libc_malloc(size);
-}
-#else
 void* raptor_user_malloc(size_t size) {
     return libc_malloc(size);
 }
@@ -174,7 +168,6 @@ void* raptor_user_realloc(void* ptr, size_t size) {
 void* raptor_user_valloc(size_t size) {
     return libc_valloc(size);
 }
-#endif
 
 void raptor_user_exit(void) {
     libc_exit(0);
@@ -188,7 +181,6 @@ void raptor_user_exit(void) {
 
 used void _start(void) {
     libc_malloc = dlsym(RTLD_NEXT, "malloc");
-    libc_sbrk = dlsym(RTLD_NEXT, "sbrk");
 
     libc = dlopen(LIBC_NAME, RTLD_LAZY | RTLD_LOCAL);
 
@@ -198,11 +190,9 @@ used void _start(void) {
         return;
     }
 
-#ifndef USER_RKMALLOC
     libc_valloc = libc_sym("valloc");
     libc_realloc = libc_sym("realloc");
     libc_free = libc_sym("free");
-#endif
 
     libc_exit = libc_sym("exit");
     libc_read = libc_sym("read");

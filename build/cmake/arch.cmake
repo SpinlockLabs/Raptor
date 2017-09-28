@@ -15,7 +15,11 @@ function(arch ARCH SRC_DIR)
       "${KERNEL_DIR}/${SRC_DIR}/*.hpp"
     )
 
-    add_executable(kernel ${ARCH_SRC} ${KERNEL_COMMON_SRC})
+    if(IOS)
+      add_executable(kernel MACOSX_BUNDLE ${ARCH_SRC} ${KERNEL_COMMON_SRC})
+    else()
+      add_executable(kernel ${ARCH_SRC} ${KERNEL_COMMON_SRC})
+    endif()
   endif()
 
   if(GCC)

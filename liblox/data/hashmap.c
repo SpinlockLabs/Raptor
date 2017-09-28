@@ -42,7 +42,11 @@ static void hashmap_int_free(void* ptr) {
 
 hashmap_t* hashmap_create(size_t size) {
     hashmap_t* map = zalloc(sizeof(hashmap_t));
+    hashmap_init(map, size);
+    return map;
+}
 
+void hashmap_init(hashmap_t* map, size_t size) {
     map->hash = hashmap_string_hash;
     map->compare = hashmap_string_comp;
     map->key_duplicate = hashmap_string_duplicate;
@@ -50,13 +54,15 @@ hashmap_t* hashmap_create(size_t size) {
     map->value_free = free;
     map->size = size;
     map->entries = zalloc(sizeof(hashmap_entry_t*) * size);
-
-    return map;
 }
 
 hashmap_t* hashmap_create_int(size_t size) {
     hashmap_t* map = zalloc(sizeof(hashmap_t));
+    hashmap_init_int(map, size);
+    return map;
+}
 
+void hashmap_init_int(hashmap_t* map, size_t size) {
     map->hash = hashmap_int_hash;
     map->compare = hashmap_int_comp;
     map->key_duplicate = hashmap_int_duplicate;
@@ -65,8 +71,6 @@ hashmap_t* hashmap_create_int(size_t size) {
 
     map->size = size;
     map->entries = zalloc(sizeof(hashmap_entry_t*) * size);
-
-    return map;
 }
 
 void* hashmap_set(hashmap_t* map, void* key, void* value) {

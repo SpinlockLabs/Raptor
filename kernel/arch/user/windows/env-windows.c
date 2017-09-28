@@ -29,12 +29,12 @@ void* raptor_user_valloc(size_t size) {
     return libc_valloc(size);
 }
 
-void raptor_user_free(void* ptr) {
-    libc_free(ptr);
-}
-
 void* raptor_user_realloc(void* ptr, size_t size) {
     return libc_realloc(ptr, size);
+}
+
+void raptor_user_free(void* ptr) {
+    libc_free(ptr);
 }
 
 void raptor_user_setup_devices(void) {
@@ -129,6 +129,8 @@ void raptor_user_output_char(char c) {
     }
     libc_printf("%c", c);
 }
+
+void heap_init(void) {}
 
 int (*kbhit)(void);
 char (*getch)(void);

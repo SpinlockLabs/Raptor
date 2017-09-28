@@ -3,6 +3,9 @@
 #include <liblox/common.h>
 #include <stdint.h>
 
+/**
+ * Time instance.
+ */
 typedef struct rtime {
     uint16_t second;
     uint16_t minute;
@@ -12,4 +15,8 @@ typedef struct rtime {
     uint16_t year;
 } packed rtime_t;
 
-extern void time_get(rtime_t*);
+/**
+ * Retrieves the current time.
+ * @param time time instance
+ */
+extern void time_get(rtime_t* time);

@@ -1,8 +1,14 @@
 set(
   LLVM_TOOLCHAIN
-  ""
+  "/usr"
   CACHE STRING
   "LLVM Toolchain"
+)
+
+option(
+  LLVM_ENABLE_LLD
+  "Enable LLVM Linker"
+  OFF
 )
 
 if(NOT LLVM_TOOLCHAIN STREQUAL "")
@@ -19,16 +25,18 @@ set(
   CACHE FILEPATH "Executable Linker" FORCE
 )
 
-set(
-  CMAKE_EXE_LINKER
-  "${LLVM_FULL_PREFIX}clang"
-  CACHE FILEPATH "Executable Linker" FORCE
-)
+if(LLVM_ENABLE_LLD)
+  set(
+    CMAKE_EXE_LINKER
+    "${LLVM_FULL_PREFIX}clang"
+    CACHE FILEPATH "Executable Linker" FORCE
+  )
 
-set(
-  CMAKE_EXE_LINKER_FLAGS
-  "-B${LLVM_FULL_PREFIX} -fuse-ld=lld"
-  CACHE STRING "Linker Flags" FORCE
-)
+  set(
+    CMAKE_EXE_LINKER_FLAGS
+    "-fuse-ld=lld"
+    CACHE STRING "Linker Flags" FORCE
+  )
+endif()
 
 set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)

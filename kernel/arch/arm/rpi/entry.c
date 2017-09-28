@@ -5,7 +5,7 @@
 #include <kernel/process/process.h>
 
 #include <kernel/entry.h>
-#include <kernel/tty.h>
+#include <kernel/tty/tty.h>
 #include <kernel/timer.h>
 
 #include <kernel/cpu/task.h>

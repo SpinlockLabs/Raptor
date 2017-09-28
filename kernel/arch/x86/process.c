@@ -1,10 +1,12 @@
+#include "process.h"
+
 #include <liblox/memory.h>
 
 #include <kernel/process/process.h>
 #include <kernel/paging.h>
 #include <kernel/cpu/idle.h>
 
-#include "elf32load.h"
+#include "kernel/arch/x86/loader/elf32load.h"
 #include "paging.h"
 #include "irq.h"
 

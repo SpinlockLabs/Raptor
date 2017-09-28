@@ -19,3 +19,9 @@ CTestTestfile.cmake
 
 CMakeSettings.json
 .vs/
+
+.DS_Store
+
+*.kdev4
+.kdev4/
+

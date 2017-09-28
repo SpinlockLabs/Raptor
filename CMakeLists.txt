@@ -16,10 +16,13 @@ include(${RAPTOR_DIR}/build/cmake/kernel.cmake)
 include(${RAPTOR_DIR}/build/cmake/arch.cmake)
 include(${RAPTOR_DIR}/build/cmake/arch-select.cmake)
 include(${RAPTOR_DIR}/build/cmake/liblox.cmake)
+include(${RAPTOR_DIR}/build/cmake/docs.cmake)
 
 arch_post_init()
 
-add_subdirectory(userspace)
+if(NOT DISABLE_USERSPACE)
+  add_subdirectory(userspace)
+endif()
 
 option(TESTS "Enable Tests" OFF)
 
@@ -27,4 +30,8 @@ if(TESTS)
   include(${RAPTOR_DIR}/build/cmake/tests.cmake)
 endif()
 
-add_subdirectory(host)
+option(BUILD_HOST_TOOLS "Enable Building Host Tools" OFF)
+
+if(BUILD_HOST_TOOLS)
+  add_subdirectory(host)
+endif()
