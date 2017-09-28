@@ -1,13 +1,14 @@
 #include <liblox/common.h>
-#include <liblox/io.h>
 #include <liblox/lox-internal.h>
+
+#include <liblox/io.h>
+#include <liblox/string.h>
 
 #include <kernel/process/process.h>
 
 #include <kernel/entry.h>
 #include <kernel/timer.h>
 #include <kernel/cpu/task.h>
-#include <liblox/string.h>
 
 #include "irq.h"
 #include "gpio.h"
@@ -55,7 +56,10 @@ syscall_result_t lox_syscall(syscall_id_t id, uintptr_t* args) {
     return 0;
 }
 
-syscall_result_t (*lox_syscall_provider)(syscall_id_t, uintptr_t*) = lox_syscall;
+syscall_result_t (*lox_syscall_provider)(
+  syscall_id_t,
+  uintptr_t*
+) = lox_syscall;
 
 static void uart_tty_write(tty_t* tty, const uint8_t* buf, size_t size) {
     unused(tty);
@@ -115,7 +119,11 @@ void kernel_setup_devices(void) {
 
 void* atags = NULL;
 
-used does_not_return void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags_addr) {
+used does_not_return void kernel_main(
+  uint32_t r0,
+  uint32_t r1,
+  uint32_t atags_addr
+) {
     (void) r0;
     (void) r1;
     atags = (void*) atags_addr;
