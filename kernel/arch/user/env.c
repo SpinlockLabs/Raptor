@@ -50,6 +50,14 @@ ulong timer_get_ticks(void) {
 void irq_wait(void) {
 }
 
+void pm_power_off(void) {
+    raptor_user_exit();
+}
+
+void pm_reboot(void) {
+    raptor_user_exit();
+}
+
 void kernel_setup_devices(void) {
     console_tty = tty_create("console");
     console_tty->ops.write = raptor_user_console_write;

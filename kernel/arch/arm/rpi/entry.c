@@ -148,3 +148,7 @@ void cpu_run_idle(void) {
         ktask_queue_flush();
     }
 }
+
+void pm_power_off(void) {}
+void pm_reboot(void) {}
+
