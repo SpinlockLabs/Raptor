@@ -52,19 +52,21 @@ elseif(WIN32)
     -DARCH_NO_SPINLOCK
   )
 
-  kernel_cflags(
-    /ZW:nostdlib
-    /MT
-    /nodefaultlib
-    /GS-
-    /Oi-
-  )
+  if(MSVC)
+    kernel_cflags(
+      /ZW:nostdlib
+      /MT
+      /nodefaultlib
+      /GS-
+      /Oi-
+    )
 
-  string(REPLACE "/RTC1" "" CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
+    string(REPLACE "/RTC1" "" CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
 
-  ldflags(
-    /FORCE:MULTIPLE
-  )
+    ldflags(
+      /FORCE:MULTIPLE
+    )
+  endif()
 else()
   target_link_libraries(kernel dl c)
 endif()

@@ -139,17 +139,73 @@ struct tty {
     tty_private_t internal;
 };
 
+/**
+ * Create a TTY with the given name.
+ * @param name TTY name
+ */
 tty_t* tty_create(char* name);
+
+/**
+ * Initialize a TTY instance.
+ * @param tty TTY instance
+ * @param name TTY name
+ */
 void tty_init(tty_t* tty, char* name);
+
+/**
+ * Register a TTY with the TTY subsystem.
+ * @param tty TTY instance
+ */
 void tty_register(tty_t* tty);
+
+/**
+ * Get a TTY by name.
+ * @param name TTY name
+ */
 tty_t* tty_get(char* name);
+
+/**
+ * Destroy a TTY.
+ * @param tty TTY instance
+ */
 void tty_destroy(tty_t* tty);
 
+/**
+ * Write data to a TTY.
+ * @param tty TTY instance
+ * @param buf data buffer
+ * @param size data size
+ */
 void tty_write(tty_t* tty, uint8_t* buf, size_t size);
+
+/**
+ * Write a string to a TTY.
+ * @param tty TTY instance
+ * @param str a string
+ */
 void tty_write_string(tty_t* tty, char* str);
+
+/**
+ * Write a formatted message to a TTY.
+ * @param tty TTY instance
+ * @param fmt message format
+ * @param ... other parameters
+ */
 void tty_printf(tty_t* tty, char* fmt, ...);
 
+/**
+ * Get a list of names of all the TTYs.
+ * @return a list of TTY names
+ */
 list_t* tty_get_names(void);
+
+/**
+ * Get a list of all the TTY instances.
+ * @return a list of TTY instances
+ */
 list_t* tty_get_all(void);
 
+/**
+ * Initialize the TTY subsystem.
+ */
 void tty_subsystem_init(void);

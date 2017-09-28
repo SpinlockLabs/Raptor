@@ -1,7 +1,7 @@
 #include <liblox/version.h>
 #include <liblox/io.h>
 
-#include <kernel/tty.h>
+#include <kernel/tty/tty.h>
 #include <kernel/modload.h>
 #include <kernel/debug/console.h>
 

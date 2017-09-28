@@ -1,6 +1,6 @@
 #pragma once
 
-#include <kernel/tty.h>
+#include <kernel/tty/tty.h>
 
 void sysexec(
     tty_t* tty,

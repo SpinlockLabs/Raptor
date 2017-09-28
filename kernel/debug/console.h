@@ -1,6 +1,6 @@
 #pragma once
 
-#include <kernel/tty.h>
+#include <kernel/tty/tty.h>
 
 typedef void (*debug_console_command_t)(tty_t* tty, const char* input);
 

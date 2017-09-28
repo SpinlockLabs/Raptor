@@ -39,11 +39,7 @@ uint32_t kpmalloc(uint32_t size) {
     return _kpmalloc_int(size, 0, 0);
 }
 
-void* kheap_expand(size_t size) {
-    if (size == 0) {
-        return (void*) kheap_placement_address;
-    }
-
+void* kheap_grab_block(size_t size) {
     void* ptr = (void*) kpmalloc(size);
     memset(ptr, 0, size);
     return ptr;
@@ -51,20 +47,8 @@ void* kheap_expand(size_t size) {
 
 void heap_init(void) {
     kheap = (rkmalloc_heap*) kpmalloc(sizeof(rkmalloc_heap));
-    kheap->expand = kheap_expand;
-
-    kheap->types.atomic = 8; // 8 bytes
-    kheap->types.molecular = 16; // 16 bytes
-    kheap->types.nano = 64; // 64 bytes
-    kheap->types.micro = 256; // 256 bytes
-    kheap->types.mini = 512; // 512 bytes
-    kheap->types.tiny = 1 * 1024; // 1 kb
-    kheap->types.small = 2 * 1024; // 2 kb
-    kheap->types.medium = 4 * 1024; // 4 kb
-    kheap->types.moderate = 16 * 1024; // 16 kb
-    kheap->types.fair = 64 * 1024; // 64 kb
-    kheap->types.large = 1024 * 1024; // 1 mb
-    kheap->types.huge = 5 * 1024 * 1024; // 5 mb
+    kheap->grab_block = kheap_grab_block;
+    kheap->return_block = NULL;
 
     rkmalloc_init_heap(kheap);
 }

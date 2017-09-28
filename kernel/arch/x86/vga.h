@@ -1,6 +1,6 @@
 #pragma once
 
-#include <kernel/tty.h>
+#include <kernel/tty/tty.h>
 
 #include <stddef.h>
 #include <stdint.h>

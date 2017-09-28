@@ -92,11 +92,7 @@ void kpmalloc_start_at(uintptr_t addr) {
     kp_placement_pointer = addr;
 }
 
-void* kpmalloc_kheap_expand(size_t size) {
-    if (size == 0) {
-        return (void*) kheap_end;
-    }
-
+void* kpmalloc_kheap_grab_block(size_t size) {
     spin_lock(&kheap_lock);
     uintptr_t address = kheap_end;
 
@@ -131,22 +127,11 @@ void* kpmalloc_kheap_expand(size_t size) {
 void heap_init(void) {
     /* Initialize kheap start point. */
     kheap_end = (kp_placement_pointer + 0x1000) & ~0xFFF;
-    kheap = (rkmalloc_heap*) kpmalloc_kheap_expand(sizeof(rkmalloc_heap));
+    kheap = (rkmalloc_heap*) kpmalloc_kheap_grab_block(sizeof(rkmalloc_heap));
     kheap_started_at = kheap;
 
-    kheap->expand = kpmalloc_kheap_expand;
-    kheap->types.atomic = 8; // 8 bytes
-    kheap->types.molecular = 16; // 16 bytes
-    kheap->types.nano = 64; // 64 bytes
-    kheap->types.micro = 256; // 256 bytes
-    kheap->types.mini = 512; // 512 bytes
-    kheap->types.tiny = 1 * 1024; // 1 kb
-    kheap->types.small = 2 * 1024; // 2 kb
-    kheap->types.medium = 4 * 1024; // 4 kb
-    kheap->types.moderate = 16 * 1024; // 16 kb
-    kheap->types.fair = 64 * 1024; // 64 kb
-    kheap->types.large = 1024 * 1024; // 1 mb
-    kheap->types.huge = 5 * 1024 * 1024; // 5 mb
+    kheap->grab_block = kpmalloc_kheap_grab_block;
+    kheap->return_block = NULL;
 
     rkmalloc_error error = rkmalloc_init_heap(kheap);
 

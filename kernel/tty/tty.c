@@ -5,7 +5,9 @@
 #include <liblox/printf.h>
 #include <liblox/memory.h>
 
-static hashmap_t* tty_registry = NULL;
+static struct {
+    hashmap_t registry;
+} tty_subsystem_state;
 
 void tty_init(tty_t* tty, char* name) {
     memset(tty, 0, sizeof(tty_t));
@@ -21,11 +23,7 @@ tty_t* tty_create(char* name) {
 }
 
 void tty_register(tty_t* tty) {
-    if (tty_registry == NULL) {
-        return;
-    }
-
-    hashmap_set(tty_registry, tty->name, tty);
+    hashmap_set(&tty_subsystem_state.registry, tty->name, tty);
 }
 
 void tty_write(tty_t* tty, uint8_t* buf, size_t size) {
@@ -61,24 +59,24 @@ void tty_destroy(tty_t* tty) {
 }
 
 tty_t* tty_get(char* name) {
-    return hashmap_get(tty_registry, name);
+    return hashmap_get(&tty_subsystem_state.registry, name);
 }
 
 list_t* tty_get_names(void) {
-    return hashmap_keys(tty_registry);
+    return hashmap_keys(&tty_subsystem_state.registry);
 }
 
 list_t* tty_get_all(void) {
-    return hashmap_values(tty_registry);
+    return hashmap_values(&tty_subsystem_state.registry);
 }
 
 void tty_subsystem_init(void) {
-    tty_registry = hashmap_create(10);
+    hashmap_init(&tty_subsystem_state.registry, 2);
 }
 
 void tty_write_kernel_log_char(char c) {
-    for (uint i = 0; i < tty_registry->size; ++i) {
-        hashmap_entry_t* x = tty_registry->entries[i];
+    for (uint i = 0; i < tty_subsystem_state.registry.size; ++i) {
+        hashmap_entry_t* x = tty_subsystem_state.registry.entries[i];
         while (x) {
             tty_t* tty = x->value;
             if (tty != NULL && tty->flags.write_kernel_log) {
@@ -92,8 +90,8 @@ void tty_write_kernel_log_char(char c) {
 
 void tty_write_kernel_log_string(char* msg) {
     size_t len = strlen(msg);
-    for (uint i = 0; i < tty_registry->size; ++i) {
-        hashmap_entry_t* x = tty_registry->entries[i];
+    for (uint i = 0; i < tty_subsystem_state.registry.size; ++i) {
+        hashmap_entry_t* x = tty_subsystem_state.registry.entries[i];
         while (x) {
             tty_t* tty = x->value;
             if (tty != NULL && tty->flags.write_kernel_log) {
