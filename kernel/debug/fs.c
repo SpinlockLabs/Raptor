@@ -142,9 +142,34 @@ static void debug_fs_stat(tty_t* tty, const char* input) {
 }
 
 void debug_fs_init(void) {
-    debug_register_command("fs-resolve", debug_fs_resolve);
-    debug_register_command("fs-stat", debug_fs_stat);
-    debug_register_command("fs-mount", debug_fs_mount);
-    debug_register_command("fs-cat", debug_fs_cat);
-    debug_register_command("fs-list", debug_fs_list);
+    debug_register_command((console_command_t) {
+        .name = "fs-resolve",
+        .group = "fs",
+        .help = "Resolve a filesystem",
+        .cmd = debug_fs_resolve
+    });
+    debug_register_command((console_command_t) {
+        .name = "fs-stat",
+        .group = "fs",
+        .help = "Show stats for a filesystem",
+        .cmd = debug_fs_stat
+    });
+    debug_register_command((console_command_t) {
+        .name = "fs-mount",
+        .group = "fs",
+        .help = "Mount a filesystem",
+        .cmd = debug_fs_mount
+    });
+    debug_register_command((console_command_t) {
+        .name = "fs-cat",
+        .group = "fs",
+        .help = "Cat a filesystem's contents",
+        .cmd = debug_fs_cat
+    });
+    debug_register_command((console_command_t) {
+        .name = "fs-list",
+        .group = "fs",
+        .help = "List all filesystems",
+        .cmd = debug_fs_list
+    });
 }

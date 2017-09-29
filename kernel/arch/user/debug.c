@@ -11,5 +11,10 @@ static void debug_exit(tty_t* tty, const char* input) {
 }
 
 void debug_user_init(void) {
-    debug_register_command("exit", debug_exit);
+    debug_register_command((console_command_t) {
+        .name = "exit",
+        .group = "user",
+        .help = "Exit the kernel in userland process",
+        .cmd = debug_exit
+    });
 }

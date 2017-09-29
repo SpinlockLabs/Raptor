@@ -9,7 +9,7 @@ static void debug_kheap_stats(tty_t* tty, const char* input) {
     rkmalloc_heap* heap = heap_get();
 
     if (heap == NULL) {
-        tty_printf(tty, "No kernel heap availabe.\n");
+        tty_printf(tty, "No kernel heap available.\n");
         return;
     }
 
@@ -68,7 +68,7 @@ static void debug_kheap_dump(tty_t* tty, const char* input) {
     rkmalloc_heap* kheap = heap_get();
 
     if (kheap == NULL) {
-        tty_printf(tty, "No kernel heap availabe.\n");
+        tty_printf(tty, "No kernel heap available.\n");
         return;
     }
 
@@ -91,7 +91,22 @@ static void debug_kheap_dump(tty_t* tty, const char* input) {
 }
 
 void debug_kheap_init(void) {
-    debug_register_command("kheap-dump", debug_kheap_dump);
-    debug_register_command("kheap-stats", debug_kheap_stats);
-    debug_register_command("kheap-reduce", debug_kheap_reduce);
+    debug_register_command((console_command_t) {
+        .name = "kheap-dump",
+        .group = "kheap",
+        .help = "Dump the kernel heap",
+        .cmd = debug_kheap_dump
+    });
+    debug_register_command((console_command_t) {
+        .name = "kheap-stats",
+        .group = "kheap",
+        .help = "Show stats for the kernel heap",
+        .cmd = debug_kheap_stats
+    });
+    debug_register_command((console_command_t) {
+        .name = "kheap-reduce",
+        .group = "kheap",
+        .help = "Reduce the kernel heap",
+        .cmd = debug_kheap_reduce
+    });
 }

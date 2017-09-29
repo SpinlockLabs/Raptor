@@ -187,12 +187,42 @@ static void debug_ifhub_create(tty_t* tty, const char* input) {
 }
 
 void debug_network_init(void) {
-    debug_register_command("net-iface-list", debug_network_iface_list);
-    debug_register_command("net-iface-destroy", debug_network_iface_destroy);
-    debug_register_command("dhcp-send-request", debug_network_dhcp_send_request);
+    debug_register_command((console_command_t) {
+        .name = "net-iface-list",
+        .group = "network",
+        .help = "List all network interfaces",
+        .cmd = debug_network_iface_list
+    });
+    debug_register_command((console_command_t) {
+        .name = "net-iface-destroy",
+        .group = "network",
+        .help = "Destroy a network interface",
+        .cmd = debug_network_iface_destroy
+    });
+    debug_register_command((console_command_t) {
+        .name = "dhcp-send-request",
+        .group = "network",
+        .help = "Request a DHCP IP address",
+        .cmd = debug_network_dhcp_send_request
+    });
 
-    debug_register_command("arp-known", debug_arp_known);
-    debug_register_command("arp-ask", debug_arp_ask);
+    debug_register_command((console_command_t) {
+        .name = "arp-known",
+        .group = "network",
+        .help = "List the entire known ARP table",
+        .cmd = debug_arp_known
+    });
+    debug_register_command((console_command_t) {
+        .name = "arp-ask",
+        .group = "network",
+        .help = "Ask ARP for a MAC address for given IPv4",
+        .cmd = debug_arp_ask
+    });
 
-    debug_register_command("ifhub-create", debug_ifhub_create);
+    debug_register_command((console_command_t) {
+        .name = "ifhub-create",
+        .group = "network",
+        .help = "Create an if hub",
+        .cmd = debug_ifhub_create
+    });
 }

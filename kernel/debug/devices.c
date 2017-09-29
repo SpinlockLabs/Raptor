@@ -31,5 +31,10 @@ static void debug_device_list(tty_t* tty, const char* input) {
 }
 
 void debug_devices_init(void) {
-    debug_register_command("device-list", debug_device_list);
+    debug_register_command((console_command_t) {
+        .name = "device-list",
+        .group = "devices",
+        .help = "List all current devices",
+        .cmd = debug_device_list
+    });
 }
