@@ -52,7 +52,7 @@ static void debug_console_trigger(tty_t* tty, char* str) {
         return;
     }
 
-    debug_console_command_t handle = hashmap_get(console_commands, cmd);
+    debug_console_command_t handle = ((console_command_t*) hashmap_get(console_commands, cmd))->cmd;
     handle(tty, args);
 }
 
@@ -151,11 +151,16 @@ void debug_console_init(void) {
 static void debug_help(tty_t* tty, const char* input) {
     unused(input);
 
-    list_t* keys = hashmap_keys(console_commands);
-    list_for_each(node, keys) {
-        tty_printf(tty, "- %s\n", node->value);
+    list_t* values = hashmap_values(console_commands);
+    console_command_t* curVal;
+    list_for_each(node, values) {
+        curVal = (console_command_t*)node->value;
+        if ((strlen(input) == 0) ||
+            (strlen(input) > 0 && strcmp(input, curVal->group) == 0)) {
+            tty_printf(tty, "- %s: %s\n", curVal->name, curVal->help);
+        }
     }
-    list_free(keys);
+    list_free(values);
 }
 
 static void debug_crash(tty_t* tty, const char* input) {
@@ -167,8 +172,18 @@ static void debug_crash(tty_t* tty, const char* input) {
 
 void debug_console_start(void) {
     {
-        debug_register_command("help", debug_help);
-        debug_register_command("crash", debug_crash);
+        debug_register_command((console_command_t) {
+            .name = "help",
+            .group = "debug",
+            .help = "Show this help menu",
+            .cmd = debug_help
+        });
+        debug_register_command((console_command_t) {
+            .name = "crash",
+            .group = "debug",
+            .help = "Crash the system",
+            .cmd = debug_crash
+        });
 
         debug_init_commands();
     }
@@ -188,10 +203,13 @@ void debug_console_start(void) {
     list_free(ttys);
 }
 
-void debug_register_command(char* name, debug_console_command_t cmd) {
+void debug_register_command(console_command_t con_cmd) {
     if (console_commands == NULL) {
         return;
     }
 
-    hashmap_set(console_commands, name, cmd);
+    console_command_t* cc_ptr = malloc(sizeof(console_command_t));
+    memcpy(cc_ptr, &con_cmd, sizeof(console_command_t));
+
+    hashmap_set(console_commands, con_cmd.name, cc_ptr);
 }

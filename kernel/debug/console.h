@@ -4,6 +4,13 @@
 
 typedef void (*debug_console_command_t)(tty_t* tty, const char* input);
 
-void debug_register_command(char* name, debug_console_command_t cmd);
+typedef struct console_command {
+    char* name;
+    char* group;
+    char* help;
+    debug_console_command_t cmd;
+} console_command_t;
+
+void debug_register_command(console_command_t con_cmd);
 void debug_console_init(void);
 void debug_console_start(void);
