@@ -83,5 +83,8 @@ typedef unsigned int uint;
 // Simplified type for unsigned long.
 typedef unsigned long ulong;
 
+// Simplified type for unsigned short.
+typedef unsigned short ushort;
+
 // Simplified type for unsigned char.
 typedef unsigned char uchar;
