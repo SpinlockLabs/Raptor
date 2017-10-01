@@ -5,16 +5,6 @@
 #include <liblox/printf.h>
 #include <liblox/memory.h>
 
-extern char* (*arch_get_cmdline)(void);
-
-char* cmdline_get(void) {
-    if (arch_get_cmdline != NULL) {
-        return arch_get_cmdline();
-    }
-
-    return "";
-}
-
 #define MAX_FLAG_SIZE 256
 
 bool cmdline_bool_flag(char *name) {

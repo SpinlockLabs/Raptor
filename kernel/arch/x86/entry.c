@@ -55,7 +55,7 @@ void lox_output_char_vga(char c) {
     lox_output_char_ebl(c);
 }
 
-used void arch_panic_handler(nullable char* msg) {
+used void panic(nullable char* msg) {
     asm("cli;");
 
     if (msg != NULL) {

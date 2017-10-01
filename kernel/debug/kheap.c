@@ -16,7 +16,7 @@ static void debug_kheap_stats(tty_t* tty, const char* input) {
     spin_lock(&heap->lock);
 
     tty_printf(tty, "Used Object Allocations: %d bytes\n", heap->total_allocated_used_size);
-    tty_printf(tty, "Used Block Adebug_kheap_test_allocllocations: %d bytes\n", heap->total_allocated_blocks_size);
+    tty_printf(tty, "Used Block Allocations: %d bytes\n", heap->total_allocated_blocks_size);
 
     size_t meta_total = 0;
     size_t full_total = 0;

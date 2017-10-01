@@ -123,7 +123,10 @@ void* (*lox_reallocate_provider)(void*, size_t) = raptor_user_realloc;
 void (*lox_free_provider)(void*) = raptor_user_free;
 #endif
 
+char* cmdline_get(void) {
+    return raptor_user_get_cmdline();
+}
+
 void (*lox_output_char_provider)(char) = raptor_user_output_char;
 void (*lox_output_string_provider)(char*) = raptor_user_output_string;
-char* (*arch_get_cmdline)(void) = raptor_user_get_cmdline;
 syscall_result_t (*lox_syscall_provider)(syscall_id_t, uintptr_t*) = raptor_user_syscall;

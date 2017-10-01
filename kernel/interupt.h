@@ -1,6 +1,8 @@
 #pragma once
 
+#include <liblox/common.h>
+
 /**
  * Wait for the next interrupt.
  */
-void irq_wait(void);
+arch_specific void irq_wait(void);

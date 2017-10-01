@@ -19,4 +19,4 @@ typedef struct rtime {
  * Retrieves the current time.
  * @param time time instance
  */
-extern void time_get(rtime_t* time);
+extern arch_specific void time_get(rtime_t* time);

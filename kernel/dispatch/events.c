@@ -44,7 +44,7 @@ void event_add_handler(event_type_t type, event_handler_t handler, void* extra) 
     UNLOCK();
 }
 
-void event_remove_handler(event_type_t type, event_handler_t handler) {
+void event_remove_handler(event_type_t type, event_handler_t handler, void* extra) {
     LOCK();
     if (!hashmap_has(&event_state.registry, (void*) (uintptr_t) type)) {
         UNLOCK();
@@ -55,7 +55,12 @@ void event_remove_handler(event_type_t type, event_handler_t handler) {
 
     list_for_each(node, list) {
         event_dispatch_info_t* info = node->value;
+
         if (info->handler != handler) {
+            continue;
+        }
+
+        if (info->extra != extra) {
             continue;
         }
 
@@ -69,7 +74,7 @@ void event_remove_handler(event_type_t type, event_handler_t handler) {
     UNLOCK();
 }
 
- void event_dispatch(event_type_t type, void* event) {
+void event_dispatch(event_type_t type, void* event) {
      LOCK();
 
     if (!hashmap_has(&event_state.registry, (void*) (uintptr_t) type)) {

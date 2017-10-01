@@ -1,14 +1,20 @@
 option(ARCH_USER "Enable Usermode Raptor OS" OFF)
 
-set(ARCH_BUILD "${CMAKE_SYSTEM_PROCESSOR}")
+if(NOT DEFINED ARCH_BUILD)
+  set(ARCH_BUILD "${CMAKE_SYSTEM_PROCESSOR}")
+endif()
 
 if(ARCH_USER)
   include(${RAPTOR_DIR}/build/cmake/arch/user.cmake)
 elseif(ARCH_BUILD STREQUAL "arm")
-  if(NOT DEFINED ARM_TARGET)
-    message(FATAL_ERROR "ARM toolchain detected. Please specify an ARM target via -DARM_TARGET={target}.")
-  endif()
-  include(${RAPTOR_DIR}/build/cmake/arch/arm-${ARM_TARGET}.cmake)
-else()
+  include(${RAPTOR_DIR}/build/cmake/arch/arm.cmake)
+elseif(ARCH_BUILD MATCHES "x86")
   include(${RAPTOR_DIR}/build/cmake/arch/x86.cmake)
+elseif(ARCH_BUILD MATCHES "none")
+  include(${RAPTOR_DIR}/build/cmake/arch/none.cmake)
+else()
+  message(
+    FATAL_ERROR
+    "Unknown Architecture: ${ARCH_BUILD}"
+  )
 endif()

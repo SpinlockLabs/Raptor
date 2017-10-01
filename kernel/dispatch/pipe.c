@@ -30,7 +30,7 @@ void epipe_add_handler(epipe_t* pipe, epipe_handler_t handler, void* extra) {
     spin_unlock(&pipe->lock);
 }
 
-void epipe_remove_handler(epipe_t* pipe, epipe_handler_t handler) {
+void epipe_remove_handler(epipe_t* pipe, epipe_handler_t handler, void* extra) {
     if (pipe == NULL) {
         return;
     }
@@ -41,7 +41,12 @@ void epipe_remove_handler(epipe_t* pipe, epipe_handler_t handler) {
 
     list_for_each(node, list) {
         epipe_handler_entry_t* info = node->value;
+
         if (info->handler != handler) {
+            continue;
+        }
+
+        if (info->extra != extra) {
             continue;
         }
 

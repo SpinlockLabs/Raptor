@@ -1,13 +1,11 @@
 #include "cmdline.h"
 
-char *cmdline = NULL;
+char *cmdline = "";
 
 void init_cmdline(multiboot_t* mboot) {
     cmdline = (char*) mboot->cmdline;
 }
 
-char* arch_x86_get_cmdline(void) {
+char* cmdline_get(void) {
     return cmdline;
 }
-
-char* (*arch_get_cmdline)(void) = arch_x86_get_cmdline;

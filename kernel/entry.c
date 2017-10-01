@@ -1,3 +1,5 @@
+#include "entry.h"
+
 #include <liblox/version.h>
 #include <liblox/io.h>
 
@@ -19,6 +21,7 @@
 #include <kernel/dispatch/events.h>
 #include <kernel/cpu/task.h>
 #include <kernel/process/scheduler.h>
+
 #include <kernel/syscall/table.h>
 #include <kernel/syscall/lox/loxcall.h>
 
@@ -26,9 +29,7 @@
 #include "heap.h"
 #include "rootfs.h"
 
-/* Architecture hooks for initialization. */
-extern void kernel_setup_devices(void);
-
+/* These are defined internally in TTY. */
 extern void tty_write_kernel_log_char(char c);
 extern void tty_write_kernel_log_string(char* msg);
 

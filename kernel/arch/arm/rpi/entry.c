@@ -25,7 +25,7 @@ void lox_output_char_uart(char c) {
     uart_putc((uint8_t) c);
 }
 
-used void arch_panic_handler(char *str) {
+used void panic(char *str) {
     lox_output_string_uart("[PANIC] ");
 
     if (str != NULL) {
@@ -37,14 +37,13 @@ used void arch_panic_handler(char *str) {
 
 static char* rpi_cmdline = "";
 
-char* arch_arm_rpi_get_cmdline(void) {
+char* cmdline_get(void) {
     return rpi_cmdline;
 }
 
 void kernel_modules_load(void) {}
 void paging_init(void) {}
 
-char* (*arch_get_cmdline)(void) = arch_arm_rpi_get_cmdline;
 void (*lox_output_string_provider)(char*) = lox_output_string_uart;
 void (*lox_output_char_provider)(char) = lox_output_char_uart;
 void (*lox_sleep_provider)(ulong) = delay;

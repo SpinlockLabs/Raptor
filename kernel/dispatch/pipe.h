@@ -16,7 +16,7 @@ typedef struct epipe {
 typedef void (*epipe_handler_t)(epipe_t* pipe, void* event, void* extra);
 
 void epipe_add_handler(epipe_t* pipe, epipe_handler_t handler, void* extra);
-void epipe_remove_handler(epipe_t* pipe, epipe_handler_t handler);
+void epipe_remove_handler(epipe_t* pipe, epipe_handler_t handler, void* extra);
 
 void epipe_deliver(epipe_t* pipe, void* event);
 void epipe_deliver_async(epipe_t* pipe, void* event);

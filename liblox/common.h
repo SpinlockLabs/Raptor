@@ -4,6 +4,10 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#ifdef RAPTOR_KERNEL
+#include <kernel/common.h>
+#endif
+
 #if UINTPTR_MAX <= UINT_MAX
 // Machine is 32-bit.
 #define BITS_32

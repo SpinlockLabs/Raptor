@@ -120,3 +120,7 @@ if(UBSAN)
     -fsanitize=undefined
   )
 endif()
+
+kernel_cflags(
+  -DRAPTOR_KERNEL
+)
