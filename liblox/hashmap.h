@@ -42,8 +42,14 @@ bool hashmap_has(hashmap_t* map, void* key);
 list_t* hashmap_keys(hashmap_t* map);
 list_t* hashmap_values(hashmap_t* map);
 void hashmap_free(hashmap_t* map);
+
 uint hashmap_string_hash(void* key);
 int hashmap_string_compare(void* a, void* b);
 void* hashmap_string_duplicate(void* key);
+
+uint hashmap_int_hash(void* key);
+int hashmap_int_compare(void* a, void* b);
+void* hashmap_int_duplicate(void* key);
+
 size_t hashmap_count(hashmap_t* map);
 void* hashmap_remove(hashmap_t* map, void* key);

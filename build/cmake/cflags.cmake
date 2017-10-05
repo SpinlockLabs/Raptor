@@ -1,4 +1,7 @@
 option(ENABLE_LTO "Enable Link-Time Optimization" OFF)
+option(ENABLE_WARN_ERRORS "Make Compiler Warnings Error" OFF)
+option(ENABLE_WARN_EVERYTHING "Enable All Compiler Warnings" OFF)
+option(ENABLE_ASAN "Enable Address Sanitizer" OFF)
 
 if(ENABLE_LTO)
   cflags(-flto)
@@ -36,3 +39,27 @@ if(CLANG)
     -Wno-unused-command-line-argument
   )
 endif()
+
+if(GCC)
+  cflags(
+    -Wduplicated-cond
+    -Wlogical-op
+    -Wduplicated-branches
+    -Wnull-dereference
+    -Wjump-misses-init
+    -Wdouble-promotion
+  )
+endif()
+
+if(ENABLE_WARN_ERRORS)
+  cflags(-Werror)
+endif()
+
+if(ENABLE_WARN_EVERYTHING)
+  cflags(-Weverything)
+endif()
+
+if(ENABLE_ASAN)
+  cflags(-fsanitize=address)
+endif()
+

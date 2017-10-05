@@ -4,6 +4,10 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#ifndef UINT_MAX
+#include <limits.h>
+#endif
+
 #ifdef RAPTOR_KERNEL
 #include <kernel/common.h>
 #endif

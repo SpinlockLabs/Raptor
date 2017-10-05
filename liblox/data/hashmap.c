@@ -16,7 +16,7 @@ uint hashmap_string_hash(void* _key) {
     return hash;
 }
 
-int hashmap_string_comp(void* a, void* b) {
+int hashmap_string_compare(void* a, void* b) {
     return !strcmp(a, b);
 }
 
@@ -28,7 +28,7 @@ uint hashmap_int_hash(void* key) {
     return (uint) (uintptr_t) key;
 }
 
-int hashmap_int_comp(void* a, void* b) {
+int hashmap_int_compare(void* a, void* b) {
     return (int) (uintptr_t) a == (int) (uintptr_t) b;
 }
 
@@ -48,7 +48,7 @@ hashmap_t* hashmap_create(size_t size) {
 
 void hashmap_init(hashmap_t* map, size_t size) {
     map->hash = hashmap_string_hash;
-    map->compare = hashmap_string_comp;
+    map->compare = hashmap_string_compare;
     map->key_duplicate = hashmap_string_duplicate;
     map->key_free = free;
     map->value_free = free;
@@ -64,7 +64,7 @@ hashmap_t* hashmap_create_int(size_t size) {
 
 void hashmap_init_int(hashmap_t* map, size_t size) {
     map->hash = hashmap_int_hash;
-    map->compare = hashmap_int_comp;
+    map->compare = hashmap_int_compare;
     map->key_duplicate = hashmap_int_duplicate;
     map->key_free = hashmap_int_free;
     map->value_free = free;

@@ -5,6 +5,7 @@
 
 #include <kernel/tty/tty.h>
 #include <kernel/modload.h>
+#include <kernel/panic.h>
 #include <kernel/debug/console.h>
 
 #include <liblox/lox-internal.h>
@@ -97,4 +98,6 @@ void kernel_init(void) {
     mount_rootfs();
 
     scheduler_switch_next();
+
+    panic("Kernel entrypoint ended.");
 }

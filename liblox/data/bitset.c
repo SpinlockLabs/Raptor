@@ -11,7 +11,7 @@
     size_t mask   = 1 << offset;
 
 void bitset_init(bitset_t* set, size_t size) {
-    set->size = CEIL(size, 8);
+    set->size = CEIL(size, (uint) 8);
     set->data = zalloc(set->size);
 }
 
