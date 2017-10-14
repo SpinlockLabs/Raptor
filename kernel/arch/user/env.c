@@ -35,7 +35,7 @@ rkmalloc_heap* heap_get(void) {
 
 void paging_init(void) {}
 
-void arch_panic_handler(char* msg) {
+void panic(char* msg) {
     if (msg != NULL) {
         puts(msg);
     }
