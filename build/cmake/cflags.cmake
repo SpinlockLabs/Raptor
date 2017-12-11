@@ -48,6 +48,7 @@ if(GCC)
     -Wnull-dereference
     -Wjump-misses-init
     -Wdouble-promotion
+    -ffreestanding
   )
 endif()
 
