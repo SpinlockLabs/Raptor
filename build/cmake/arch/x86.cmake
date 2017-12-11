@@ -102,7 +102,7 @@ add_custom_target(bochs
 
 add_custom_target(
   diskimg
-  COMMAND "${CMAKE_SOURCE_DIR}/build/scripts/gendiskimg.sh"
+  COMMAND "${CMAKE_SOURCE_DIR}/build/scripts/gendiskimg.linux.sh"
   WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
   DEPENDS filesystem
   SOURCES ${FS_DIR}
