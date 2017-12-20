@@ -308,6 +308,7 @@ uint rkmalloc_reduce(
     spin_lock(&heap->lock);
 
     if (heap->return_block == NULL) {
+        spin_unlock(&heap->lock);
         return 0;
     }
 
