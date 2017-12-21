@@ -14,13 +14,13 @@ typedef struct ktask {
     void* data;
 } ktask_t;
 
-static list_t* __task_queue = NULL;
+static list_t* task_queue = NULL;
 
 static ktask_id ktask_counter = 0UL;
 
 static void init_if_needed(void) {
-    if (__task_queue == NULL) {
-        __task_queue = list_create();
+    if (task_queue == NULL) {
+        task_queue = list_create();
     }
 }
 
@@ -37,7 +37,7 @@ ktask_id ktask_repeat(ulong ticks, ktask_func_t func, void* data) {
     task->func = func;
     task->data = data;
 
-    list_add(__task_queue, task);
+    list_add(task_queue, task);
     return id;
 }
 
@@ -54,19 +54,19 @@ ktask_id ktask_queue(ktask_func_t func, void* data) {
     task->func = func;
     task->data = data;
 
-    list_add(__task_queue, task);
+    list_add(task_queue, task);
     return id;
 }
 
-static volatile int __queue_state = 0;
+static volatile int queue_state = 0;
 
-static void __ktask_queue_flush(void) {
-    if (__task_queue == NULL) {
+static void flush_queue(void) {
+    if (task_queue == NULL) {
         return;
     }
 
     ulong current_ticks = timer_get_ticks();
-    list_node_t* node = __task_queue->head;
+    list_node_t* node = task_queue->head;
 
     while (node != NULL) {
         ktask_t* task = node->value;
@@ -94,19 +94,19 @@ static void __ktask_queue_flush(void) {
 }
 
 void ktask_queue_flush(void) {
-    if (__queue_state > 0) {
+    if (queue_state > 0) {
         return;
     }
 
-    __queue_state = 1;
-    __ktask_queue_flush();
-    __queue_state = 0;
+    queue_state = 1;
+    flush_queue();
+    queue_state = 0;
 }
 
 void ktask_cancel(ktask_id id) {
     init_if_needed();
 
-    list_node_t* node = __task_queue->head;
+    list_node_t* node = task_queue->head;
 
     while (node != NULL) {
         ktask_t* task = node->value;

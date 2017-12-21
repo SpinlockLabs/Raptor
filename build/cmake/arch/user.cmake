@@ -18,7 +18,7 @@ else()
   set(REAL_ARCH "user")
 endif()
 
-if(APPLE)
+if(APPLE OR CYGWIN)
   set(REAL_ARCH "generic")
 endif()
 
@@ -48,10 +48,6 @@ elseif(WEB)
 elseif(UNIX)
   target_link_libraries(kernel dl c)
 elseif(WIN32)
-  add_definitions(
-    -DARCH_NO_SPINLOCK
-  )
-
   if(MSVC)
     kernel_cflags(
       /ZW:nostdlib

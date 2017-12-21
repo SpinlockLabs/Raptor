@@ -32,3 +32,10 @@ foreach(COMMON_TYPE ${KERNEL_COMMON_TYPES})
 
   list(APPEND KERNEL_COMMON_SRC ${COMMON_TYPE_SRC})
 endforeach()
+
+option(DEBUG_KERNEL_LOCKS "Enable Kernel Lock Debugging" OFF)
+if(DEBUG_KERNEL_LOCKS)
+  add_definitions(
+    -DDEBUG_SPINLOCKS
+  )
+endif()

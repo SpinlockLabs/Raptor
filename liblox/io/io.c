@@ -1,7 +1,7 @@
 #include "../lox-internal.h"
 #include "../printf.h"
 
-void puts(char *msg) {
+void puts(char* msg) {
     lox_output_string_provider(msg);
 }
 

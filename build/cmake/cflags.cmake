@@ -44,11 +44,16 @@ if(GCC)
   cflags(
     -Wduplicated-cond
     -Wlogical-op
-    -Wduplicated-branches
     -Wnull-dereference
     -Wjump-misses-init
     -Wdouble-promotion
     -ffreestanding
+  )
+endif()
+
+if(GCC AND NOT CYGWIN)
+  cflags(
+    -Wduplicated-branches
   )
 endif()
 
@@ -63,4 +68,3 @@ endif()
 if(ENABLE_ASAN)
   cflags(-fsanitize=address)
 endif()
-

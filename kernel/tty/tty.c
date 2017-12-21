@@ -7,7 +7,11 @@
 
 static struct {
     hashmap_t registry;
+    spin_lock_t lock;
 } tty_subsystem_state;
+
+#define LOCK() spin_lock(&tty_subsystem_state.lock)
+#define UNLOCK() spin_unlock(&tty_subsystem_state.lock)
 
 void tty_init(tty_t* tty, char* name) {
     memset(tty, 0, sizeof(tty_t));
@@ -53,42 +57,62 @@ void tty_printf(tty_t* tty, char* fmt, ...) {
 }
 
 void tty_destroy(tty_t* tty) {
+    LOCK();
+    hashmap_remove(&tty_subsystem_state.registry, tty->name);
+
     if (tty->ops.destroy != NULL) {
         tty->ops.destroy(tty);
     }
+    UNLOCK();
 }
 
 tty_t* tty_get(char* name) {
-    return hashmap_get(&tty_subsystem_state.registry, name);
+    LOCK();
+    tty_t* tty = hashmap_get(&tty_subsystem_state.registry, name);
+    UNLOCK();
+    return tty;
 }
 
 list_t* tty_get_names(void) {
-    return hashmap_keys(&tty_subsystem_state.registry);
+    LOCK();
+    list_t* keys = hashmap_keys(&tty_subsystem_state.registry);
+    UNLOCK();
+    return keys;
 }
 
 list_t* tty_get_all(void) {
-    return hashmap_values(&tty_subsystem_state.registry);
+    LOCK();
+    list_t* ttys = hashmap_values(&tty_subsystem_state.registry);
+    UNLOCK();
+    return ttys;
 }
 
 void tty_subsystem_init(void) {
+    spin_init(&tty_subsystem_state.lock);
+    SET_SPIN_LOCK_LABEL(&tty_subsystem_state.lock, "TTY Subsystem");
     hashmap_init(&tty_subsystem_state.registry, 2);
 }
 
 void tty_write_kernel_log_char(char c) {
+    LOCK();
     for (uint i = 0; i < tty_subsystem_state.registry.size; ++i) {
         hashmap_entry_t* x = tty_subsystem_state.registry.entries[i];
         while (x) {
             tty_t* tty = x->value;
             if (tty != NULL && tty->flags.write_kernel_log) {
-                tty_write(tty, (uint8_t*) (&c), 1);
+                tty_write(tty, (uint8_t*) &c, 1);
             }
 
             x = x->next;
         }
     }
+    UNLOCK();
 }
 
 void tty_write_kernel_log_string(char* msg) {
+#ifndef DEBUG_SPINLOCKS
+    LOCK();
+#endif
     size_t len = strlen(msg);
     for (uint i = 0; i < tty_subsystem_state.registry.size; ++i) {
         hashmap_entry_t* x = tty_subsystem_state.registry.entries[i];
@@ -101,4 +125,7 @@ void tty_write_kernel_log_string(char* msg) {
             x = x->next;
         }
     }
+#ifndef DEBUG_SPINLOCKS
+    UNLOCK();
+#endif
 }

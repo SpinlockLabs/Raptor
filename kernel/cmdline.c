@@ -40,11 +40,7 @@ bool cmdline_bool_flag(char *name) {
         i++;
     }
 
-    if (strcmp(buf, name) == 0) {
-        return true;
-    }
-
-    return false;
+    return strcmp(buf, name) == 0;
 }
 
 char* cmdline_read(char* name) {

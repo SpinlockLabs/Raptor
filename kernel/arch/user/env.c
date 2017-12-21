@@ -13,12 +13,12 @@
 
 tty_t* console_tty = NULL;
 
-#ifdef USER_RKMALLOC
+#ifndef NO_USER_RKMALLOC
 static rkmalloc_heap kheap;
 #endif
 
 void heap_init(void) {
-#ifdef USER_RKMALLOC
+#ifndef NO_USER_RKMALLOC
     kheap.grab_block = raptor_user_malloc;
     kheap.return_block = raptor_user_free;
     rkmalloc_init_heap(&kheap);
@@ -26,7 +26,7 @@ void heap_init(void) {
 }
 
 rkmalloc_heap* heap_get(void) {
-#ifdef USER_RKMALLOC
+#ifndef NO_USER_RKMALLOC
     return &kheap;
 #else
     return NULL;
@@ -92,7 +92,7 @@ void cpu_run_idle(void) {
 }
 #endif
 
-#ifdef USER_RKMALLOC
+#ifndef NO_USER_RKMALLOC
 void* raptor_kernel_malloc(size_t size) {
     if (kheap.grab_block == NULL) {
         heap_init();

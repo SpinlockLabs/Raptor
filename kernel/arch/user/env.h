@@ -13,7 +13,7 @@ void raptor_user_loop(void);
 void* raptor_user_malloc(size_t size);
 void raptor_user_free(void* ptr);
 
-#ifndef USER_RKMALLOC
+#ifdef NO_USER_RKMALLOC
 void* raptor_user_valloc(size_t size);
 void raptor_user_free(void* ptr);
 void* raptor_user_realloc(void* ptr, size_t size);

@@ -3,6 +3,8 @@
 
 #include "init.h"
 
+#include <liblox/common.h>
+
 #include <windows.h>
 
 static HMODULE libc;

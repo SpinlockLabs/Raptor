@@ -95,8 +95,14 @@ void kernel_init(void) {
      */
     ktask_queue_flush();
 
+    /**
+     * Mounts the root filesystem, if needed.
+     */
     mount_rootfs();
 
+    /**
+     * Ask the scheduler to switch tasks.
+     */
     scheduler_switch_next();
 
     panic("Kernel entrypoint ended.");

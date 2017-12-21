@@ -2,8 +2,6 @@
 
 #include <liblox/hex.h>
 
-#include <kernel/panic.h>
-
 #ifndef RKMALLOC_DISABLE_MAGIC
 uintptr_t rkmagic(uintptr_t x) {
     x = ((x >> 16) ^ x) * 0x45d9f3b;
@@ -22,6 +20,8 @@ rkmalloc_error rkmalloc_init_heap(rkmalloc_heap* heap) {
     heap->total_allocated_used_size = 0;
 
     spin_init(&heap->lock);
+    SET_SPIN_LOCK_LABEL(&heap->lock, "rkmalloc heap");
+
     list_init(&heap->index);
     heap->index.free_values = false;
 
@@ -142,11 +142,7 @@ static bool is_block_usable(rkmalloc_entry* entry, size_t block_size) {
         return false;
     }
 
-    if (block_size == entry->block_size) {
-        return true;
-    }
-
-    return false;
+    return block_size == entry->block_size;
 }
 
 void* rkmalloc_allocate_align(rkmalloc_heap* heap, size_t size, size_t align) {

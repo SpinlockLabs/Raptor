@@ -4,10 +4,10 @@ file(
   "${CMAKE_CURRENT_LIST_DIR}/*.h"
 )
 
-option(ARCH_USER_RKMALLOC "Use rkmalloc for user arch." OFF)
+option(ARCH_USER_NO_RKMALLOC "Do not use rkmalloc for user arch." OFF)
 
-if(ARCH_USER_RKMALLOC)
-  add_definitions(-DUSER_RKMALLOC)
+if(ARCH_USER_NO_RKMALLOC)
+  add_definitions(-DNO_USER_RKMALLOC)
 endif()
 
 foreach(F ${USER_ARCH_SRC})

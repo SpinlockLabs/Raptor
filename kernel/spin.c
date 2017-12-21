@@ -33,6 +33,14 @@ void spin_wait(atomic_int32* addr, atomic_int32* waiters) {
 #endif
 
 void spin_lock(spin_lock_t* lock) {
+#ifdef DEBUG_SPINLOCKS
+    if (lock->label == NULL) {
+        printf(DEBUG "[Kernel Locks] Acquired\n");
+    } else {
+        printf(DEBUG "[Kernel Locks] Acquired '%s'\n", lock->label);
+    }
+#endif
+
 #ifdef ARCH_NO_SPINLOCK
     unused(lock);
     return;
@@ -41,7 +49,7 @@ void spin_lock(spin_lock_t* lock) {
     while (atomic_exchange(&lock->addr, 1)) {
         if (!warned) {
             warned = true;
-            printf(WARN "Waiting for lock...\n");
+            printf(WARN "[Kernel Locks] Waiting for lock...\n");
         }
         spin_wait(&lock->addr, &lock->waiters);
     }
@@ -49,10 +57,21 @@ void spin_lock(spin_lock_t* lock) {
 }
 
 void spin_init(spin_lock_t* lock) {
+#ifdef DEBUG_SPINLOCKS
+    printf(DEBUG "[Kernel Locks] Init\n");
+#endif
     memset(lock, 0, sizeof(spin_lock_t));
 }
 
 void spin_unlock(spin_lock_t* lock) {
+#ifdef DEBUG_SPINLOCKS
+    if (lock->label == NULL) {
+        printf(DEBUG "[Kernel Locks] Released\n");
+    } else {
+        printf(DEBUG "[Kernel Locks] Released '%s'\n", lock->label);
+    }
+#endif
+
 #ifdef ARCH_NO_SPINLOCK
     unused(lock);
     return;

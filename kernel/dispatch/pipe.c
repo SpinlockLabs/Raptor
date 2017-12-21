@@ -113,6 +113,7 @@ void epipe_init(epipe_t* pipe) {
     pipe->internal = list;
 
     spin_init(&pipe->lock);
+    SET_SPIN_LOCK_LABEL(&pipe->lock, "Event Pipe");
 }
 
 void epipe_destroy(epipe_t* pipe) {

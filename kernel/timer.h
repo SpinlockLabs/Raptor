@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+
 #include <liblox/common.h>
 
 extern arch_specific void timer_init(uint32_t);

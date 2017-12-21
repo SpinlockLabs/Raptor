@@ -160,6 +160,7 @@ device_entry_t* device_lookup(
 void device_registry_init(void) {
     device_tree = tree_create();
     spin_init(&lock);
+    SET_SPIN_LOCK_LABEL(&lock, "Device Registry");
 
     device_entry_t* entry = zalloc(sizeof(device_entry_t));
     entry->name = "root";
