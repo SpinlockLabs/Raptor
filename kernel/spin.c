@@ -19,7 +19,7 @@ void spin_wait(atomic_int32* addr, atomic_int32* waiters) {
     }
 
     while (*addr) {
-        if (kernel_initialized) {
+        if (kernel_is_initialized()) {
             ktask_queue_flush();
         } else {
             irq_wait();
@@ -78,7 +78,7 @@ void spin_unlock(spin_lock_t* lock) {
 #else
     if (lock->addr) {
         atomic_store(&lock->addr, 0);
-        if (lock->waiters && kernel_initialized) {
+        if (lock->waiters && kernel_is_initialized()) {
             ktask_queue_flush();
         }
     }

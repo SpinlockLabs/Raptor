@@ -3,6 +3,7 @@
 #include <liblox/version.h>
 #include <liblox/io.h>
 
+#include <kernel/device/registry.h>
 #include <kernel/tty/tty.h>
 #include <kernel/modload.h>
 #include <kernel/panic.h>
@@ -23,7 +24,6 @@
 #include <kernel/cpu/task.h>
 #include <kernel/process/scheduler.h>
 
-#include <kernel/syscall/table.h>
 #include <kernel/syscall/lox/loxcall.h>
 
 #include "paging.h"
@@ -106,4 +106,8 @@ void kernel_init(void) {
     scheduler_switch_next();
 
     panic("Kernel entrypoint ended.");
+}
+
+bool kernel_is_initialized(void) {
+    return kernel_initialized;
 }

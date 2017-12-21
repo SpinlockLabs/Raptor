@@ -1,5 +1,7 @@
 #pragma once
 
+#define __LIBLOX_COMMON_DEF
+
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -8,7 +10,7 @@
 #include <limits.h>
 #endif
 
-#ifdef RAPTOR_KERNEL
+#if defined(RAPTOR_KERNEL) && !defined(__KERNEL_COMMON_DEF)
 #include <kernel/common.h>
 #endif
 

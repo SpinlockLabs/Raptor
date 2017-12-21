@@ -1,6 +1,6 @@
 #pragma once
 
-#include <liblox/common.h>
+#include <kernel/common.h>
 #include <stdint.h>
 
 /**

@@ -118,7 +118,8 @@ static void debug_fs_stat(tty_t* tty, const char* input) {
         return;
     }
 
-    fs_stat_t stat;
+    fs_stat_t stat = {FS_TYPE_UNKNOWN, 0};
+
     fs_error_t error = fs_stat(node, &stat);
 
     if (error != FS_ERROR_OK) {
@@ -145,31 +146,35 @@ void debug_fs_init(void) {
     debug_register_command((console_command_t) {
         .name = "fs-resolve",
         .group = "fs",
-        .help = "Resolve a filesystem",
+        .help = "Resolve a filesystem path.",
         .cmd = debug_fs_resolve
     });
+
     debug_register_command((console_command_t) {
         .name = "fs-stat",
         .group = "fs",
-        .help = "Show stats for a filesystem",
+        .help = "Show information about a file.",
         .cmd = debug_fs_stat
     });
+
     debug_register_command((console_command_t) {
         .name = "fs-mount",
         .group = "fs",
-        .help = "Mount a filesystem",
+        .help = "Mount a filesystem.",
         .cmd = debug_fs_mount
     });
+
     debug_register_command((console_command_t) {
         .name = "fs-cat",
         .group = "fs",
-        .help = "Cat a filesystem's contents",
+        .help = "Read a file.",
         .cmd = debug_fs_cat
     });
+
     debug_register_command((console_command_t) {
         .name = "fs-list",
         .group = "fs",
-        .help = "List all filesystems",
+        .help = "List a directory.",
         .cmd = debug_fs_list
     });
 }

@@ -10,6 +10,7 @@
 #include <kernel/dispatch/events.h>
 
 #include "mbr.h"
+#include "nulldev.h"
 
 static struct {
     hashmap_t* registry;
@@ -26,6 +27,8 @@ void block_device_subsystem_init(void) {
     SET_SPIN_LOCK_LABEL(blockdev_subsystem.lock, "Block Devices");
 
     block_device_mbr_subsystem_init();
+    block_device_t* nulldev = null_block_dev_create("null");
+    block_device_register(device_root(), nulldev);
 }
 
 block_device_t* block_device_create(char* name) {
