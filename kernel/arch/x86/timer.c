@@ -16,7 +16,7 @@ static int timer_callback(cpu_registers_t* regs) {
     unused(regs);
 
     timer_ticks++;
-    if (kernel_initialized) {
+    if (kernel_is_initialized()) {
         ktask_queue_flush();
         scheduler_switch_task(true);
     }

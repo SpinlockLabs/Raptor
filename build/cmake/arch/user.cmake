@@ -50,13 +50,14 @@ elseif(UNIX)
 elseif(WIN32)
   if(MSVC)
     kernel_cflags(
+      /ZW:nostdlib
       /MT
+      /nodefaultlib
       /GS-
       /Oi-
     )
 
     string(REPLACE "/RTC1" "" CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
-    string(REPLACE "/MDd" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
 
     ldflags(
       /FORCE:MULTIPLE
