@@ -7,15 +7,21 @@
 #include <kernel/spin.h>
 #include <kernel/dispatch/events.h>
 
-static tree_t* device_tree = NULL;
-static spin_lock_t lock;
+static struct {
+    tree_t* devtree;
+    spin_lock_t lock;
+} device_subsystem;
+
+#define DEVTREE device_subsystem.devtree
+#define LOCK() spin_lock(&device_subsystem.lock)
+#define UNLOCK() spin_unlock(&device_subsystem.lock)
 
 device_entry_t* device_root(void) {
-    if (device_tree == NULL || device_tree->root == NULL) {
+    if (DEVTREE == NULL || DEVTREE->root == NULL) {
         return NULL;
     }
 
-    return device_tree->root->value;
+    return DEVTREE->root->value;
 }
 
 device_entry_t* device_register(
@@ -43,14 +49,14 @@ device_entry_t* device_register(
     entry->classifier = classifier;
     entry->device = device;
 
-    spin_lock(&lock);
+    LOCK();
     tree_node_t* node = tree_node_insert_child(
-        device_tree,
+        DEVTREE,
         parent->node,
         entry
     );
     entry->node = node;
-    spin_unlock(&lock);
+    UNLOCK();
 
     event_dispatch_async(EVENT_DEVICE_REGISTERED, entry);
 
@@ -68,10 +74,10 @@ bool device_unregister(
     if (node != NULL) {
         event_dispatch(EVENT_DEVICE_UNREGISTERED, node->value);
 
-        spin_lock(&lock);
+        LOCK();
         free(node->value);
-        tree_node_remove(device_tree, node);
-        spin_unlock(&lock);
+        tree_node_remove(DEVTREE, node);
+        UNLOCK();
     }
 
     return node != NULL;
@@ -100,13 +106,13 @@ static void do_device_query(
 list_t* device_query(device_class_t classifier) {
     list_t* list = list_create();
 
-    spin_lock(&lock);
+    LOCK();
     do_device_query(
         device_root(),
         list,
         classifier
     );
-    spin_unlock(&lock);
+    UNLOCK();
 
     return list;
 }
@@ -147,24 +153,25 @@ device_entry_t* device_lookup(
     char* name,
     device_class_t classifier
 ) {
-    spin_lock(&lock);
+    LOCK();
     device_entry_t* result = do_device_lookup(
         parent,
         name,
         classifier
     );
-    spin_unlock(&lock);
+    UNLOCK();
     return result;
 }
 
 void device_registry_init(void) {
-    device_tree = tree_create();
-    spin_init(&lock);
-    SET_SPIN_LOCK_LABEL(&lock, "Device Registry");
+    DEVTREE = tree_create();
+    
+    spin_init(&device_subsystem.lock);
+    SET_SPIN_LOCK_LABEL(&device_subsystem.lock, "Device Registry");
 
     device_entry_t* entry = zalloc(sizeof(device_entry_t));
     entry->name = "root";
     entry->classifier = DEVICE_CLASS_ROOT;
-    tree_set_root(device_tree, entry);
-    entry->node = device_tree->root;
+    tree_set_root(DEVTREE, entry);
+    entry->node = DEVTREE->root;
 }

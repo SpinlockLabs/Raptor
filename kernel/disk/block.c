@@ -11,11 +11,19 @@
 
 #include "mbr.h"
 
-static hashmap_t* registry = NULL;
-static spin_lock_t lock;
+static struct {
+    hashmap_t* registry;
+    spin_lock_t lock;
+} blockdev_subsystem;
+
+#define REGISTRY blockdev_subsystem.registry
+#define LOCK() spin_lock(&blockdev_subsystem.lock)
+#define UNLOCK() spin_unlock(&blockdev_subsystem.lock)
 
 void block_device_subsystem_init(void) {
-    registry = hashmap_create(5);
+    REGISTRY = hashmap_create(5);
+    
+    SET_SPIN_LOCK_LABEL(blockdev_subsystem.lock, "Block Devices");
 
     block_device_mbr_subsystem_init();
 }
@@ -37,34 +45,37 @@ block_device_t* block_device_create(char* name) {
 }
 
 block_device_t* block_device_get(char* name) {
-    spin_lock(&lock);
-    block_device_t* device = hashmap_get(registry, name);
-    spin_unlock(&lock);
+    LOCK();
+    block_device_t* device = hashmap_get(REGISTRY, name);
+    UNLOCK();
     return device;
 }
 
 list_t* block_device_get_all(void) {
-    return hashmap_values(registry);
+    LOCK();
+    list_t* block_devices = hashmap_values(REGISTRY);
+    UNLOCK();
+    return block_devices;
 }
 
 block_device_error_t block_device_register(
     device_entry_t* parent,
     block_device_t* device
 ) {
-    spin_lock(&lock);
+    LOCK();
 
-    if (hashmap_has(registry, device->name)) {
+    if (hashmap_has(REGISTRY, device->name)) {
         printf(
             WARN "Failed to register block device '%s': "
                  "device already exists!\n"
         );
 
-        spin_unlock(&lock);
+        UNLOCK();
         return BLOCK_DEVICE_ERROR_EXISTS;
     }
 
-    hashmap_set(registry, device->name, device);
-    spin_unlock(&lock);
+    hashmap_set(REGISTRY, device->name, device);
+    UNLOCK();
 
     event_dispatch_async(
         EVENT_BLOCK_DEVICE_INITIALIZED,
@@ -91,7 +102,7 @@ block_device_error_t block_device_destroy(block_device_t* device) {
         device_unregister(device->entry);
     }
 
-    spin_lock(&lock);
+    LOCK();
 
     char* name = device->name;
     block_device_error_t error = BLOCK_DEVICE_ERROR_OK;
@@ -100,13 +111,13 @@ block_device_error_t block_device_destroy(block_device_t* device) {
         error = device->ops.destroy(device);
     }
 
-    hashmap_remove(registry, device);
+    hashmap_remove(REGISTRY, device);
     event_dispatch_async(
         EVENT_BLOCK_DEVICE_DESTROYED,
         name
     );
 
-    spin_unlock(&lock);
+    UNLOCK();
 
     return error;
 }
