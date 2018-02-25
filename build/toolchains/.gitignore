@@ -1,0 +1,5 @@
+*/build.log
+*/config
+*/config.gen/
+*/.config.old
+*/.build/
