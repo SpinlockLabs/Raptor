@@ -65,12 +65,14 @@ set(QEMU_CMD
   ${QEMU_CMD_BASE}
 )
 
-add_custom_target(qemu
+add_custom_target(
+  qemu
   COMMAND ${QEMU_CMD} -net user -serial file:kernel.log
   DEPENDS kernel diskimg
 )
 
-add_custom_target(qemu-cli
+add_custom_target(
+  qemu-cli
   COMMAND ${QEMU_CMD} -monitor none -nographic -net user
   DEPENDS kernel diskimg
 )
@@ -84,7 +86,8 @@ add_custom_target(
   WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
 )
 
-add_custom_target(qemu-iso
+add_custom_target(
+  qemu-iso
   COMMAND ${QEMU_CMD_BASE}
             -cdrom "${CMAKE_BINARY_DIR}/raptor.iso"
             -boot d
@@ -94,7 +97,8 @@ add_custom_target(qemu-iso
   DEPENDS iso diskimg
 )
 
-add_custom_target(bochs
+add_custom_target(
+  bochs
   COMMAND bochs -q -f "${CMAKE_SOURCE_DIR}/build/bochs/raptor.bcfg"
   DEPENDS iso kernel
   WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
@@ -110,7 +114,8 @@ add_custom_target(
 )
 
 if(RAPTOR_WINDOWS)
-    add_custom_target(qemu-windows
+    add_custom_target(
+      qemu-windows
       COMMAND "C:/Program Files/qemu/qemu-system-i386.exe"
             -netdev user,id=net0
             -device ${QEMU_NIC},netdev=net0

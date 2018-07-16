@@ -4,6 +4,7 @@
 #include <liblox/va_list.h>
 #include <liblox/printf.h>
 #include <liblox/memory.h>
+#include <liblox/io.h>
 
 static struct {
     hashmap_t registry;

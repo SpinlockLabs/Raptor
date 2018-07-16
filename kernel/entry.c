@@ -7,6 +7,8 @@
 #include <kernel/tty/tty.h>
 #include <kernel/modload.h>
 #include <kernel/panic.h>
+#include <kernel/cmdline.h>
+
 #include <kernel/debug/console.h>
 
 #include <liblox/lox-internal.h>
@@ -81,6 +83,9 @@ void kernel_init(void) {
     kernel_modules_load();
     puts(DEBUG "Kernel modules loaded.\n");
 
+    /**
+     * Starts the debug console.
+     */
     debug_console_start();
 
     /**

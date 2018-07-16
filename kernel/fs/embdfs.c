@@ -15,6 +15,8 @@ static embdfs_entry_t default_entries[] = {
 };
 
 static fs_error_t embdfs_list(fs_node_t* node, fs_list_entry_t** eout) {
+    unused(node);
+
     embdfs_entry_t* last = &default_entries[0];
     if (*eout != NULL) {
         last = (*eout)->internal.tag;
@@ -70,6 +72,8 @@ static fs_error_t embdfs_read(fs_node_t* node, size_t offset, uint8_t* buffer, s
 }
 
 static fs_error_t embdfs_child(fs_node_t* node, char* name, fs_node_t** out) {
+    unused(node);
+
     for (embdfs_entry_t* entry = &default_entries[0]; entry->name != NULL; entry++) {
         if (strcmp(name, entry->name) != 0) {
             continue;

@@ -1,4 +1,5 @@
 #include "spin.h"
+#include "panic.h"
 
 #include <liblox/io.h>
 #include <liblox/string.h>
@@ -49,11 +50,17 @@ void spin_lock(spin_lock_t* lock) {
     while (atomic_exchange(&lock->addr, 1)) {
         if (!warned) {
             warned = true;
-            printf(WARN "[Kernel Locks] Waiting for lock...\n");
+#ifdef DEBUG_SPINLOCKS
+            printf(WARN "[Kernel Locks] Waiting for lock... (%s)\n", lock->label);
+#else
+            printf(WARN "[Kernel Locks] Waiting for lock... (acquired by 0x%x)\n", lock->last_acquired_by);
+#endif
         }
         spin_wait(&lock->addr, &lock->waiters);
     }
 #endif
+
+    lock->last_acquired_by = __builtin_return_address(1);
 }
 
 void spin_init(spin_lock_t* lock) {

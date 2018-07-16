@@ -24,7 +24,7 @@ static struct {
 void block_device_subsystem_init(void) {
     REGISTRY = hashmap_create(5);
     
-    SET_SPIN_LOCK_LABEL(blockdev_subsystem.lock, "Block Devices");
+    SET_SPIN_LOCK_LABEL(&blockdev_subsystem.lock, "Block Devices");
 
     block_device_mbr_subsystem_init();
     block_device_t* nulldev = null_block_dev_create("null");

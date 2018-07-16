@@ -5,11 +5,12 @@
 #include <liblox/atomic.h>
 
 /**
- * Spin lock mechanism.
+ * Spinlock mechanism.
  */
 typedef struct spin_lock {
     atomic_int32 addr;
     atomic_int32 waiters;
+    void* last_acquired_by;
 
 #ifdef DEBUG_SPINLOCKS
     char* label;

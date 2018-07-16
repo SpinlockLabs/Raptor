@@ -3,6 +3,7 @@
 #include <liblox/string.h>
 #include <liblox/memory.h>
 #include <liblox/strbuf/strbuf.h>
+#include <kernel/arch/x86/process.h>
 
 #include "commands.h"
 
@@ -15,7 +16,7 @@ typedef struct debug_console {
     strbuf_t buffer;
 } debug_console_t;
 
-static void debug_console_trigger(tty_t* tty, char* str) {
+void debug_console_trigger(tty_t* tty, char* str) {
     char cmd[CONSOLE_CMD_MAX_SIZE];
     memset(cmd, 0, CONSOLE_CMD_MAX_SIZE);
     char args[CONSOLE_BUFFER_SIZE];
@@ -54,6 +55,12 @@ static void debug_console_trigger(tty_t* tty, char* str) {
 
     debug_console_command_t handle = ((console_command_t*) hashmap_get(console_commands, cmd))->cmd;
     handle(tty, args);
+}
+
+void debug_console_command_reset(tty_t* tty) {
+    debug_console_t* console = tty->internal.controller;
+    strbuf_clear(&console->buffer);
+    tty->status.execute_post_write = true;
 }
 
 static void debug_console_handle_data(epipe_t* pipe, void* event, void* extra) {
@@ -116,15 +123,15 @@ static void debug_console_handle_data(epipe_t* pipe, void* event, void* extra) {
             triggered = true;
             char* cmd = strbuf_read(&console->buffer);
             debug_console_trigger(tty, cmd);
-            strbuf_clear(&console->buffer);
+            debug_console_command_reset(tty);
         } else {
             if (!strbuf_putc(&console->buffer, c)) {
                 tty_printf(tty, "Command buffer full. Resetting.\n");
                 strbuf_clear(&console->buffer);
                 return;
             }
+            tty->status.execute_post_write = true;
         }
-        tty->status.execute_post_write = true;
     }
 
     if (triggered) {
@@ -203,13 +210,13 @@ void debug_console_start(void) {
     list_free(ttys);
 }
 
-void debug_register_command(console_command_t con_cmd) {
+void debug_register_command(console_command_t cmd) {
     if (console_commands == NULL) {
         return;
     }
 
     console_command_t* cc_ptr = malloc(sizeof(console_command_t));
-    memcpy(cc_ptr, &con_cmd, sizeof(console_command_t));
+    memcpy(cc_ptr, &cmd, sizeof(console_command_t));
 
-    hashmap_set(console_commands, con_cmd.name, cc_ptr);
+    hashmap_set(console_commands, cmd.name, cc_ptr);
 }

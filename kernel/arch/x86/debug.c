@@ -112,8 +112,10 @@ static void debug_start_process(tty_t* tty, const char* input) {
         return;
     }
 
-    char* argv[] = {""};
+    spin_unlock(&tty->reads.lock);
+    debug_console_command_reset(tty);
 
+    char* argv[] = {""};
     sysexec(tty, (char*) input, buff, stat.size, 0, argv);
 }
 
