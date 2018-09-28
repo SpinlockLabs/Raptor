@@ -51,7 +51,7 @@ typedef struct rkmalloc_entry {
     };
     size_t used_size;
     size_t block_size;
-} packed rkmalloc_entry;
+} rkmalloc_entry;
 
 /**
  * A heap index entry.
@@ -60,7 +60,7 @@ typedef struct rkmalloc_index_entry {
     list_node_t node;
     rkmalloc_entry entry;
     uint8_t ptr[];
-} packed rkmalloc_index_entry;
+} rkmalloc_index_entry;
 
 typedef enum {
     RKMALLOC_ERROR_NONE = 0,
