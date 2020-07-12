@@ -75,7 +75,7 @@ void event_remove_handler(event_type_t type, event_handler_t handler, void* extr
 }
 
 void event_dispatch(event_type_t type, void* event) {
-     LOCK();
+    LOCK();
 
     if (!hashmap_has(&event_state.registry, (void*) (uintptr_t) type)) {
         UNLOCK();
