@@ -8,7 +8,7 @@ typedef struct console_command {
     char* name;
     char* group;
     char* help;
-    debug_console_command_t cmd;
+    debug_console_command_t handler;
 } console_command_t;
 
 void debug_register_command(console_command_t cmd);

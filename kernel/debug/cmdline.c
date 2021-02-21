@@ -31,18 +31,18 @@ void debug_cmdline_init(void) {
         .name = "cmdline",
         .group = "cmdline",
         .help = "Show cmdline used at boot",
-        .cmd = show_cmdline
+        .handler = show_cmdline
     });
     debug_register_command((console_command_t) {
         .name = "cmdline-has",
         .group = "cmdline",
         .help = "Check whether cmdline has a flag",
-        .cmd = has_flag
+        .handler = has_flag
     });
     debug_register_command((console_command_t) {
         .name = "cmdline-read",
         .group = "cmdline",
         .help = "Read cmdline key value",
-        .cmd = debug_read
+        .handler = debug_read
     });
 }

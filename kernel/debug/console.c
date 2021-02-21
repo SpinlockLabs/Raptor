@@ -53,7 +53,7 @@ void debug_console_trigger(tty_t* tty, char* str) {
         return;
     }
 
-    debug_console_command_t handle = ((console_command_t*) hashmap_get(console_commands, cmd))->cmd;
+    debug_console_command_t handle = ((console_command_t*) hashmap_get(console_commands, cmd))->handler;
     handle(tty, args);
 }
 
@@ -183,13 +183,13 @@ void debug_console_start(void) {
             .name = "help",
             .group = "debug",
             .help = "Show this help menu",
-            .cmd = debug_help
+            .handler = debug_help
         });
         debug_register_command((console_command_t) {
             .name = "crash",
             .group = "debug",
             .help = "Crash the system",
-            .cmd = debug_crash
+            .handler = debug_crash
         });
 
         debug_init_commands();

@@ -34,14 +34,18 @@ static void debug_kheap_stats(tty_t* tty, const char* input) {
             reclaimable_block_total += entry->block_size;
         }
 
+#ifndef RKMALLOC_DISABLE_SITTING
         if (entry->sitting) {
             sitter_total++;
         }
+#endif
     }
 
     spin_unlock(&heap->lock);
 
+#ifndef RKMALLOC_DISABLE_SITTING
     tty_printf(tty, "Sitting Entries: %d\n", sitter_total);
+#endif
     tty_printf(tty, "Reclaimable Entries: %d\n", reclaimable_entries);
     tty_printf(tty, "Reclaimable Block Allocations: %d bytes\n", reclaimable_block_total);
     tty_printf(tty, "Metadata Usage: %d bytes\n", meta_total);
@@ -84,7 +88,11 @@ static void debug_kheap_dump(tty_t* tty, const char* input) {
                    entry->block_size,
                    entry->used_size,
                    &id->ptr,
+#ifndef RKMALLOC_DISABLE_SITTING
                    entry->free ? (entry->sitting ? "free (sitting)" : "free") : "used"
+#else
+                   entry->free ? "free" : "used"
+#endif
         );
         index++;
     }
@@ -95,18 +103,18 @@ void debug_kheap_init(void) {
         .name = "kheap-dump",
         .group = "kheap",
         .help = "Dump the kernel heap",
-        .cmd = debug_kheap_dump
+        .handler = debug_kheap_dump
     });
     debug_register_command((console_command_t) {
         .name = "kheap-stats",
         .group = "kheap",
         .help = "Show stats for the kernel heap",
-        .cmd = debug_kheap_stats
+        .handler = debug_kheap_stats
     });
     debug_register_command((console_command_t) {
         .name = "kheap-reduce",
         .group = "kheap",
         .help = "Reduce the kernel heap",
-        .cmd = debug_kheap_reduce
+        .handler = debug_kheap_reduce
     });
 }

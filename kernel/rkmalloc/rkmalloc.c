@@ -25,9 +25,11 @@ rkmalloc_error rkmalloc_init_heap(rkmalloc_heap* heap) {
     list_init(&heap->index);
     heap->index.free_values = false;
 
+#ifndef RKMALLOC_DISABLE_SITTING
     for (uint i = 0; i < RKMALLOC_SITTER_COUNT; i++) {
         heap->sitters[i] = NULL;
     }
+#endif
 
     return RKMALLOC_ERROR_NONE;
 }
@@ -81,7 +83,10 @@ static rkmalloc_index_entry* reserve_block(
 
     rkmalloc_entry* entry = &blk->entry;
     entry->free = true;
+
+#ifndef RKMALLOC_DISABLE_SITTING
     entry->sitting = false;
+#endif
     entry->block_size = size;
     entry->used_size = 0;
 
@@ -97,6 +102,7 @@ static rkmalloc_index_entry* reserve_block(
     return blk;
 }
 
+#ifndef RKMALLOC_DISABLE_SITTING
 static void insert_sitter(rkmalloc_heap* heap, rkmalloc_entry* entry) {
     for (uint i = 0; i < RKMALLOC_SITTER_COUNT; i++) {
         if (heap->sitters[i] == NULL) {
@@ -120,6 +126,7 @@ static void drop_sitter(rkmalloc_heap* heap, rkmalloc_entry* entry) {
         }
     }
 }
+#endif
 
 static size_t get_block_size(size_t size) {
     size--;
@@ -177,6 +184,7 @@ void* rkmalloc_allocate(rkmalloc_heap* heap, size_t size) {
 
     rkmalloc_entry* entry = NULL;
 
+#ifndef RKMALLOC_DISABLE_SITTING
     for (uint i = 0; i < RKMALLOC_SITTER_COUNT; i++) {
         rkmalloc_entry* candidate = heap->sitters[i];
         if (candidate != NULL && is_block_usable(candidate, block_size)) {
@@ -184,6 +192,7 @@ void* rkmalloc_allocate(rkmalloc_heap* heap, size_t size) {
             break;
         }
     }
+#endif
 
     if (entry == NULL) {
         list_node_t* node = heap->index.head;
@@ -198,7 +207,9 @@ void* rkmalloc_allocate(rkmalloc_heap* heap, size_t size) {
     }
 
     if (entry != NULL) {
+#ifndef RKMALLOC_DISABLE_SITTING
         drop_sitter(heap, entry);
+#endif
         rkmalloc_index_entry* index = (rkmalloc_index_entry*) (
             (uintptr_t) entry - sizeof(list_node_t)
         );
@@ -285,7 +296,9 @@ void rkmalloc_free(rkmalloc_heap* heap, void* ptr) {
         printf(WARN "Attempted to free an already freed pointer (0x%x)\n", ptr);
     } else {
         entry->free = true;
+#ifndef RKMALLOC_DISABLE_SITTING
         insert_sitter(heap, entry);
+#endif
         heap->total_allocated_blocks_size -= entry->block_size;
         heap->total_allocated_used_size -= entry->used_size;
     }
@@ -318,10 +331,12 @@ uint rkmalloc_reduce(
             continue;
         }
 
+#ifndef RKMALLOC_DISABLE_SITTING
         if (!aggressive && entry->sitting) {
             current = current->next;
             continue;
         }
+#endif
 
         list_node_t* prev = current->prev;
         list_remove(current);

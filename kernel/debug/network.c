@@ -191,38 +191,38 @@ void debug_network_init(void) {
         .name = "net-iface-list",
         .group = "network",
         .help = "List all network interfaces",
-        .cmd = debug_network_iface_list
+        .handler = debug_network_iface_list
     });
     debug_register_command((console_command_t) {
         .name = "net-iface-destroy",
         .group = "network",
         .help = "Destroy a network interface",
-        .cmd = debug_network_iface_destroy
+        .handler = debug_network_iface_destroy
     });
     debug_register_command((console_command_t) {
         .name = "dhcp-send-request",
         .group = "network",
         .help = "Request a DHCP IP address",
-        .cmd = debug_network_dhcp_send_request
+        .handler = debug_network_dhcp_send_request
     });
 
     debug_register_command((console_command_t) {
         .name = "arp-known",
         .group = "network",
         .help = "List the entire known ARP table",
-        .cmd = debug_arp_known
+        .handler = debug_arp_known
     });
     debug_register_command((console_command_t) {
         .name = "arp-ask",
         .group = "network",
         .help = "Ask ARP for a MAC address for given IPv4",
-        .cmd = debug_arp_ask
+        .handler = debug_arp_ask
     });
 
     debug_register_command((console_command_t) {
         .name = "ifhub-create",
         .group = "network",
         .help = "Create an if hub",
-        .cmd = debug_ifhub_create
+        .handler = debug_ifhub_create
     });
 }

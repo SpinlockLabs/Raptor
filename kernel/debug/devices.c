@@ -35,6 +35,6 @@ void debug_devices_init(void) {
         .name = "device-list",
         .group = "devices",
         .help = "List all current devices",
-        .cmd = debug_device_list
+        .handler = debug_device_list
     });
 }

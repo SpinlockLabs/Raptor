@@ -147,34 +147,34 @@ void debug_fs_init(void) {
         .name = "fs-resolve",
         .group = "fs",
         .help = "Resolve a filesystem path.",
-        .cmd = debug_fs_resolve
+        .handler = debug_fs_resolve
     });
 
     debug_register_command((console_command_t) {
         .name = "fs-stat",
         .group = "fs",
         .help = "Show information about a file.",
-        .cmd = debug_fs_stat
+        .handler = debug_fs_stat
     });
 
     debug_register_command((console_command_t) {
         .name = "fs-mount",
         .group = "fs",
         .help = "Mount a filesystem.",
-        .cmd = debug_fs_mount
+        .handler = debug_fs_mount
     });
 
     debug_register_command((console_command_t) {
         .name = "fs-cat",
         .group = "fs",
         .help = "Read a file.",
-        .cmd = debug_fs_cat
+        .handler = debug_fs_cat
     });
 
     debug_register_command((console_command_t) {
         .name = "fs-list",
         .group = "fs",
         .help = "List a directory.",
-        .cmd = debug_fs_list
+        .handler = debug_fs_list
     });
 }

@@ -34,12 +34,12 @@ void debug_time_init(void) {
         .name = "time",
         .group = "time",
         .help = "Show the current system time",
-        .cmd = debug_time
+        .handler = debug_time
     });
     debug_register_command((console_command_t) {
         .name = "ticks",
         .group = "time",
         .help = "Show the current system ticks",
-        .cmd = debug_ticks
+        .handler = debug_ticks
     });
 }

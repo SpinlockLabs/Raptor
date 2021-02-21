@@ -40,12 +40,12 @@ void debug_disk_init(void) {
         .name = "block-list",
         .group = "disk",
         .help = "List blocks on a device",
-        .cmd = block_list
+        .handler = block_list
     });
     debug_register_command((console_command_t) {
         .name = "block-probe",
         .group = "disk",
         .help = "Probe for blocks on a device",
-        .cmd = block_probe
+        .handler = block_probe
     });
 }

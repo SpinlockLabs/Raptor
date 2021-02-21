@@ -39,3 +39,17 @@ if(DEBUG_KERNEL_LOCKS)
     -DDEBUG_SPINLOCKS
   )
 endif()
+
+option(DEBUG_RKMALLOC_DISABLE_MAGIC "Disable Allocation Magic Usage" OFF)
+if(DEBUG_RKMALLOC_DISABLE_MAGIC)
+  add_definitions(
+    -DRKMALLOC_DISABLE_MAGIC
+  )
+endif()
+
+option(DEBUG_RKMALLOC_DISABLE_SITTING "Disable Allocation Sitting" OFF)
+if(DEBUG_RKMALLOC_DISABLE_SITTING)
+  add_definitions(
+    -DRKMALLOC_DISABLE_SITTING
+  )
+endif()

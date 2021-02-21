@@ -9,8 +9,10 @@
 
 #include <kernel/spin.h>
 
+#ifndef RKMALLOC_DISABLE_SITTING
 #ifndef RKMALLOC_SITTER_COUNT
 #define RKMALLOC_SITTER_COUNT 16
+#endif
 #endif
 
 /**
@@ -44,7 +46,9 @@ typedef struct rkmalloc_entry {
     union {
         struct {
             bool free : 1;
+#ifndef RKMALLOC_DISABLE_SITTING
             bool sitting : 1;
+#endif
         };
 
         uint32_t flags;
@@ -77,7 +81,10 @@ typedef struct rkmalloc_heap {
     list_t index;
 
     spin_lock_t lock;
+
+#ifndef RKMALLOC_DISABLE_SITTING
     rkmalloc_entry* sitters[RKMALLOC_SITTER_COUNT];
+#endif
 } rkmalloc_heap;
 
 /**

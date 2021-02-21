@@ -41,9 +41,6 @@ static void network_stack_handle_untranslated_send(
 
 static netif_error_t network_stack_handle_interface_receive(
     netif_t* iface, uint8_t* buffer, size_t size) {
-    unused(buffer);
-    unused(size);
-
     char* name = iface->name;
     raw_packet_t pkt = {
         .direction = PACKET_DIRECTION_IN,
@@ -51,7 +48,7 @@ static netif_error_t network_stack_handle_interface_receive(
         .buffer = buffer,
         .free = true,
         .iface_class_type = iface->class_type,
-        .length = 0,
+        .length = size,
         .translated = false
     };
 

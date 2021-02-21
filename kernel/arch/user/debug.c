@@ -15,6 +15,6 @@ void debug_user_init(void) {
         .name = "exit",
         .group = "user",
         .help = "Exit the kernel in userland process",
-        .cmd = debug_exit
+        .handler = debug_exit
     });
 }
