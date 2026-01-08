@@ -27,6 +27,8 @@
 #include "devices/vgafb/vgafb.h"
 #include "devices/ata/ata.h"
 
+multiboot_t* mboot;
+
 void lox_output_char_ebl(char c) {
     outb(0x3F8, (uint8_t) c);
 }

@@ -83,4 +83,4 @@ typedef struct {
     uint32_t type;
 } packed mboot_memmap_t;
 
-multiboot_t* mboot;
+extern multiboot_t* mboot;

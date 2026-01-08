@@ -29,10 +29,10 @@ enum vga_color {
 #define VGA_WIDTH 80
 #define VGA_HEIGHT 25
 
-size_t vga_row;
-size_t vga_column;
-uint8_t vga_color;
-uint16_t* vga_buffer;
+extern size_t vga_row;
+extern size_t vga_column;
+extern uint8_t vga_color;
+extern uint16_t* vga_buffer;
 
 void vga_init(void);
 void vga_clear(void);

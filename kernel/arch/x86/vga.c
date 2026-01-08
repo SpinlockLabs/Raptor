@@ -12,6 +12,10 @@ static inline uint16_t vga_entry(unsigned char uc, uint8_t color) {
 }
 
 tty_t* vga_pty = NULL;
+size_t vga_row;
+size_t vga_column;
+uint8_t vga_color;
+uint16_t* vga_buffer;
 
 void vga_init(void) {
     vga_row = 0;

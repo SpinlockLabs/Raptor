@@ -124,30 +124,30 @@ void debug_x86_init(void) {
         .name = "kpused",
         .group = "debug",
         .help = "Show used kernel page memory",
-        .cmd = debug_kpused
+        .handler = debug_kpused
     });
     debug_register_command((console_command_t) {
         .name = "pci-list",
         .group = "debug",
         .help = "List all PCI devices",
-        .cmd = debug_pci_list
+        .handler = debug_pci_list
     });
     debug_register_command((console_command_t) {
         .name = "page-stats",
         .group = "debug",
         .help = "Show page stats",
-        .cmd = debug_page_stats
+        .handler = debug_page_stats
     });
     debug_register_command((console_command_t) {
         .name = "page-dump",
         .group = "debug",
         .help = "Page dump of memory",
-        .cmd = debug_page_dump
+        .handler = debug_page_dump
     });
     debug_register_command((console_command_t) {
         .name = "start",
         .group = "debug",
         .help = "Start the given executable from disk",
-        .cmd = debug_start_process
+        .handler = debug_start_process
     });
 }

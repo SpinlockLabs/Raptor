@@ -16,8 +16,8 @@ typedef struct {
     uint32_t base;
 } packed idt_ptr_t;
 
-idt_entry_t idt_entries[256];
-idt_ptr_t idt_ptr;
+extern idt_entry_t idt_entries[256];
+extern idt_ptr_t idt_ptr;
 
 void idt_init(void);
 void idt_set_gate(uint8_t, uint32_t, uint16_t, uint8_t);
